@@ -1,0 +1,379 @@
+[
+  {
+    "id": "e6401a57-914e-4de8-837c-1f542fa0ebe0",
+    "question": "what is nosql",
+    "answer": "unstructured database",
+    "distractors": [
+      "table",
+      "structured data base",
+      "map"
+    ],
+    "explanation": "",
+    "hint": "",
+    "difficulty": 3,
+    "tags": [
+      "bffc45f7-b61a-4a82-b0bc-14694b44298b"
+    ],
+    "createdAt": "2026-05-15T16:17:36.042Z"
+  },
+  {
+    "id": "6f12f0f1-2d58-4ed9-803c-3c78ce638b40",
+    "question": "What does HTML stand for?",
+    "answer": "HyperText Markup Language",
+    "distractors": [
+      "Home Tool Markup Language",
+      "Hyperlink Trail Mode Language",
+      "High Text Machine Logic"
+    ],
+    "explanation": "HTML is the standard markup language used to create the structure of web pages.",
+    "hint": "It's a markup language for the web.",
+    "difficulty": 1,
+    "tags": [
+      "6710ba42-6463-48f8-bfaf-c8f5fea2baa1",
+      "09c6be98-f692-466a-8cd4-359c8477d148"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "88c5d819-e4d6-4f82-b6c2-e53bcebdb182",
+    "question": "Which data structure operates on a LIFO (Last In, First Out) principle?",
+    "answer": "Stack",
+    "distractors": [
+      "Queue",
+      "Linked List",
+      "Heap"
+    ],
+    "explanation": "A stack adds and removes elements from the same end (the top), making the last inserted element the first to be removed.",
+    "hint": "Think of a stack of plates.",
+    "difficulty": 1,
+    "tags": [
+      "85b6f5cf-cf2e-4912-9b69-0a699768fed6",
+      "f0f1d720-a255-46d2-b85f-b94c16026d19"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "c1201067-b595-4d2d-97b9-8538fe8cb21d",
+    "question": "What is the time complexity of binary search on a sorted array?",
+    "answer": "O(log n)",
+    "distractors": [
+      "O(n)",
+      "O(n log n)",
+      "O(1)"
+    ],
+    "explanation": "Binary search halves the search space at each step, resulting in logarithmic time complexity.",
+    "hint": "The search space is halved at every step.",
+    "difficulty": 2,
+    "tags": [
+      "1b2b161c-7643-425d-aa44-fc5e2389ead7",
+      "f0f1d720-a255-46d2-b85f-b94c16026d19"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "6d2cced5-e085-4141-969b-e1dd5c462bae",
+    "question": "Which CSS property is used to make a flex container wrap its children onto multiple lines?",
+    "answer": "flex-wrap: wrap",
+    "distractors": [
+      "flex-direction: row-wrap",
+      "flex-flow: wrap",
+      "overflow: flex-wrap"
+    ],
+    "explanation": "Setting flex-wrap: wrap on a flex container allows child items to wrap to a new line when there is not enough space.",
+    "hint": "It's a property set on the container, not the children.",
+    "difficulty": 2,
+    "tags": [
+      "471fc6e7-97b6-4b49-86f7-f89379ea6608",
+      "09c6be98-f692-466a-8cd4-359c8477d148"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "421a9a74-bc59-4f08-b1ae-f368b9d43f35",
+    "question": "What does the 'S' in SOLID principles stand for?",
+    "answer": "Single Responsibility Principle",
+    "distractors": [
+      "Structured Design Principle",
+      "Separation of Services Principle",
+      "Static Responsibility Principle"
+    ],
+    "explanation": "The Single Responsibility Principle states that a class should have only one reason to change.",
+    "hint": "Each class should do exactly one thing.",
+    "difficulty": 2,
+    "tags": [
+      "e5ce215f-4f87-40e0-a035-3c44b4caceec",
+      "a82cfe31-9da7-44ed-91c0-1ad0d073842e"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "b9d0b17a-13a4-437b-a9ec-9f80346ddfb7",
+    "question": "In JavaScript, what does the 'typeof null' expression return?",
+    "answer": "object",
+    "distractors": [
+      "null",
+      "undefined",
+      "boolean"
+    ],
+    "explanation": "This is a well-known JavaScript bug from its early design. typeof null returns 'object' even though null is not an object.",
+    "hint": "It's a historical bug in JavaScript.",
+    "difficulty": 3,
+    "tags": [
+      "8a29227e-7076-42fb-8d5e-4ee344e269b3",
+      "a82f6325-5e7f-4158-a37b-178993b8b740"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "ddb3af1a-99b1-4850-a587-4a53ac40f83d",
+    "question": "Which HTTP method is considered idempotent but NOT safe?",
+    "answer": "PUT",
+    "distractors": [
+      "GET",
+      "POST",
+      "PATCH"
+    ],
+    "explanation": "PUT is idempotent (calling it multiple times gives the same result) but not safe because it modifies server state.",
+    "hint": "Safe methods do not alter server state.",
+    "difficulty": 3,
+    "tags": [
+      "8e00a7a4-f252-4ba2-af55-b3fae2dce04f",
+      "b38410f7-b117-41c7-a374-2f910fc0c04f"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "ac21db57-7902-44f0-93b2-45c3fc524650",
+    "question": "What is the primary purpose of a database index?",
+    "answer": "Speed up data retrieval",
+    "distractors": [
+      "Enforce data uniqueness",
+      "Encrypt sensitive columns",
+      "Compress table storage"
+    ],
+    "explanation": "Indexes create a data structure (usually a B-tree) that allows the database to find rows much faster without scanning the entire table.",
+    "hint": "Think of a book's index at the back.",
+    "difficulty": 2,
+    "tags": [
+      "bffc45f7-b61a-4a82-b0bc-14694b44298b",
+      "c259bacd-68dd-4bd3-810f-2a5880622a5f"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "6bda3a01-dd2d-48f5-ad4c-4772b22e9e8a",
+    "question": "Which Git command is used to apply changes from one branch onto another by re-writing commits?",
+    "answer": "git rebase",
+    "distractors": [
+      "git merge",
+      "git cherry-pick",
+      "git reset"
+    ],
+    "explanation": "git rebase moves or replays commits from one branch on top of another, creating a linear history.",
+    "hint": "It rewrites commit history for a cleaner log.",
+    "difficulty": 2,
+    "tags": [
+      "2b011a19-9987-417e-8223-c9a5b70966c4",
+      "12c45c49-7280-4784-a8b7-129f577d1405"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "a4ad5fbc-3978-455f-80c6-85ff16e3b8fe",
+    "question": "What is a closure in JavaScript?",
+    "answer": "A function that retains access to its outer scope after the outer function has returned",
+    "distractors": [
+      "A function with no return value",
+      "A method that closes the browser tab",
+      "An arrow function with implicit return"
+    ],
+    "explanation": "Closures allow inner functions to 'remember' variables from their enclosing scope even when called outside that scope.",
+    "hint": "It's about scope persistence.",
+    "difficulty": 3,
+    "tags": [
+      "8a29227e-7076-42fb-8d5e-4ee344e269b3",
+      "1e6ee36b-36e4-43e6-9e7d-dbe587539e4d"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "9da25a60-1fe5-4882-a5fc-c90ac6519655",
+    "question": "In Python, which built-in function returns the length of an object?",
+    "answer": "len()",
+    "distractors": [
+      "size()",
+      "count()",
+      "length()"
+    ],
+    "explanation": "len() works on strings, lists, tuples, dictionaries, and other sequences to return the number of elements.",
+    "hint": "It's a three-letter function.",
+    "difficulty": 1,
+    "tags": [
+      "6accd678-38f5-43db-90a4-debd2bc9298c",
+      "cfc74fc4-f86e-4ade-9c4a-26f2c8de5110"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "05d3cff5-e37b-4f88-a6ca-929bbda67776",
+    "question": "What does the CAP theorem state about distributed systems?",
+    "answer": "You can only guarantee two of: Consistency, Availability, and Partition tolerance",
+    "distractors": [
+      "All three properties can always be achieved simultaneously",
+      "Consistency always trumps availability",
+      "Partition tolerance is optional in cloud systems"
+    ],
+    "explanation": "The CAP theorem (Brewer's theorem) proves that a distributed data store can only provide two of the three guarantees at any given time.",
+    "hint": "There are three letters and only two can be chosen.",
+    "difficulty": 3,
+    "tags": [
+      "93f7ffe9-0abd-426c-9b57-188aefef8c90",
+      "b548325c-c1f3-40be-839a-832926c0e9c7"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "b89129cd-4181-4b55-ab7e-e075d479929e",
+    "question": "Which design pattern ensures only one instance of a class exists?",
+    "answer": "Singleton",
+    "distractors": [
+      "Factory",
+      "Observer",
+      "Prototype"
+    ],
+    "explanation": "The Singleton pattern restricts instantiation of a class to a single object, often used for shared resources like config or loggers.",
+    "hint": "The name hints at 'single'.",
+    "difficulty": 2,
+    "tags": [
+      "e5ce215f-4f87-40e0-a035-3c44b4caceec",
+      "a82cfe31-9da7-44ed-91c0-1ad0d073842e"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "dec669f9-59e5-4fcb-bfb4-63f441a0f5cb",
+    "question": "What is the difference between '==' and '===' in JavaScript?",
+    "answer": "'==' checks value with type coercion; '===' checks value and type strictly",
+    "distractors": [
+      "They are identical in modern JavaScript",
+      "'===' is slower because it checks more properties",
+      "'==' is only for numbers"
+    ],
+    "explanation": "== performs type coercion before comparison (e.g., 0 == false is true), while === requires both value and type to match.",
+    "hint": "The extra equals sign adds strictness.",
+    "difficulty": 2,
+    "tags": [
+      "8a29227e-7076-42fb-8d5e-4ee344e269b3",
+      "89403bd4-8da7-4ec4-bea3-b6d060707cc8"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "0121d33f-fad7-4d9a-a5ae-b22353def2cb",
+    "question": "What is the purpose of the 'virtual' keyword in C++ class methods?",
+    "answer": "To enable runtime polymorphism through dynamic dispatch",
+    "distractors": [
+      "To make a method private to the class",
+      "To prevent the method from being overridden",
+      "To allocate the method on the heap"
+    ],
+    "explanation": "Marking a method virtual tells the compiler to use the vtable for runtime resolution, allowing derived class overrides to be called through a base class pointer.",
+    "hint": "It's related to polymorphism.",
+    "difficulty": 3,
+    "tags": [
+      "1458dc12-1579-46d0-811d-92dcb1764700",
+      "a82cfe31-9da7-44ed-91c0-1ad0d073842e"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "8e20ba52-1db1-4f2f-a470-1aa6da233f28",
+    "question": "Which sorting algorithm has the best average-case time complexity?",
+    "answer": "Merge Sort or Quick Sort (both O(n log n))",
+    "distractors": [
+      "Bubble Sort",
+      "Insertion Sort",
+      "Selection Sort"
+    ],
+    "explanation": "Merge Sort and Quick Sort both achieve O(n log n) average-case performance, making them the most efficient general-purpose comparison sorts.",
+    "hint": "Divide and conquer is the key idea.",
+    "difficulty": 2,
+    "tags": [
+      "1b2b161c-7643-425d-aa44-fc5e2389ead7",
+      "e5602821-47f3-40eb-b41b-f9f44f2a3c9a"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "d49062f7-bc1b-4e23-92c1-7dee762c85b3",
+    "question": "What does REST stand for in web API design?",
+    "answer": "Representational State Transfer",
+    "distractors": [
+      "Remote Execution and Service Technology",
+      "Rapid Endpoint Serialization Transfer",
+      "Resource-Encoded Socket Transfer"
+    ],
+    "explanation": "REST is an architectural style for designing networked applications, relying on stateless, client-server communication using HTTP methods.",
+    "hint": "It describes how state is transferred between client and server.",
+    "difficulty": 2,
+    "tags": [
+      "b38410f7-b117-41c7-a374-2f910fc0c04f",
+      "6710ba42-6463-48f8-bfaf-c8f5fea2baa1"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "8a345176-9e8c-4d3a-971a-05ee5dce9ee1",
+    "question": "In SQL, what is the difference between WHERE and HAVING clauses?",
+    "answer": "WHERE filters rows before grouping; HAVING filters groups after GROUP BY",
+    "distractors": [
+      "They are interchangeable",
+      "HAVING is used only with JOINs",
+      "WHERE can only filter numeric columns"
+    ],
+    "explanation": "WHERE is applied before aggregation (on individual rows), while HAVING is applied after GROUP BY to filter aggregated results.",
+    "hint": "Think about when in the query execution each filter runs.",
+    "difficulty": 3,
+    "tags": [
+      "818b62ac-4bbf-40a1-8a36-349afd00c84e",
+      "bffc45f7-b61a-4a82-b0bc-14694b44298b"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "d613b587-2a14-49a6-bb6a-61ec7792a502",
+    "question": "What is the purpose of a load balancer in a web architecture?",
+    "answer": "Distribute incoming traffic across multiple servers",
+    "distractors": [
+      "Compress HTTP responses",
+      "Cache database queries",
+      "Manage SSL certificates"
+    ],
+    "explanation": "A load balancer sits in front of servers and distributes client requests to prevent any single server from becoming a bottleneck.",
+    "hint": "It's about dividing the workload.",
+    "difficulty": 2,
+    "tags": [
+      "b548325c-c1f3-40be-839a-832926c0e9c7",
+      "92625953-33c7-45b0-a51f-4256429fa9af"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  },
+  {
+    "id": "cc9187ec-08f0-468a-b1c1-e34e371790de",
+    "question": "What is memoization?",
+    "answer": "Caching the results of expensive function calls to avoid redundant computation",
+    "distractors": [
+      "A way to write self-documenting code",
+      "Storing function names in memory",
+      "A garbage collection strategy"
+    ],
+    "explanation": "Memoization is an optimization technique where previously computed results are stored and returned for the same inputs, commonly used in dynamic programming.",
+    "hint": "It's a form of caching tied to function inputs.",
+    "difficulty": 2,
+    "tags": [
+      "afb50e40-9c48-468e-8279-9a15d3616229",
+      "1b2b161c-7643-425d-aa44-fc5e2389ead7"
+    ],
+    "createdAt": "2026-05-15T16:23:07.851Z"
+  }
+]

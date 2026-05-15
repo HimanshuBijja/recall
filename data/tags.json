@@ -1,0 +1,137 @@
+[
+  {
+    "id": "bffc45f7-b61a-4a82-b0bc-14694b44298b",
+    "name": "databases",
+    "parents": []
+  },
+  {
+    "id": "6710ba42-6463-48f8-bfaf-c8f5fea2baa1",
+    "name": "web",
+    "parents": []
+  },
+  {
+    "id": "09c6be98-f692-466a-8cd4-359c8477d148",
+    "name": "frontend",
+    "parents": []
+  },
+  {
+    "id": "85b6f5cf-cf2e-4912-9b69-0a699768fed6",
+    "name": "data-structures",
+    "parents": []
+  },
+  {
+    "id": "f0f1d720-a255-46d2-b85f-b94c16026d19",
+    "name": "cs-fundamentals",
+    "parents": []
+  },
+  {
+    "id": "1b2b161c-7643-425d-aa44-fc5e2389ead7",
+    "name": "algorithms",
+    "parents": []
+  },
+  {
+    "id": "471fc6e7-97b6-4b49-86f7-f89379ea6608",
+    "name": "css",
+    "parents": []
+  },
+  {
+    "id": "e5ce215f-4f87-40e0-a035-3c44b4caceec",
+    "name": "design-patterns",
+    "parents": []
+  },
+  {
+    "id": "a82cfe31-9da7-44ed-91c0-1ad0d073842e",
+    "name": "oop",
+    "parents": []
+  },
+  {
+    "id": "8a29227e-7076-42fb-8d5e-4ee344e269b3",
+    "name": "javascript",
+    "parents": []
+  },
+  {
+    "id": "a82f6325-5e7f-4158-a37b-178993b8b740",
+    "name": "quirks",
+    "parents": []
+  },
+  {
+    "id": "8e00a7a4-f252-4ba2-af55-b3fae2dce04f",
+    "name": "http",
+    "parents": []
+  },
+  {
+    "id": "b38410f7-b117-41c7-a374-2f910fc0c04f",
+    "name": "api",
+    "parents": []
+  },
+  {
+    "id": "c259bacd-68dd-4bd3-810f-2a5880622a5f",
+    "name": "performance",
+    "parents": []
+  },
+  {
+    "id": "2b011a19-9987-417e-8223-c9a5b70966c4",
+    "name": "git",
+    "parents": []
+  },
+  {
+    "id": "12c45c49-7280-4784-a8b7-129f577d1405",
+    "name": "version-control",
+    "parents": []
+  },
+  {
+    "id": "1e6ee36b-36e4-43e6-9e7d-dbe587539e4d",
+    "name": "functions",
+    "parents": []
+  },
+  {
+    "id": "6accd678-38f5-43db-90a4-debd2bc9298c",
+    "name": "python",
+    "parents": []
+  },
+  {
+    "id": "cfc74fc4-f86e-4ade-9c4a-26f2c8de5110",
+    "name": "basics",
+    "parents": []
+  },
+  {
+    "id": "93f7ffe9-0abd-426c-9b57-188aefef8c90",
+    "name": "distributed-systems",
+    "parents": []
+  },
+  {
+    "id": "b548325c-c1f3-40be-839a-832926c0e9c7",
+    "name": "architecture",
+    "parents": []
+  },
+  {
+    "id": "89403bd4-8da7-4ec4-bea3-b6d060707cc8",
+    "name": "comparison",
+    "parents": []
+  },
+  {
+    "id": "1458dc12-1579-46d0-811d-92dcb1764700",
+    "name": "cpp",
+    "parents": []
+  },
+  {
+    "id": "e5602821-47f3-40eb-b41b-f9f44f2a3c9a",
+    "name": "sorting",
+    "parents": []
+  },
+  {
+    "id": "818b62ac-4bbf-40a1-8a36-349afd00c84e",
+    "name": "sql",
+    "parents": []
+  },
+  {
+    "id": "92625953-33c7-45b0-a51f-4256429fa9af",
+    "name": "devops",
+    "parents": []
+  },
+  {
+    "id": "afb50e40-9c48-468e-8279-9a15d3616229",
+    "name": "optimization",
+    "parents": []
+  }
+]
