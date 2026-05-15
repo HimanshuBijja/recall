@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
-import type { Card, Tag } from "@/types";
+import type { Card, Group, Tag } from "@/types";
 
 export async function PUT(
   req: NextRequest,
@@ -40,6 +40,13 @@ export async function DELETE(
     c.tags.includes(id) ? { ...c, tags: c.tags.filter((t) => t !== id) } : c
   );
   writeDb("cards.json", updated);
+
+  // ...and from any groups referencing it.
+  const groups = readDb<Group>("groups.json");
+  const updatedGroups = groups.map((g) =>
+    g.tagIds.includes(id) ? { ...g, tagIds: g.tagIds.filter((t) => t !== id) } : g
+  );
+  writeDb("groups.json", updatedGroups);
 
   return Response.json({ ok: true });
 }

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { readDb } from "@/lib/db";
-import type { Card, Session, Tag } from "@/types";
+import type { Card, Group, Session, Tag } from "@/types";
 import { TagTree } from "@/components/TagTree";
+import { GroupQuickLaunch } from "@/components/GroupQuickLaunch";
 
 export const dynamic = "force-dynamic";
 
@@ -23,20 +24,29 @@ export default function Home() {
   const cards = readDb<Card>("cards.json");
   const tags = readDb<Tag>("tags.json");
   const sessions = readDb<Session>("sessions.json");
+  const groups = readDb<Group>("groups.json");
 
-  // tag accuracy
+  // Tag accuracy — uses the LATEST attempt per card so retries reflect improvement.
   const cardById = new Map(cards.map((c) => [c.id, c]));
-  const buckets = new Map<string, { total: number; correct: number }>();
+  const cardHistory = new Map<string, { correct: boolean; t: string }[]>();
   for (const s of sessions) {
-    for (const r of s.results) {
-      const card = cardById.get(r.cardId);
-      if (!card) continue;
-      for (const tagId of card.tags) {
-        const b = buckets.get(tagId) ?? { total: 0, correct: 0 };
-        b.total += 1;
-        if (r.correct) b.correct += 1;
-        buckets.set(tagId, b);
-      }
+    for (const r of s.results ?? []) {
+      const arr = cardHistory.get(r.cardId) ?? [];
+      arr.push({ correct: r.correct, t: s.completedAt });
+      cardHistory.set(r.cardId, arr);
+    }
+  }
+  const buckets = new Map<string, { total: number; correct: number }>();
+  for (const [cid, hist] of cardHistory) {
+    const card = cardById.get(cid);
+    if (!card) continue;
+    hist.sort((a, b) => a.t.localeCompare(b.t));
+    const latest = hist[hist.length - 1];
+    for (const tagId of card.tags) {
+      const b = buckets.get(tagId) ?? { total: 0, correct: 0 };
+      b.total += 1;
+      if (latest.correct) b.correct += 1;
+      buckets.set(tagId, b);
     }
   }
   const weakTags = tags
@@ -59,7 +69,7 @@ export default function Home() {
           </Link>
         </div>
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-3 bg-white dark:bg-zinc-900">
-          <TagTree tags={tags} />
+          <TagTree tags={tags} searchable />
         </div>
       </aside>
 
@@ -69,8 +79,9 @@ export default function Home() {
           <p className="text-zinc-500 mt-1">Stay sharp. Pick a topic and run a quick test.</p>
         </div>
 
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-4 gap-4">
           <Stat label="Total cards" value={cards.length} />
+          <Stat label="Groups" value={groups.length} />
           <Stat label="Weak tags (&lt;50%)" value={weakTags.length} accent="amber" />
           <Stat label="Day streak" value={streak} accent="emerald" />
         </div>
@@ -88,7 +99,28 @@ export default function Home() {
           >
             New card
           </Link>
+          <Link
+            href="/groups"
+            className="inline-flex items-center px-4 py-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-medium"
+          >
+            Manage groups
+          </Link>
         </div>
+
+        {groups.length > 0 && (
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-5 bg-white dark:bg-zinc-900">
+            <div className="flex items-baseline justify-between mb-3">
+              <h3 className="font-semibold">Your groups</h3>
+              <Link
+                href="/groups"
+                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                manage →
+              </Link>
+            </div>
+            <GroupQuickLaunch groups={groups} tags={tags} />
+          </div>
+        )}
 
         {weakTags.length > 0 && (
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-5 bg-white dark:bg-zinc-900">

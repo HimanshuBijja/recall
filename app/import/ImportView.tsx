@@ -50,11 +50,46 @@ const sample = `[
   }
 ]`;
 
+const aiPrompt = `Generate flashcard questions as a JSON array. Each card must follow this exact schema:
+
+- question:     string (the prompt)
+- answer:       string (the single correct answer)
+- distractors:  array of exactly 3 strings (plausible wrong answers)
+- explanation:  string (why the answer is correct)
+- hint:         string (a small nudge, not the answer)
+- difficulty:   integer 1-5 (1 = trivial, 5 = expert)
+- tags:         array of lowercase kebab-case strings (e.g. "binary-search")
+
+Rules:
+- Output ONLY a valid JSON array. No markdown fences, no commentary.
+- Distractors must be the same TYPE/SHAPE as the answer (e.g. if the answer is a number, all distractors are numbers).
+- Avoid "all of the above" / "none of the above" style distractors.
+- Keep questions self-contained — no "as discussed earlier".
+
+Example (one card):
+
+` + sample + `
+
+Now generate <N> cards on the topic: <TOPIC>.`;
+
 export function ImportView() {
   const router = useRouter();
   const toast = useToast();
   const [text, setText] = useState("");
   const [importing, setImporting] = useState(false);
+  const [copied, setCopied] = useState<"schema" | "prompt" | null>(null);
+
+  async function copy(kind: "schema" | "prompt") {
+    const payload = kind === "schema" ? sample : aiPrompt;
+    try {
+      await navigator.clipboard.writeText(payload);
+      setCopied(kind);
+      toast("success", kind === "schema" ? "Schema copied" : "AI prompt copied");
+      setTimeout(() => setCopied((c) => (c === kind ? null : c)), 1800);
+    } catch {
+      toast("error", "Couldn't copy — your browser blocked clipboard access");
+    }
+  }
 
   const { rows, parseError } = useMemo(() => {
     if (!text.trim()) return { rows: [] as ValidatedRow[], parseError: null as string | null };
@@ -102,6 +137,40 @@ export function ImportView() {
           Paste a JSON array of cards. Tags are matched by name (case-insensitive) and
           created if they don&apos;t exist.
         </p>
+      </div>
+
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60 overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/60 dark:bg-zinc-900">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Format
+            </div>
+            <div className="text-[11px] text-zinc-500 mt-0.5">
+              Copy the AI prompt, paste to ChatGPT / Claude, then paste the output below.
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => copy("schema")}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-zinc-300 dark:border-zinc-700 hover:bg-white dark:hover:bg-zinc-800 text-xs font-medium"
+              title="Copy just the example JSON"
+            >
+              <CopyIcon /> {copied === "schema" ? "Copied" : "Schema"}
+            </button>
+            <button
+              type="button"
+              onClick={() => copy("prompt")}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium"
+              title="Copy a full AI-ready prompt: schema + rules + example, ready to paste into ChatGPT/Claude"
+            >
+              <CopyIcon /> {copied === "prompt" ? "Copied" : "AI prompt"}
+            </button>
+          </div>
+        </div>
+        <pre className="px-3 py-3 text-[11px] font-mono leading-relaxed overflow-x-auto text-zinc-700 dark:text-zinc-300 max-h-64">
+{sample}
+        </pre>
       </div>
 
       <textarea
@@ -168,5 +237,24 @@ export function ImportView() {
         </>
       )}
     </div>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="13"
+      height="13"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
   );
 }

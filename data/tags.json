@@ -1,45 +1,5 @@
 [
   {
-    "id": "bffc45f7-b61a-4a82-b0bc-14694b44298b",
-    "name": "databases",
-    "parents": []
-  },
-  {
-    "id": "6710ba42-6463-48f8-bfaf-c8f5fea2baa1",
-    "name": "web",
-    "parents": []
-  },
-  {
-    "id": "09c6be98-f692-466a-8cd4-359c8477d148",
-    "name": "frontend",
-    "parents": []
-  },
-  {
-    "id": "85b6f5cf-cf2e-4912-9b69-0a699768fed6",
-    "name": "data-structures",
-    "parents": []
-  },
-  {
-    "id": "f0f1d720-a255-46d2-b85f-b94c16026d19",
-    "name": "cs-fundamentals",
-    "parents": []
-  },
-  {
-    "id": "1b2b161c-7643-425d-aa44-fc5e2389ead7",
-    "name": "algorithms",
-    "parents": []
-  },
-  {
-    "id": "471fc6e7-97b6-4b49-86f7-f89379ea6608",
-    "name": "css",
-    "parents": []
-  },
-  {
-    "id": "e5ce215f-4f87-40e0-a035-3c44b4caceec",
-    "name": "design-patterns",
-    "parents": []
-  },
-  {
     "id": "a82cfe31-9da7-44ed-91c0-1ad0d073842e",
     "name": "oop",
     "parents": []
@@ -132,6 +92,11 @@
   {
     "id": "afb50e40-9c48-468e-8279-9a15d3616229",
     "name": "optimization",
+    "parents": []
+  },
+  {
+    "id": "f29615b3-5d46-4807-8019-3b47b69b4b7f",
+    "name": "we",
     "parents": []
   }
 ]

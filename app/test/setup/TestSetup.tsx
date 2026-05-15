@@ -62,7 +62,7 @@ export function TestSetup({ tags, cards }: { tags: Tag[]; cards: Card[] }) {
               No tags yet — without tags, all {cards.length} cards will be included.
             </p>
           ) : (
-            <TagTree tags={tags} selected={selected} onToggle={toggle} />
+            <TagTree tags={tags} selected={selected} onToggle={toggle} searchable />
           )}
         </div>
       </section>

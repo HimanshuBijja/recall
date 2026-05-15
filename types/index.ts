@@ -41,3 +41,15 @@ export interface TagStat {
   correct: number;
   accuracy: number;
 }
+
+/**
+ * A saved collection of tag IDs — lets the user pre-define a study set
+ * ("Exam revision", "JS quirks", "Yesterday's misses") and launch a test
+ * on it from anywhere with one click.
+ */
+export interface Group {
+  id: string;
+  name: string;
+  tagIds: string[];
+  createdAt: string;
+}

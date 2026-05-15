@@ -8,6 +8,7 @@ const links = [
   { href: "/", label: "Home" },
   { href: "/cards", label: "Cards" },
   { href: "/tags", label: "Tags" },
+  { href: "/groups", label: "Groups" },
   { href: "/test/setup", label: "Test" },
   { href: "/analytics", label: "Analytics" },
   { href: "/import", label: "Import" },
@@ -65,7 +66,7 @@ export function Nav() {
       </header>
       {/* Mobile bottom nav */}
       <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-zinc-200 dark:border-zinc-800">
-        <div className="grid grid-cols-6">
+        <div className="grid grid-cols-7">
           {links.map((l) => {
             const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
             return (

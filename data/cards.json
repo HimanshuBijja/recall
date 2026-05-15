@@ -11,9 +11,7 @@
     "explanation": "",
     "hint": "",
     "difficulty": 3,
-    "tags": [
-      "bffc45f7-b61a-4a82-b0bc-14694b44298b"
-    ],
+    "tags": [],
     "createdAt": "2026-05-15T16:17:36.042Z"
   },
   {
@@ -28,10 +26,7 @@
     "explanation": "HTML is the standard markup language used to create the structure of web pages.",
     "hint": "It's a markup language for the web.",
     "difficulty": 1,
-    "tags": [
-      "6710ba42-6463-48f8-bfaf-c8f5fea2baa1",
-      "09c6be98-f692-466a-8cd4-359c8477d148"
-    ],
+    "tags": [],
     "createdAt": "2026-05-15T16:23:07.851Z"
   },
   {
@@ -45,11 +40,8 @@
     ],
     "explanation": "A stack adds and removes elements from the same end (the top), making the last inserted element the first to be removed.",
     "hint": "Think of a stack of plates.",
-    "difficulty": 1,
-    "tags": [
-      "85b6f5cf-cf2e-4912-9b69-0a699768fed6",
-      "f0f1d720-a255-46d2-b85f-b94c16026d19"
-    ],
+    "difficulty": 4,
+    "tags": [],
     "createdAt": "2026-05-15T16:23:07.851Z"
   },
   {
@@ -64,10 +56,7 @@
     "explanation": "Binary search halves the search space at each step, resulting in logarithmic time complexity.",
     "hint": "The search space is halved at every step.",
     "difficulty": 2,
-    "tags": [
-      "1b2b161c-7643-425d-aa44-fc5e2389ead7",
-      "f0f1d720-a255-46d2-b85f-b94c16026d19"
-    ],
+    "tags": [],
     "createdAt": "2026-05-15T16:23:07.851Z"
   },
   {
@@ -82,10 +71,7 @@
     "explanation": "Setting flex-wrap: wrap on a flex container allows child items to wrap to a new line when there is not enough space.",
     "hint": "It's a property set on the container, not the children.",
     "difficulty": 2,
-    "tags": [
-      "471fc6e7-97b6-4b49-86f7-f89379ea6608",
-      "09c6be98-f692-466a-8cd4-359c8477d148"
-    ],
+    "tags": [],
     "createdAt": "2026-05-15T16:23:07.851Z"
   },
   {
@@ -101,7 +87,6 @@
     "hint": "Each class should do exactly one thing.",
     "difficulty": 2,
     "tags": [
-      "e5ce215f-4f87-40e0-a035-3c44b4caceec",
       "a82cfe31-9da7-44ed-91c0-1ad0d073842e"
     ],
     "createdAt": "2026-05-15T16:23:07.851Z"
@@ -155,7 +140,6 @@
     "hint": "Think of a book's index at the back.",
     "difficulty": 2,
     "tags": [
-      "bffc45f7-b61a-4a82-b0bc-14694b44298b",
       "c259bacd-68dd-4bd3-810f-2a5880622a5f"
     ],
     "createdAt": "2026-05-15T16:23:07.851Z"
@@ -245,7 +229,6 @@
     "hint": "The name hints at 'single'.",
     "difficulty": 2,
     "tags": [
-      "e5ce215f-4f87-40e0-a035-3c44b4caceec",
       "a82cfe31-9da7-44ed-91c0-1ad0d073842e"
     ],
     "createdAt": "2026-05-15T16:23:07.851Z"
@@ -299,7 +282,6 @@
     "hint": "Divide and conquer is the key idea.",
     "difficulty": 2,
     "tags": [
-      "1b2b161c-7643-425d-aa44-fc5e2389ead7",
       "e5602821-47f3-40eb-b41b-f9f44f2a3c9a"
     ],
     "createdAt": "2026-05-15T16:23:07.851Z"
@@ -317,8 +299,7 @@
     "hint": "It describes how state is transferred between client and server.",
     "difficulty": 2,
     "tags": [
-      "b38410f7-b117-41c7-a374-2f910fc0c04f",
-      "6710ba42-6463-48f8-bfaf-c8f5fea2baa1"
+      "b38410f7-b117-41c7-a374-2f910fc0c04f"
     ],
     "createdAt": "2026-05-15T16:23:07.851Z"
   },
@@ -335,8 +316,7 @@
     "hint": "Think about when in the query execution each filter runs.",
     "difficulty": 3,
     "tags": [
-      "818b62ac-4bbf-40a1-8a36-349afd00c84e",
-      "bffc45f7-b61a-4a82-b0bc-14694b44298b"
+      "818b62ac-4bbf-40a1-8a36-349afd00c84e"
     ],
     "createdAt": "2026-05-15T16:23:07.851Z"
   },
@@ -371,8 +351,7 @@
     "hint": "It's a form of caching tied to function inputs.",
     "difficulty": 2,
     "tags": [
-      "afb50e40-9c48-468e-8279-9a15d3616229",
-      "1b2b161c-7643-425d-aa44-fc5e2389ead7"
+      "afb50e40-9c48-468e-8279-9a15d3616229"
     ],
     "createdAt": "2026-05-15T16:23:07.851Z"
   }
