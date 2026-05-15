@@ -65,7 +65,7 @@ export function Nav() {
         </div>
       </header>
       {/* Mobile bottom nav */}
-      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-zinc-200 dark:border-zinc-800">
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-zinc-200 dark:border-zinc-800 pb-[env(safe-area-inset-bottom)]">
         <div className="grid grid-cols-7">
           {links.map((l) => {
             const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
@@ -73,9 +73,12 @@ export function Nav() {
               <Link
                 key={l.href}
                 href={l.href}
+                aria-current={active ? "page" : undefined}
                 className={[
-                  "py-2 text-[10px] font-medium text-center",
-                  active ? "text-indigo-600 dark:text-indigo-400" : "text-zinc-500 dark:text-zinc-400",
+                  "py-2.5 text-[10px] font-medium text-center min-h-[44px] flex items-center justify-center",
+                  active
+                    ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/60 dark:bg-indigo-950/30"
+                    : "text-zinc-500 dark:text-zinc-400 active:bg-zinc-100 dark:active:bg-zinc-800",
                 ].join(" ")}
               >
                 {l.label}

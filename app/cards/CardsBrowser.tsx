@@ -56,13 +56,13 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
         </div>
         <Link
           href="/cards/new"
-          className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+          className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm whitespace-nowrap"
         >
           + New card
         </Link>
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -104,7 +104,7 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
       ) : filtered.length === 0 ? (
         <p className="text-sm text-zinc-500">No cards match.</p>
       ) : (
-        <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
           {filtered.map((c) => (
             <li
               key={c.id}

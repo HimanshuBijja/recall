@@ -61,7 +61,7 @@ export default function Home() {
 
   return (
     <div className="grid lg:grid-cols-[18rem_1fr] gap-6">
-      <aside className="space-y-3">
+      <aside className="space-y-3 order-2 lg:order-1">
         <div className="flex items-baseline justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Tags</h2>
           <Link href="/tags" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
@@ -73,35 +73,35 @@ export default function Home() {
         </div>
       </aside>
 
-      <section className="space-y-6">
+      <section className="space-y-6 order-1 lg:order-2">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Welcome back</h1>
           <p className="text-zinc-500 mt-1">Stay sharp. Pick a topic and run a quick test.</p>
         </div>
 
-        <div className="grid sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <Stat label="Total cards" value={cards.length} />
           <Stat label="Groups" value={groups.length} />
           <Stat label="Weak tags (&lt;50%)" value={weakTags.length} accent="amber" />
           <Stat label="Day streak" value={streak} accent="emerald" />
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <Link
             href="/test/setup"
-            className="inline-flex items-center px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
           >
             Start a test →
           </Link>
           <Link
             href="/cards/new"
-            className="inline-flex items-center px-4 py-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-medium"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center px-4 py-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-medium"
           >
             New card
           </Link>
           <Link
             href="/groups"
-            className="inline-flex items-center px-4 py-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-medium"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center px-4 py-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-medium"
           >
             Manage groups
           </Link>

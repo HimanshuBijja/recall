@@ -82,6 +82,34 @@ export function ResultView() {
         </div>
       </div>
 
+      <div className="flex gap-3 justify-center flex-wrap">
+        {missed.length > 0 && (
+          <button
+            onClick={() => {
+              const ids = new Set(missed.map((m) => m.cardId));
+              const cardsForRetry = cards.filter((c) => ids.has(c.id));
+              sessionStorage.setItem("retryCards", JSON.stringify(cardsForRetry));
+              router.push("/test/session?retry=1");
+            }}
+            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+          >
+            Retry missed ({missed.length})
+          </button>
+        )}
+        <Link
+          href="/test/setup"
+          className="px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 font-medium"
+        >
+          New test
+        </Link>
+        <Link
+          href="/analytics"
+          className="px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 font-medium"
+        >
+          Analytics
+        </Link>
+      </div>
+
       {tagRows.length > 0 && (
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-5 bg-white dark:bg-zinc-900">
           <h3 className="font-semibold mb-3">By tag</h3>
@@ -158,33 +186,7 @@ export function ResultView() {
         </div>
       )}
 
-      <div className="flex gap-3 justify-center flex-wrap">
-        {missed.length > 0 && (
-          <button
-            onClick={() => {
-              const ids = new Set(missed.map((m) => m.cardId));
-              const cardsForRetry = cards.filter((c) => ids.has(c.id));
-              sessionStorage.setItem("retryCards", JSON.stringify(cardsForRetry));
-              router.push("/test/session?retry=1");
-            }}
-            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
-          >
-            Retry missed ({missed.length})
-          </button>
-        )}
-        <Link
-          href="/test/setup"
-          className="px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 font-medium"
-        >
-          New test
-        </Link>
-        <Link
-          href="/analytics"
-          className="px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 font-medium"
-        >
-          Analytics
-        </Link>
-      </div>
+      
     </div>
   );
 }

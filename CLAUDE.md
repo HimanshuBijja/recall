@@ -302,6 +302,60 @@ and a direct edit link.
   hydration to avoid a flash. Preference persisted under
   `localStorage.theme`. Nav has a manual toggle.
 
+## Mobile layout conventions
+
+This is a phone-first app — every screen needs to be usable on a 360px
+viewport. The conventions are codified in a few places; copy them when
+adding pages, don't reinvent.
+
+**Chrome and safe areas**
+- `app/layout.tsx` `<main>` uses
+  `pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-6` so content
+  clears the fixed mobile bottom nav plus the iOS home indicator.
+- The mobile bottom nav (`<sm` breakpoint) is `fixed inset-x-0 bottom-0`
+  with `pb-[env(safe-area-inset-bottom)]`, links at `min-h-[44px]` to
+  meet the 44pt tap-target rule.
+- Toasts use `bottom-[calc(5rem+env(safe-area-inset-bottom))] sm:bottom-6`
+  with `left-4 right-4 sm:left-auto sm:max-w-sm` so they're full-width
+  on phone and right-anchored on desktop. They're `pointer-events-none`
+  on the wrapper with `[&>*]:pointer-events-auto` so taps pass through
+  the gutter.
+
+**Two-column pages (dashboard, tags, test setup)**
+The pattern is `grid lg:grid-cols-[Xrem_Yfr] gap-6` with `order-2`/
+`order-1` swaps so the *main content shows first on mobile*. Sidebars
+go below the fold on small screens — never make a user scroll past a
+filter panel to reach their stats.
+
+**Sticky CTAs on small screens**
+When a page has a primary action that lives in a side panel on desktop
+(e.g. test setup's "Start"), render the panel `hidden lg:block` and
+add a `lg:hidden fixed inset-x-0 bottom-[calc(2.75rem+env(safe-area-inset-bottom))]`
+bar above the bottom nav. Don't try to share one button between the
+two layouts — the contexts are different enough that two simple
+renderings beat one complex one.
+
+**Stat grids**
+Always step `grid-cols-2 sm:grid-cols-N lg:grid-cols-M`. A 5-card row
+should be `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5` (3+2 on tablet,
+2+2+1 on phone) — never leave a row with an orphan card.
+
+**Headers with action buttons**
+On small screens, header rows with an action button frequently overflow.
+Use `flex flex-wrap items-center justify-between gap-3` and put
+`text-sm whitespace-nowrap` on the action button. For toolbars with
+multiple copy-style buttons, stack them on mobile via
+`flex-col sm:flex-row`, and make each button `flex-1 sm:flex-initial`
+so they fill the row width on phone.
+
+**Test session specifically**
+- Question card uses `p-4 sm:p-6`, heading `text-base sm:text-xl` —
+  16px text is the iOS tap-zoom threshold so don't go below it for
+  primary content.
+- Top counter row uses `flex-wrap` because the timer can push the score
+  chips to a second line on very narrow screens.
+- Option buttons stack `grid sm:grid-cols-2` — one column on phone.
+
 ## API conventions
 
 - Route Handlers in `app/api/*/route.ts`, **export `dynamic = "force-dynamic"`**

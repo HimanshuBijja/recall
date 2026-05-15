@@ -140,8 +140,8 @@ export function ImportView() {
       </div>
 
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60 overflow-hidden">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/60 dark:bg-zinc-900">
-          <div>
+        <div className="px-3 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/60 dark:bg-zinc-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="min-w-0">
             <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
               Format
             </div>
@@ -149,11 +149,11 @@ export function ImportView() {
               Copy the AI prompt, paste to ChatGPT / Claude, then paste the output below.
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={() => copy("schema")}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-zinc-300 dark:border-zinc-700 hover:bg-white dark:hover:bg-zinc-800 text-xs font-medium"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded-md border border-zinc-300 dark:border-zinc-700 hover:bg-white dark:hover:bg-zinc-800 text-xs font-medium"
               title="Copy just the example JSON"
             >
               <CopyIcon /> {copied === "schema" ? "Copied" : "Schema"}
@@ -161,7 +161,7 @@ export function ImportView() {
             <button
               type="button"
               onClick={() => copy("prompt")}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium"
               title="Copy a full AI-ready prompt: schema + rules + example, ready to paste into ChatGPT/Claude"
             >
               <CopyIcon /> {copied === "prompt" ? "Copied" : "AI prompt"}
@@ -172,6 +172,7 @@ export function ImportView() {
 {sample}
         </pre>
       </div>
+      
 
       <textarea
         value={text}
@@ -180,6 +181,13 @@ export function ImportView() {
         rows={12}
         className="w-full font-mono text-xs px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
       />
+      <button
+            onClick={doImport}
+            disabled={importing || validRows.length === 0}
+            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium disabled:opacity-50"
+          >
+            {importing ? "Importing…" : `Import ${validRows.length} cards`}
+          </button>
 
       {parseError && (
         <div className="rounded-lg border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-sm text-rose-700 dark:text-rose-300">
@@ -227,13 +235,7 @@ export function ImportView() {
             </table>
           </div>
 
-          <button
-            onClick={doImport}
-            disabled={importing || validRows.length === 0}
-            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium disabled:opacity-50"
-          >
-            {importing ? "Importing…" : `Import ${validRows.length} cards`}
-          </button>
+          
         </>
       )}
     </div>

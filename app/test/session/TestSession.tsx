@@ -203,8 +203,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     <div className="max-w-2xl mx-auto space-y-5">
       {/* Top bar: progress + score chips */}
       <div className="space-y-2">
-        <div className="flex justify-between items-center text-xs">
-          <div className="flex items-center gap-3">
+        <div className="flex justify-between items-center gap-2 text-xs flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3">
             <span className="font-mono text-zinc-500">
               {idx + 1} / {total}
             </span>
@@ -217,10 +217,10 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 font-mono text-zinc-500">
+          <div className="flex items-center gap-2 sm:gap-3 font-mono text-zinc-500">
             <span className="text-emerald-600 dark:text-emerald-400">✓ {correctCount}</span>
             <span className="text-rose-600 dark:text-rose-400">✗ {results.length - correctCount}</span>
-            {!picked && <span>⏱ {fmtMs(elapsed)}</span>}
+            {!picked && <span className="tabular-nums">⏱ {fmtMs(elapsed)}</span>}
           </div>
         </div>
         <div className="h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
@@ -234,13 +234,13 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
       {/* Question card */}
       <div
         key={idx}
-        className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 bg-white dark:bg-zinc-900 space-y-5 animate-in fade-in duration-200"
+        className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 bg-white dark:bg-zinc-900 space-y-5 animate-in fade-in duration-200"
       >
-        <h2 className="text-lg sm:text-xl font-medium leading-relaxed">
+        <h2 className="text-base sm:text-xl font-medium leading-relaxed">
           {current.card.question}
         </h2>
 
-        <div className="grid sm:grid-cols-2 gap-2.5">
+        <div className="grid sm:grid-cols-2 gap-2 sm:gap-2.5">
           {current.options.map((opt, i) => {
             const isCorrect = opt === current.card.answer;
             const isPicked = opt === picked;

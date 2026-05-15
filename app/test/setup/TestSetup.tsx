@@ -49,9 +49,9 @@ export function TestSetup({ tags, cards }: { tags: Tag[]; cards: Card[] }) {
   }
 
   return (
-    <div className="grid lg:grid-cols-[1fr_22rem] gap-6">
-      <section className="space-y-4">
-        <h1 className="text-2xl font-bold">Set up a test</h1>
+    <div className="grid lg:grid-cols-[1fr_22rem] gap-6 pb-24 lg:pb-0">
+      <section className="space-y-4 order-2 lg:order-1">
+        <h1 className="text-2xl font-bold hidden lg:block">Set up a test</h1>
 
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900">
           <h3 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide mb-3">
@@ -67,7 +67,8 @@ export function TestSetup({ tags, cards }: { tags: Tag[]; cards: Card[] }) {
         </div>
       </section>
 
-      <aside className="space-y-4">
+      <aside className="space-y-4 order-1 lg:order-2">
+        <h1 className="text-2xl font-bold lg:hidden">Set up a test</h1>
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900 space-y-4">
           <h3 className="font-semibold">Options</h3>
           <label className="flex items-center gap-2 text-sm">
@@ -118,7 +119,7 @@ export function TestSetup({ tags, cards }: { tags: Tag[]; cards: Card[] }) {
           </div>
         </div>
 
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900">
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900 hidden lg:block">
           <div className="text-sm text-zinc-500">Matching cards</div>
           <div className="text-3xl font-bold">{matched.length}</div>
           <button
@@ -130,6 +131,21 @@ export function TestSetup({ tags, cards }: { tags: Tag[]; cards: Card[] }) {
           </button>
         </div>
       </aside>
+
+      {/* Mobile sticky action bar — sits above the bottom nav (which is ~44px tall + safe area). */}
+      <div className="lg:hidden fixed inset-x-0 bottom-[calc(2.75rem+env(safe-area-inset-bottom))] z-30 bg-background/95 backdrop-blur border-t border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3">
+        <div className="flex-1">
+          <div className="text-[10px] uppercase tracking-wide text-zinc-500">Matching</div>
+          <div className="text-xl font-bold leading-none">{matched.length}</div>
+        </div>
+        <button
+          onClick={start}
+          disabled={matched.length === 0}
+          className="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium disabled:opacity-50"
+        >
+          Start →
+        </button>
+      </div>
     </div>
   );
 }

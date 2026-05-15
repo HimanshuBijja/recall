@@ -129,7 +129,7 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
 
   return (
     <div className="grid lg:grid-cols-[1fr_22rem] gap-6">
-      <section className="space-y-4">
+      <section className="space-y-4 order-2 lg:order-1">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-2xl font-bold">Tags</h1>
           <div className="flex items-center gap-2">
@@ -232,10 +232,10 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
         )}
       </section>
 
-      <aside>
+      <aside className="order-1 lg:order-2">
         <form
           onSubmit={create}
-          className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900 space-y-3 sticky top-20"
+          className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900 space-y-3 lg:sticky lg:top-20"
         >
           <h3 className="font-semibold">New tag</h3>
           <input

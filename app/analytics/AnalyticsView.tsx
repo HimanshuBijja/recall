@@ -350,13 +350,13 @@ export function AnalyticsView({ sessions, cards, tags }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold">Analytics</h1>
-        <div className="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+        <div className="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden self-stretch sm:self-auto">
           {(["7d", "30d", "all"] as const).map((r) => (
             <button
               key={r}
               onClick={() => setRange(r)}
               className={[
-                "px-3 py-1.5 text-xs font-medium",
+                "flex-1 sm:flex-initial px-3 py-1.5 text-xs font-medium",
                 range === r
                   ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
                   : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
@@ -368,7 +368,7 @@ export function AnalyticsView({ sessions, cards, tags }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
         <Stat label="Sessions" value={filteredSessions.length} />
         <Stat
           label="Cards seen"
