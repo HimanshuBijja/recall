@@ -3,6 +3,8 @@ import { readDb } from "@/lib/db";
 import type { Card, Group, Session, Tag } from "@/types";
 import { TagTree } from "@/components/TagTree";
 import { GroupQuickLaunch } from "@/components/GroupQuickLaunch";
+import { ExportAllButton } from "@/components/ExportAllButton";
+import { exportBundle } from "@/lib/export";
 
 export const dynamic = "force-dynamic";
 
@@ -105,6 +107,7 @@ export default function Home() {
           >
             Manage groups
           </Link>
+          <ExportAllButton bundle={exportBundle(cards, tags, groups)} />
         </div>
 
         {groups.length > 0 && (
