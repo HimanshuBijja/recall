@@ -20,13 +20,10 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editParents, setEditParents] = useState<string[]>([]);
-  const [name, setName] = useState("");
-  const [parents, setParents] = useState<string[]>([]);
 
   const tree = useMemo(() => flattenDag(tags), [tags]);
   const q = query.trim().toLowerCase();
 
-  // Flat filtered view when searching, tree view otherwise.
   const flatFiltered = useMemo(() => {
     if (!q) return null;
     return tags
@@ -34,17 +31,19 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [tags, q]);
 
-  async function create(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim()) return;
-    try {
-      const res = await api.post<Tag>("/tags", { name: name.trim(), parents });
-      setTags((ts) => [...ts, res.data]);
-      setName("");
-      setParents([]);
-      toast("success", "Tag created");
-    } catch {
-      toast("error", "Failed to create tag");
+  // All visible tag IDs for "Select all"
+  const visibleTagIds = useMemo(() => {
+    if (flatFiltered) return flatFiltered.map((t) => t.id);
+    return tags.map((t) => t.id);
+  }, [flatFiltered, tags]);
+
+  const allSelected = visibleTagIds.length > 0 && visibleTagIds.every((id) => selectedIds.has(id));
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(visibleTagIds));
     }
   }
 
@@ -128,11 +127,17 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
   }
 
   return (
-    <div className="grid lg:grid-cols-[1fr_22rem] gap-6">
-      <section className="space-y-4 order-2 lg:order-1">
+    <div className="space-y-4">
+      <section className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-2xl font-bold">Tags</h1>
           <div className="flex items-center gap-2">
+            <button
+              onClick={toggleSelectAll}
+              className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              {allSelected ? "Deselect all" : "Select all"}
+            </button>
             {selectedIds.size > 0 && (
               <>
                 <button
@@ -231,47 +236,16 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
           </div>
         )}
       </section>
-
-      <aside className="order-1 lg:order-2">
-        <form
-          onSubmit={create}
-          className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900 space-y-3 lg:sticky lg:top-20"
-        >
-          <h3 className="font-semibold">New tag</h3>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Tag name"
-            className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
-          />
-          <ParentPicker tags={tags} selected={parents} onChange={setParents} />
-          <button className="w-full px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium">
-            Create
-          </button>
-        </form>
-      </aside>
     </div>
   );
 }
 
 function TreeRow({
-  node,
-  depth,
-  seen,
-  usage,
-  selectedIds,
-  onSelect,
-  onEdit,
-  onDelete,
+  node, depth, seen, usage, selectedIds, onSelect, onEdit, onDelete,
 }: {
-  node: TagTreeNode;
-  depth: number;
-  seen: Set<string>;
-  usage: Record<string, number>;
-  selectedIds: Set<string>;
-  onSelect: (id: string) => void;
-  onEdit: (t: Tag) => void;
-  onDelete: (id: string) => void;
+  node: TagTreeNode; depth: number; seen: Set<string>;
+  usage: Record<string, number>; selectedIds: Set<string>;
+  onSelect: (id: string) => void; onEdit: (t: Tag) => void; onDelete: (id: string) => void;
 }) {
   const next = new Set(seen);
   next.add(node.tag.id);
@@ -279,11 +253,8 @@ function TreeRow({
   return (
     <>
       <TagRow
-        tag={node.tag}
-        depth={depth}
-        shared={node.shared}
-        usage={usage[node.tag.id] ?? 0}
-        selected={selectedIds.has(node.tag.id)}
+        tag={node.tag} depth={depth} shared={node.shared}
+        usage={usage[node.tag.id] ?? 0} selected={selectedIds.has(node.tag.id)}
         onSelect={() => onSelect(node.tag.id)}
         onEdit={() => onEdit(node.tag)}
         onDelete={() => onDelete(node.tag.id)}
@@ -291,15 +262,9 @@ function TreeRow({
       {!alreadyShown &&
         node.children.map((c) => (
           <TreeRow
-            key={node.tag.id + ">" + c.tag.id}
-            node={c}
-            depth={depth + 1}
-            seen={next}
-            usage={usage}
-            selectedIds={selectedIds}
-            onSelect={onSelect}
-            onEdit={onEdit}
-            onDelete={onDelete}
+            key={node.tag.id + ">" + c.tag.id} node={c} depth={depth + 1}
+            seen={next} usage={usage} selectedIds={selectedIds}
+            onSelect={onSelect} onEdit={onEdit} onDelete={onDelete}
           />
         ))}
     </>
@@ -307,35 +272,15 @@ function TreeRow({
 }
 
 function TagRow({
-  tag,
-  depth,
-  shared,
-  usage,
-  selected,
-  onSelect,
-  onEdit,
-  onDelete,
+  tag, depth, shared, usage, selected, onSelect, onEdit, onDelete,
 }: {
-  tag: Tag;
-  depth: number;
-  shared: boolean;
-  usage: number;
-  selected: boolean;
-  onSelect: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  tag: Tag; depth: number; shared: boolean; usage: number;
+  selected: boolean; onSelect: () => void; onEdit: () => void; onDelete: () => void;
 }) {
   return (
     <li
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect();
-        }
-      }}
+      role="button" tabIndex={0} onClick={onSelect}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(); } }}
       aria-pressed={selected}
       className={[
         "flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors group",
@@ -381,10 +326,7 @@ function TagRow({
         {usage}
       </span>
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onEdit();
-        }}
+        onClick={(e) => { e.stopPropagation(); onEdit(); }}
         aria-label="Edit tag"
         className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400"
         title="Edit"
@@ -392,10 +334,7 @@ function TagRow({
         ✎
       </button>
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
+        onClick={(e) => { e.stopPropagation(); onDelete(); }}
         aria-label="Delete tag"
         className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-950 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400"
         title={usage > 0 ? `Delete (used by ${usage})` : "Delete"}
@@ -407,13 +346,9 @@ function TagRow({
 }
 
 function ParentPicker({
-  tags,
-  selected,
-  onChange,
+  tags, selected, onChange,
 }: {
-  tags: Tag[];
-  selected: string[];
-  onChange: (next: string[]) => void;
+  tags: Tag[]; selected: string[]; onChange: (next: string[]) => void;
 }) {
   const [q, setQ] = useState("");
   const filtered = q
@@ -436,11 +371,8 @@ function ParentPicker({
           const on = selected.includes(t.id);
           return (
             <button
-              type="button"
-              key={t.id}
-              onClick={() =>
-                onChange(on ? selected.filter((x) => x !== t.id) : [...selected, t.id])
-              }
+              type="button" key={t.id}
+              onClick={() => onChange(on ? selected.filter((x) => x !== t.id) : [...selected, t.id])}
               className={[
                 "px-2 py-0.5 rounded-full text-xs border",
                 on

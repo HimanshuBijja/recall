@@ -14,6 +14,7 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
   const [tagFilter, setTagFilter] = useState<string>("");
   const [diffFilter, setDiffFilter] = useState<number>(0);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
@@ -33,18 +34,60 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
     });
   }, [cards, query, tagFilter, diffFilter]);
 
+  const filteredIds = useMemo(() => new Set(filtered.map((c) => c.id)), [filtered]);
+  const allSelected = filtered.length > 0 && filtered.every((c) => selectedIds.has(c.id));
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedIds((s) => {
+        const n = new Set(s);
+        for (const id of filteredIds) n.delete(id);
+        return n;
+      });
+    } else {
+      setSelectedIds((s) => new Set([...s, ...filteredIds]));
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }
+
   async function del(id: string) {
     if (!confirm("Delete this card?")) return;
     setDeleting(id);
     try {
       await api.delete(`/cards/${id}`);
       setCards((cs) => cs.filter((c) => c.id !== id));
+      setSelectedIds((s) => { const n = new Set(s); n.delete(id); return n; });
       toast("success", "Card deleted");
     } catch {
       toast("error", "Failed to delete");
     } finally {
       setDeleting(null);
     }
+  }
+
+  async function deleteSelected() {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    const ok = confirm(`Delete ${ids.length} card${ids.length === 1 ? "" : "s"}?`);
+    if (!ok) return;
+    let count = 0;
+    for (const id of ids) {
+      try {
+        await api.delete(`/cards/${id}`);
+        count++;
+      } catch { /* skip */ }
+    }
+    setCards((cs) => cs.filter((c) => !ids.includes(c.id)));
+    setSelectedIds(new Set());
+    toast("success", `Deleted ${count} card${count === 1 ? "" : "s"}`);
   }
 
   return (
@@ -54,12 +97,38 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
           <h1 className="text-2xl font-bold">Cards</h1>
           <p className="text-sm text-zinc-500">{filtered.length} of {cards.length}</p>
         </div>
-        <Link
-          href="/cards/new"
-          className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm whitespace-nowrap"
-        >
-          + New card
-        </Link>
+        <div className="flex items-center gap-2">
+          {filtered.length > 0 && (
+            <button
+              onClick={toggleSelectAll}
+              className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors whitespace-nowrap"
+            >
+              {allSelected ? "Deselect all" : "Select all"}
+            </button>
+          )}
+          {selectedIds.size > 0 && (
+            <>
+              <button
+                onClick={deleteSelected}
+                className="px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium whitespace-nowrap"
+              >
+                Delete {selectedIds.size}
+              </button>
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm whitespace-nowrap"
+              >
+                Clear
+              </button>
+            </>
+          )}
+          <Link
+            href="/cards/new"
+            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm whitespace-nowrap"
+          >
+            + New card
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
@@ -105,45 +174,68 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
         <p className="text-sm text-zinc-500">No cards match.</p>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
-          {filtered.map((c) => (
-            <li
-              key={c.id}
-              className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900 flex flex-col gap-2"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                  D{c.difficulty}
-                </span>
-                <div className="flex flex-wrap justify-end gap-1">
-                  {c.tags.slice(0, 3).map((tid) => (
+          {filtered.map((c) => {
+            const sel = selectedIds.has(c.id);
+            return (
+              <li
+                key={c.id}
+                onClick={() => toggleSelect(c.id)}
+                className={[
+                  "rounded-xl border p-4 bg-white dark:bg-zinc-900 flex flex-col gap-2 cursor-pointer transition-colors",
+                  sel
+                    ? "border-indigo-400 dark:border-indigo-600 ring-2 ring-indigo-200 dark:ring-indigo-900"
+                    : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700",
+                ].join(" ")}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2">
                     <span
-                      key={tid}
-                      className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300"
+                      className={[
+                        "shrink-0 w-5 h-5 inline-flex items-center justify-center rounded border text-xs",
+                        sel
+                          ? "bg-indigo-600 border-indigo-600 text-white"
+                          : "border-zinc-300 dark:border-zinc-700 text-transparent",
+                      ].join(" ")}
+                      aria-hidden="true"
                     >
-                      {tagById.get(tid)?.name ?? "?"}
+                      ✓
                     </span>
-                  ))}
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                      D{c.difficulty}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap justify-end gap-1">
+                    {c.tags.slice(0, 3).map((tid) => (
+                      <span
+                        key={tid}
+                        className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300"
+                      >
+                        {tagById.get(tid)?.name ?? "?"}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="font-medium text-sm flex-1 line-clamp-3">{c.question}</div>
-              <div className="text-xs text-zinc-500 line-clamp-2">→ {c.answer}</div>
-              <div className="flex justify-end gap-2 pt-1">
-                <Link
-                  href={`/cards/${c.id}/edit`}
-                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
-                >
-                  Edit
-                </Link>
-                <button
-                  onClick={() => del(c.id)}
-                  disabled={deleting === c.id}
-                  className="text-xs text-rose-600 dark:text-rose-400 hover:underline disabled:opacity-50"
-                >
-                  {deleting === c.id ? "Deleting…" : "Delete"}
-                </button>
-              </div>
-            </li>
-          ))}
+                <div className="font-medium text-sm flex-1 line-clamp-3">{c.question}</div>
+                <div className="text-xs text-zinc-500 line-clamp-2">→ {c.answer}</div>
+                <div className="flex justify-end gap-2 pt-1">
+                  <Link
+                    href={`/cards/${c.id}/edit`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                  >
+                    Edit
+                  </Link>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); del(c.id); }}
+                    disabled={deleting === c.id}
+                    className="text-xs text-rose-600 dark:text-rose-400 hover:underline disabled:opacity-50"
+                  >
+                    {deleting === c.id ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

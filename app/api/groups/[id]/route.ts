@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
-import type { Group } from "@/types";
+import type { BinItem, Group } from "@/types";
 
 export async function PUT(
   req: NextRequest,
@@ -26,10 +26,22 @@ export async function DELETE(
 ) {
   const { id } = await ctx.params;
   const groups = readDb<Group>("groups.json");
-  const next = groups.filter((g) => g.id !== id);
-  if (next.length === groups.length) {
+  const deleted = groups.find((g) => g.id === id);
+  if (!deleted) {
     return Response.json({ error: "not found" }, { status: 404 });
   }
-  writeDb("groups.json", next);
+
+  // Soft-delete to bin
+  const bin = readDb<BinItem>("bin.json");
+  bin.push({
+    id: deleted.id,
+    kind: "group",
+    name: deleted.name,
+    data: { ...deleted } as unknown as Record<string, unknown>,
+    deletedAt: new Date().toISOString(),
+  });
+  writeDb("bin.json", bin);
+
+  writeDb("groups.json", groups.filter((g) => g.id !== id));
   return Response.json({ ok: true });
 }

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
-import type { Card } from "@/types";
+import type { BinItem, Card, Group, Tag } from "@/types";
 
 export async function PUT(
   req: NextRequest,
@@ -22,10 +22,62 @@ export async function DELETE(
 ) {
   const { id } = await ctx.params;
   const cards = readDb<Card>("cards.json");
-  const next = cards.filter((c) => c.id !== id);
-  if (next.length === cards.length) {
+  const deleted = cards.find((c) => c.id === id);
+  if (!deleted) {
     return Response.json({ error: "not found" }, { status: 404 });
   }
-  writeDb("cards.json", next);
-  return Response.json({ ok: true });
+
+  const bin = readDb<BinItem>("bin.json");
+
+  // Soft-delete card to bin
+  bin.push({
+    id: deleted.id,
+    kind: "card",
+    name: deleted.question.slice(0, 80),
+    data: { ...deleted } as unknown as Record<string, unknown>,
+    deletedAt: new Date().toISOString(),
+  });
+
+  const remaining = cards.filter((c) => c.id !== id);
+  writeDb("cards.json", remaining);
+
+  // Auto-delete orphan tags: if any tag from the deleted card now has
+  // zero cards referencing it, soft-delete that tag too.
+  const orphanTagIds = deleted.tags.filter(
+    (tid) => !remaining.some((c) => c.tags.includes(tid))
+  );
+
+  if (orphanTagIds.length > 0) {
+    const tags = readDb<Tag>("tags.json");
+    const orphanTags = tags.filter((t) => orphanTagIds.includes(t.id));
+
+    for (const t of orphanTags) {
+      bin.push({
+        id: t.id,
+        kind: "tag",
+        name: t.name,
+        data: { ...t },
+        deletedAt: new Date().toISOString(),
+      });
+    }
+
+    const survivingTags = tags
+      .filter((t) => !orphanTagIds.includes(t.id))
+      .map((t) => ({
+        ...t,
+        parents: t.parents.filter((p) => !orphanTagIds.includes(p)),
+      }));
+    writeDb("tags.json", survivingTags);
+
+    // Strip orphaned tags from groups
+    const groups = readDb<Group>("groups.json");
+    const updatedGroups = groups.map((g) => ({
+      ...g,
+      tagIds: g.tagIds.filter((tid) => !orphanTagIds.includes(tid)),
+    }));
+    writeDb("groups.json", updatedGroups);
+  }
+
+  writeDb("bin.json", bin);
+  return Response.json({ ok: true, orphanedTags: orphanTagIds.length });
 }

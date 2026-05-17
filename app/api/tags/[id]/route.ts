@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
-import type { Card, Group, Tag } from "@/types";
+import type { BinItem, Card, Group, Tag } from "@/types";
 
 export async function PUT(
   req: NextRequest,
@@ -26,12 +26,25 @@ export async function DELETE(
 ) {
   const { id } = await ctx.params;
   const tags = readDb<Tag>("tags.json");
+  const deleted = tags.find((t) => t.id === id);
+  if (!deleted) {
+    return Response.json({ error: "not found" }, { status: 404 });
+  }
+
+  // Soft-delete to bin
+  const bin = readDb<BinItem>("bin.json");
+  bin.push({
+    id: deleted.id,
+    kind: "tag",
+    name: deleted.name,
+    data: { ...deleted },
+    deletedAt: new Date().toISOString(),
+  });
+  writeDb("bin.json", bin);
+
   const next = tags
     .filter((t) => t.id !== id)
     .map((t) => ({ ...t, parents: t.parents.filter((p) => p !== id) }));
-  if (next.length === tags.length) {
-    return Response.json({ error: "not found" }, { status: 404 });
-  }
   writeDb("tags.json", next);
 
   // Strip the deleted tag from any cards referencing it.

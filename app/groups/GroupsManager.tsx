@@ -20,6 +20,7 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
   const [cardCounts, setCardCounts] = useState<Record<string, number>>(initialCounts);
   const [editor, setEditor] = useState<{ mode: "new" } | { mode: "edit"; group: Group } | null>(null);
   const [query, setQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
@@ -31,6 +32,30 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
       return g.tagIds.some((tid) => tagById.get(tid)?.name.toLowerCase().includes(q));
     });
   }, [groups, query, tagById]);
+
+  const visibleIds = useMemo(() => new Set(visibleGroups.map((g) => g.id)), [visibleGroups]);
+  const allSelected = visibleGroups.length > 0 && visibleGroups.every((g) => selectedIds.has(g.id));
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedIds((s) => {
+        const n = new Set(s);
+        for (const id of visibleIds) n.delete(id);
+        return n;
+      });
+    } else {
+      setSelectedIds((s) => new Set([...s, ...visibleIds]));
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }
 
   function launchTest(g: Group) {
     if (g.tagIds.length === 0) {
@@ -50,10 +75,28 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
     try {
       await api.delete(`/groups/${g.id}`);
       setGroups((gs) => gs.filter((x) => x.id !== g.id));
+      setSelectedIds((s) => { const n = new Set(s); n.delete(g.id); return n; });
       toast("success", "Group deleted");
     } catch {
       toast("error", "Failed to delete group");
     }
+  }
+
+  async function deleteSelected() {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    const ok = confirm(`Delete ${ids.length} group${ids.length === 1 ? "" : "s"}?`);
+    if (!ok) return;
+    let count = 0;
+    for (const id of ids) {
+      try {
+        await api.delete(`/groups/${id}`);
+        count++;
+      } catch { /* skip */ }
+    }
+    setGroups((gs) => gs.filter((g) => !ids.includes(g.id)));
+    setSelectedIds(new Set());
+    toast("success", `Deleted ${count} group${count === 1 ? "" : "s"}`);
   }
 
   function onSaved(g: Group, count: number, isNew: boolean) {
@@ -71,12 +114,38 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
           <h1 className="text-2xl font-bold">Groups</h1>
           <p className="text-sm text-zinc-500">Saved tag bundles you can quiz on with one click.</p>
         </div>
-        <button
-          onClick={() => setEditor({ mode: "new" })}
-          className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
-        >
-          + New group
-        </button>
+        <div className="flex items-center gap-2">
+          {visibleGroups.length > 0 && (
+            <button
+              onClick={toggleSelectAll}
+              className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors whitespace-nowrap"
+            >
+              {allSelected ? "Deselect all" : "Select all"}
+            </button>
+          )}
+          {selectedIds.size > 0 && (
+            <>
+              <button
+                onClick={deleteSelected}
+                className="px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium whitespace-nowrap"
+              >
+                Delete {selectedIds.size}
+              </button>
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm whitespace-nowrap"
+              >
+                Clear
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => setEditor({ mode: "new" })}
+            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium whitespace-nowrap"
+          >
+            + New group
+          </button>
+        </div>
       </div>
 
       {groups.length > 0 && (
@@ -111,6 +180,8 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
               group={g}
               tagById={tagById}
               cardCount={cardCounts[g.id] ?? 0}
+              selected={selectedIds.has(g.id)}
+              onToggle={() => toggleSelect(g.id)}
               onTest={() => launchTest(g)}
               onEdit={() => setEditor({ mode: "edit", group: g })}
               onDelete={() => del(g)}
@@ -123,31 +194,44 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
 }
 
 function GroupCard({
-  group,
-  tagById,
-  cardCount,
-  onTest,
-  onEdit,
-  onDelete,
+  group, tagById, cardCount, selected, onToggle, onTest, onEdit, onDelete,
 }: {
-  group: Group;
-  tagById: Map<string, Tag>;
-  cardCount: number;
-  onTest: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  group: Group; tagById: Map<string, Tag>; cardCount: number;
+  selected: boolean; onToggle: () => void;
+  onTest: () => void; onEdit: () => void; onDelete: () => void;
 }) {
   const visibleTags = group.tagIds.slice(0, 6);
   const overflow = group.tagIds.length - visibleTags.length;
   return (
-    <li className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 flex flex-col gap-3">
+    <li
+      onClick={onToggle}
+      className={[
+        "rounded-xl border p-4 bg-white dark:bg-zinc-900 flex flex-col gap-3 cursor-pointer transition-colors",
+        selected
+          ? "border-indigo-400 dark:border-indigo-600 ring-2 ring-indigo-200 dark:ring-indigo-900"
+          : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700",
+      ].join(" ")}
+    >
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3 className="font-semibold truncate">{group.name}</h3>
-          <p className="text-xs text-zinc-500 mt-0.5">
-            {group.tagIds.length} tag{group.tagIds.length === 1 ? "" : "s"} ·{" "}
-            {cardCount} card{cardCount === 1 ? "" : "s"}
-          </p>
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className={[
+              "shrink-0 w-5 h-5 inline-flex items-center justify-center rounded border text-xs",
+              selected
+                ? "bg-indigo-600 border-indigo-600 text-white"
+                : "border-zinc-300 dark:border-zinc-700 text-transparent",
+            ].join(" ")}
+            aria-hidden="true"
+          >
+            ✓
+          </span>
+          <div className="min-w-0">
+            <h3 className="font-semibold truncate">{group.name}</h3>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              {group.tagIds.length} tag{group.tagIds.length === 1 ? "" : "s"} ·{" "}
+              {cardCount} card{cardCount === 1 ? "" : "s"}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -173,7 +257,7 @@ function GroupCard({
 
       <div className="flex gap-2 mt-auto">
         <button
-          onClick={onTest}
+          onClick={(e) => { e.stopPropagation(); onTest(); }}
           disabled={cardCount === 0}
           className="flex-1 px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
           title={cardCount === 0 ? "No cards match this group's tags" : undefined}
@@ -181,13 +265,13 @@ function GroupCard({
           Test →
         </button>
         <button
-          onClick={onEdit}
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
           className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
         >
           Edit
         </button>
         <button
-          onClick={onDelete}
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
           aria-label="Delete group"
           className="px-2 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm text-zinc-500 hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-800"
           title="Delete"
@@ -200,15 +284,10 @@ function GroupCard({
 }
 
 function GroupEditor({
-  tags,
-  initial,
-  onCancel,
-  onSaved,
+  tags, initial, onCancel, onSaved,
 }: {
-  tags: Tag[];
-  initial: Group | null;
-  onCancel: () => void;
-  onSaved: (g: Group, cardCount: number, isNew: boolean) => void;
+  tags: Tag[]; initial: Group | null;
+  onCancel: () => void; onSaved: (g: Group, cardCount: number, isNew: boolean) => void;
 }) {
   const toast = useToast();
   const [name, setName] = useState(initial?.name ?? "");

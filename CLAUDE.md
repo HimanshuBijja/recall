@@ -35,6 +35,8 @@ app/
   tags/                       Tag manager (DAG with parents)
     page.tsx + TagsManager.tsx
   groups/                     Groups manager (GroupsManager.tsx)
+  bin/                        Unified bin (BinManager.tsx)
+    page.tsx + BinManager.tsx
   test/                       Test flow
     setup/   (TestSetup.tsx)
     session/ (TestSession.tsx)
@@ -43,14 +45,18 @@ app/
   import/                     ImportView.tsx (JSON bulk import)
   api/                        Route Handlers
     cards/route.ts                       GET, POST
-    cards/[id]/route.ts                  PUT, DELETE
+    cards/[id]/route.ts                  PUT, DELETE (soft-delete to bin)
     cards/bulk/route.ts                  POST
     tags/route.ts                        GET, POST
-    tags/[id]/route.ts                   PUT, DELETE (cascades from cards)
+    tags/[id]/route.ts                   PUT, DELETE (soft-delete to bin)
+    groups/route.ts                      GET, POST
+    groups/[id]/route.ts                 PUT, DELETE (soft-delete to bin)
+    bin/route.ts                         GET (auto-purges expired)
+    bin/restore/route.ts                 POST (restore from bin)
+    bin/[id]/route.ts                    DELETE (permanent)
+    bin/bulk-delete/route.ts             POST (bulk permanent delete)
     sessions/route.ts                    GET, POST
     sessions/stats/route.ts              GET (per-tag accuracy)
-    groups/route.ts                      GET, POST
-    groups/[id]/route.ts                 PUT, DELETE
 
 components/
   Nav.tsx                     Sticky desktop header + mobile bottom bar
@@ -68,11 +74,12 @@ lib/
   api.ts                      Pre-configured Axios instance
 
 types/
-  index.ts                    Card, Tag, Session, SessionResult, TagStat
+  index.ts                    Card, Tag, BinItem, Session, SessionResult, TagStat
 
 data/
   cards.json
   tags.json
+  bin.json
   sessions.json
   groups.json
 ```
@@ -83,12 +90,13 @@ All shapes are TypeScript interfaces (not classes). IDs are
 `crypto.randomUUID()`.
 
 ```ts
-Card    = { id, question, answer, distractors[3], explanation, hint,
-            difficulty 1-5, tags: TagId[], createdAt: ISO }
-Tag     = { id, name, parents: TagId[] }            // DAG, multi-parent
-Group   = { id, name, tagIds: TagId[], createdAt: ISO }
-Session = { id, tagIds, results[], score 0-100, completedAt: ISO }
+Card       = { id, question, answer, distractors[3], explanation, hint,
+               difficulty 1-5, tags: TagId[], createdAt: ISO }
+Tag        = { id, name, parents: TagId[] }            // DAG, multi-parent
+Group      = { id, name, tagIds: TagId[], createdAt: ISO }
+Session    = { id, tagIds, results[], score 0-100, completedAt: ISO }
 SessionResult = { cardId, correct, timeTaken (ms), confidence 1|2|3 }
+BinItem    = { id, kind: "tag"|"card"|"group", name, data: {…}, deletedAt: ISO }
 ```
 
 ## Persistence: `lib/db.ts`
@@ -115,10 +123,25 @@ utilities in `lib/tags.ts` handle this:
 
 When deleting a tag (`DELETE /api/tags/[id]`):
 
-1. Tag is removed from `tags.json`
-2. Any tag listing it as a parent is updated
-3. Any card referencing it has the ID stripped from `card.tags`
-4. Any group referencing it has the ID stripped from `group.tagIds`
+1. Tag is **soft-deleted** — moved to `bin.json` as a `BinItem`
+2. Tag is removed from `tags.json`
+3. Any tag listing it as a parent is updated
+4. Any card referencing it has the ID stripped from `card.tags`
+5. Any group referencing it has the ID stripped from `group.tagIds`
+
+When deleting a card (`DELETE /api/cards/[id]`):
+
+1. Card is soft-deleted to `bin.json`
+2. **Orphan tag cleanup**: for each tag the card referenced, if no
+   remaining cards use that tag, the tag is also soft-deleted to the bin
+   and stripped from other tags’ parents and from groups.
+
+> **Invariant:** Tags only exist while at least one card uses them.
+> There is no standalone tag creation UI — tags are created exclusively
+> through the CardForm when saving a card (create-on-save semantics).
+> The `/tags` page is for browsing, editing, and deleting tags only.
+
+Cards and groups also soft-delete to the same bin (see Bin section below).
 
 ## Groups (`/groups`)
 
@@ -200,10 +223,52 @@ invent a new one.
 ## Tag manager (`/tags`)
 
 - Same row-click selection as above.
+- **Select All / Deselect All** button in the header — selects all visible
+  tags (respects the current search filter).
 - Selection enables a "Delete N selected" action with a single confirm.
 - Hover reveals inline ✎/✕ icons; the ✕ confirm prompt only appears when
   the tag is actually used by cards (a usage-count badge shows live).
 - Search filter switches the tree view into a flat alphabetical list.
+- **No standalone tag creation form.** Tags are created only through
+  CardForm’s create-on-save flow.
+
+## Cards (`/cards`)
+
+- **Select All / Deselect All** button in the header — selects all visible
+  cards (respects search, tag, and difficulty filters).
+- Click a card to toggle selection (checkbox + ring highlight). Edit and
+  Delete links use `stopPropagation`.
+- Bulk delete sends individual DELETE requests per card (which triggers
+  orphan tag cleanup server-side).
+
+## Groups (`/groups`) — Select All
+
+- **Select All / Deselect All** button in the header — selects all visible
+  groups (respects search filter).
+- Click a group card to toggle selection. Test/Edit/Delete buttons use
+  `stopPropagation`.
+- Bulk delete sends individual DELETE requests per group.
+
+## Bin (`/bin`)
+
+All delete operations across the app (tags, cards, groups) are **soft
+deletes**. Deleted items are moved to `data/bin.json` as `BinItem`
+objects and auto-purged 30 days after `deletedAt`.
+
+- **Storage**: `data/bin.json`. Type: `BinItem` in `types/index.ts`.
+  Each item stores `kind` ("tag"|"card"|"group"), a display `name`,
+  the full original `data` object, and `deletedAt`.
+- **API**:
+  - `GET /api/bin` — returns all non-expired items, auto-purges expired.
+  - `POST /api/bin/restore` with `{ ids }` — moves items back to their
+    original data files based on `kind`.
+  - `DELETE /api/bin/[id]` — permanent delete of a single item.
+  - `POST /api/bin/bulk-delete` with `{ ids }` — permanent bulk delete.
+- **Page**: `/bin` — BinManager.tsx with filter chips (All / Tag / Card /
+  Group), search, Select All, Restore, Delete Forever, Empty Bin.
+  Same row-click selection pattern as the tag manager.
+- **Nav**: Bin appears as the last item in both desktop header and mobile
+  bottom nav.
 
 ## Test flow
 

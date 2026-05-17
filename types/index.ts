@@ -53,3 +53,18 @@ export interface Group {
   tagIds: string[];
   createdAt: string;
 }
+
+/**
+ * A soft-deleted item sitting in the bin. `kind` discriminates what was
+ * deleted; `data` holds the original object verbatim. Auto-purged 30
+ * days after `deletedAt`.
+ */
+export type BinItemKind = "tag" | "card" | "group";
+
+export interface BinItem {
+  id: string;
+  kind: BinItemKind;
+  name: string;
+  data: Record<string, unknown>;
+  deletedAt: string;
+}
