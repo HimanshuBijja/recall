@@ -3,6 +3,8 @@ import { readDb } from "@/lib/db";
 import type { Card, Group, Session, Tag } from "@/types";
 import { TagTree } from "@/components/TagTree";
 import { GroupQuickLaunch } from "@/components/GroupQuickLaunch";
+import { ExportAllButton } from "@/components/ExportAllButton";
+import { exportBundle } from "@/lib/export";
 
 export const dynamic = "force-dynamic";
 
@@ -121,6 +123,19 @@ export default function Home() {
             <GroupQuickLaunch groups={groups} tags={tags} />
           </div>
         )}
+
+        <div className="flex items-center gap-3 pt-2 text-xs text-zinc-500">
+          <span className="uppercase tracking-wider">Tools</span>
+          <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" aria-hidden="true" />
+          <Link
+            href="/import"
+            className="hover:text-zinc-700 dark:hover:text-zinc-300 hover:underline"
+          >
+            Import
+          </Link>
+          <span aria-hidden="true">·</span>
+          <ExportAllButton bundle={exportBundle(cards, tags, groups)} />
+        </div>
 
         {weakTags.length > 0 && (
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-5 bg-white dark:bg-zinc-900">

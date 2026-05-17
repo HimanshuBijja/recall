@@ -6,6 +6,8 @@ import type { Card, Tag } from "@/types";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { Skeleton } from "@/components/Skeleton";
+import { ExportDialog } from "@/components/ExportDialog";
+import { exportCard, exportCards } from "@/lib/export";
 
 export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tags: Tag[] }) {
   const toast = useToast();
@@ -15,6 +17,9 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
   const [diffFilter, setDiffFilter] = useState<number>(0);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [exportPayload, setExportPayload] = useState<{
+    title: string; filename: string; payload: unknown;
+  } | null>(null);
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
@@ -98,29 +103,21 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
           <p className="text-sm text-zinc-500">{filtered.length} of {cards.length}</p>
         </div>
         <div className="flex items-center gap-2">
-          {filtered.length > 0 && (
+          {cards.length > 0 && (
             <button
-              onClick={toggleSelectAll}
-              className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors whitespace-nowrap"
+              onClick={() =>
+                setExportPayload({
+                  title: "Export all cards",
+                  filename: "cards",
+                  payload: exportCards(cards, tags),
+                })
+              }
+              title="Export all cards"
+              aria-label="Export all cards"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 whitespace-nowrap"
             >
-              {allSelected ? "Deselect all" : "Select all"}
+              <DownloadIcon /> <span className="hidden sm:inline">Export</span>
             </button>
-          )}
-          {selectedIds.size > 0 && (
-            <>
-              <button
-                onClick={deleteSelected}
-                className="px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium whitespace-nowrap"
-              >
-                Delete {selectedIds.size}
-              </button>
-              <button
-                onClick={() => setSelectedIds(new Set())}
-                className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm whitespace-nowrap"
-              >
-                Clear
-              </button>
-            </>
           )}
           <Link
             href="/cards/new"
@@ -130,6 +127,60 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
           </Link>
         </div>
       </div>
+
+      {filtered.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={toggleSelectAll}
+            className="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
+          >
+            <span
+              className={[
+                "w-4 h-4 inline-flex items-center justify-center rounded border text-[10px]",
+                allSelected
+                  ? "bg-indigo-600 border-indigo-600 text-white"
+                  : "border-zinc-300 dark:border-zinc-700 text-transparent",
+              ].join(" ")}
+              aria-hidden="true"
+            >
+              ✓
+            </span>
+            {allSelected ? "Deselect all" : "Select all"}
+          </button>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2 ml-auto rounded-lg border border-indigo-200 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-1">
+              <span className="text-xs font-medium text-indigo-700 dark:text-indigo-300 pl-1.5">
+                {selectedIds.size} selected
+              </span>
+              <button
+                onClick={() => {
+                  const picked = cards.filter((c) => selectedIds.has(c.id));
+                  setExportPayload({
+                    title: `Export ${picked.length} card${picked.length === 1 ? "" : "s"}`,
+                    filename: `cards-selection-${picked.length}`,
+                    payload: exportCards(picked, tags),
+                  });
+                }}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950"
+              >
+                <DownloadIcon /> Export
+              </button>
+              <button
+                onClick={deleteSelected}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950"
+              >
+                ✕ Delete
+              </button>
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="px-2 py-1 rounded-md text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
         <input
@@ -218,6 +269,21 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                 <div className="font-medium text-sm flex-1 line-clamp-3">{c.question}</div>
                 <div className="text-xs text-zinc-500 line-clamp-2">→ {c.answer}</div>
                 <div className="flex justify-end gap-2 pt-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExportPayload({
+                        title: "Export card",
+                        filename: `card-${c.id.slice(0, 8)}`,
+                        payload: [exportCard(c, tagById)],
+                      });
+                    }}
+                    aria-label="Export card"
+                    title="Export"
+                    className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+                  >
+                    <DownloadIcon />
+                  </button>
                   <Link
                     href={`/cards/${c.id}/edit`}
                     onClick={(e) => e.stopPropagation()}
@@ -238,6 +304,23 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
           })}
         </ul>
       )}
+      <ExportDialog
+        open={exportPayload !== null}
+        title={exportPayload?.title ?? ""}
+        filename={exportPayload?.filename ?? "export"}
+        payload={exportPayload?.payload ?? []}
+        onClose={() => setExportPayload(null)}
+      />
     </div>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
   );
 }

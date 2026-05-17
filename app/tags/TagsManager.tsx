@@ -5,6 +5,8 @@ import type { Tag } from "@/types";
 import { flattenDag, type TagTreeNode } from "@/lib/tags";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
+import { ExportDialog } from "@/components/ExportDialog";
+import { exportTag, exportTags } from "@/lib/export";
 
 interface Props {
   initialTags: Tag[];
@@ -20,6 +22,10 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editParents, setEditParents] = useState<string[]>([]);
+  const [exportPayload, setExportPayload] = useState<{
+    title: string; filename: string; payload: unknown;
+  } | null>(null);
+  const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t] as const)), [tags]);
 
   const tree = useMemo(() => flattenDag(tags), [tags]);
   const q = query.trim().toLowerCase();
@@ -131,31 +137,77 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
       <section className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-2xl font-bold">Tags</h1>
-          <div className="flex items-center gap-2">
+          {tags.length > 0 && (
+            <button
+              onClick={() =>
+                setExportPayload({
+                  title: "Export all tags",
+                  filename: "tags",
+                  payload: exportTags(tags),
+                })
+              }
+              title="Export all tags"
+              aria-label="Export all tags"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800"
+            >
+              <DownloadIcon /> <span className="hidden sm:inline">Export</span>
+            </button>
+          )}
+        </div>
+
+        {visibleTagIds.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={toggleSelectAll}
-              className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
             >
+              <span
+                className={[
+                  "w-4 h-4 inline-flex items-center justify-center rounded border text-[10px]",
+                  allSelected
+                    ? "bg-indigo-600 border-indigo-600 text-white"
+                    : "border-zinc-300 dark:border-zinc-700 text-transparent",
+                ].join(" ")}
+                aria-hidden="true"
+              >
+                ✓
+              </span>
               {allSelected ? "Deselect all" : "Select all"}
             </button>
             {selectedIds.size > 0 && (
-              <>
+              <div className="flex items-center gap-2 ml-auto rounded-lg border border-indigo-200 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-1">
+                <span className="text-xs font-medium text-indigo-700 dark:text-indigo-300 pl-1.5">
+                  {selectedIds.size} selected
+                </span>
+                <button
+                  onClick={() => {
+                    const picked = tags.filter((t) => selectedIds.has(t.id));
+                    setExportPayload({
+                      title: `Export ${picked.length} tag${picked.length === 1 ? "" : "s"}`,
+                      filename: `tags-selection-${picked.length}`,
+                      payload: picked.map((t) => exportTag(t, tagById)),
+                    });
+                  }}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950"
+                >
+                  <DownloadIcon /> Export
+                </button>
                 <button
                   onClick={deleteSelected}
-                  className="px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950"
                 >
-                  Delete {selectedIds.size} selected
+                  ✕ Delete
                 </button>
                 <button
                   onClick={() => setSelectedIds(new Set())}
-                  className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm"
+                  className="px-2 py-1 rounded-md text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
                 >
                   Clear
                 </button>
-              </>
+              </div>
             )}
           </div>
-        </div>
+        )}
 
         <input
           value={query}
@@ -183,6 +235,11 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
                     onSelect={() => toggleSelect(t.id)}
                     onEdit={() => startEdit(t)}
                     onDelete={() => deleteOne(t.id)}
+                    onExport={() => setExportPayload({
+                      title: `Export tag "${t.name}"`,
+                      filename: `tag-${t.name}`,
+                      payload: [exportTag(t, tagById)],
+                    })}
                   />
                 ))}
               </ul>
@@ -200,6 +257,11 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
                   onSelect={toggleSelect}
                   onEdit={startEdit}
                   onDelete={(id) => deleteOne(id)}
+                  onExport={(t) => setExportPayload({
+                    title: `Export tag "${t.name}"`,
+                    filename: `tag-${t.name}`,
+                    payload: [exportTag(t, tagById)],
+                  })}
                 />
               ))}
             </ul>
@@ -236,16 +298,34 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
           </div>
         )}
       </section>
+      <ExportDialog
+        open={exportPayload !== null}
+        title={exportPayload?.title ?? ""}
+        filename={exportPayload?.filename ?? "export"}
+        payload={exportPayload?.payload ?? []}
+        onClose={() => setExportPayload(null)}
+      />
     </div>
   );
 }
 
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
 function TreeRow({
-  node, depth, seen, usage, selectedIds, onSelect, onEdit, onDelete,
+  node, depth, seen, usage, selectedIds, onSelect, onEdit, onDelete, onExport,
 }: {
   node: TagTreeNode; depth: number; seen: Set<string>;
   usage: Record<string, number>; selectedIds: Set<string>;
   onSelect: (id: string) => void; onEdit: (t: Tag) => void; onDelete: (id: string) => void;
+  onExport: (t: Tag) => void;
 }) {
   const next = new Set(seen);
   next.add(node.tag.id);
@@ -258,13 +338,14 @@ function TreeRow({
         onSelect={() => onSelect(node.tag.id)}
         onEdit={() => onEdit(node.tag)}
         onDelete={() => onDelete(node.tag.id)}
+        onExport={() => onExport(node.tag)}
       />
       {!alreadyShown &&
         node.children.map((c) => (
           <TreeRow
             key={node.tag.id + ">" + c.tag.id} node={c} depth={depth + 1}
             seen={next} usage={usage} selectedIds={selectedIds}
-            onSelect={onSelect} onEdit={onEdit} onDelete={onDelete}
+            onSelect={onSelect} onEdit={onEdit} onDelete={onDelete} onExport={onExport}
           />
         ))}
     </>
@@ -272,10 +353,11 @@ function TreeRow({
 }
 
 function TagRow({
-  tag, depth, shared, usage, selected, onSelect, onEdit, onDelete,
+  tag, depth, shared, usage, selected, onSelect, onEdit, onDelete, onExport,
 }: {
   tag: Tag; depth: number; shared: boolean; usage: number;
   selected: boolean; onSelect: () => void; onEdit: () => void; onDelete: () => void;
+  onExport: () => void;
 }) {
   return (
     <li
@@ -325,6 +407,14 @@ function TagRow({
       >
         {usage}
       </span>
+      <button
+        onClick={(e) => { e.stopPropagation(); onExport(); }}
+        aria-label="Export tag"
+        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-emerald-100 dark:hover:bg-emerald-950 text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400"
+        title="Export"
+      >
+        <DownloadIcon />
+      </button>
       <button
         onClick={(e) => { e.stopPropagation(); onEdit(); }}
         aria-label="Edit tag"

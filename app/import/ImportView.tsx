@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
@@ -15,27 +15,81 @@ interface RawCard {
   tags?: unknown;
 }
 
-interface ValidatedRow {
-  raw: RawCard;
-  errors: string[];
+interface RawTag {
+  name?: unknown;
+  parents?: unknown;
 }
 
-function validate(arr: unknown): ValidatedRow[] {
-  if (!Array.isArray(arr)) return [];
-  return arr.map((row) => {
-    const r = (row ?? {}) as RawCard;
-    const errors: string[] = [];
-    if (typeof r.question !== "string" || !r.question.trim())
-      errors.push("question missing");
-    if (typeof r.answer !== "string" || !r.answer.trim()) errors.push("answer missing");
-    if (!Array.isArray(r.distractors) || r.distractors.length !== 3)
-      errors.push("distractors must be exactly 3");
-    const d = Number(r.difficulty);
-    if (r.difficulty !== undefined && (!Number.isInteger(d) || d < 1 || d > 5))
-      errors.push("difficulty must be 1-5");
-    if (r.tags !== undefined && !Array.isArray(r.tags)) errors.push("tags must be an array");
-    return { raw: r, errors };
-  });
+interface RawGroup {
+  name?: unknown;
+  tags?: unknown;
+  tagIds?: unknown;
+}
+
+interface ValidatedCard { raw: RawCard; errors: string[] }
+interface ValidatedTag { raw: RawTag; errors: string[] }
+interface ValidatedGroup { raw: RawGroup; errors: string[] }
+
+interface ParsedBundle {
+  cards: ValidatedCard[];
+  tags: ValidatedTag[];
+  groups: ValidatedGroup[];
+  shape: "array" | "bundle";
+}
+
+function validateCard(row: unknown): ValidatedCard {
+  const r = (row ?? {}) as RawCard;
+  const errors: string[] = [];
+  if (typeof r.question !== "string" || !r.question.trim())
+    errors.push("question missing");
+  if (typeof r.answer !== "string" || !r.answer.trim()) errors.push("answer missing");
+  if (!Array.isArray(r.distractors) || r.distractors.length !== 3)
+    errors.push("distractors must be exactly 3");
+  const d = Number(r.difficulty);
+  if (r.difficulty !== undefined && (!Number.isInteger(d) || d < 1 || d > 5))
+    errors.push("difficulty must be 1-5");
+  if (r.tags !== undefined && !Array.isArray(r.tags)) errors.push("tags must be an array");
+  return { raw: r, errors };
+}
+
+function validateTag(row: unknown): ValidatedTag {
+  const r = (row ?? {}) as RawTag;
+  const errors: string[] = [];
+  if (typeof r.name !== "string" || !r.name.trim()) errors.push("name missing");
+  if (r.parents !== undefined && !Array.isArray(r.parents))
+    errors.push("parents must be an array");
+  return { raw: r, errors };
+}
+
+function validateGroup(row: unknown): ValidatedGroup {
+  const r = (row ?? {}) as RawGroup;
+  const errors: string[] = [];
+  if (typeof r.name !== "string" || !r.name.trim()) errors.push("name missing");
+  if (r.tags !== undefined && !Array.isArray(r.tags)) errors.push("tags must be an array");
+  if (r.tagIds !== undefined && !Array.isArray(r.tagIds))
+    errors.push("tagIds must be an array");
+  return { raw: r, errors };
+}
+
+function parseBundle(parsed: unknown): ParsedBundle {
+  if (Array.isArray(parsed)) {
+    return {
+      cards: parsed.map(validateCard),
+      tags: [],
+      groups: [],
+      shape: "array",
+    };
+  }
+  if (parsed && typeof parsed === "object") {
+    const obj = parsed as { cards?: unknown; tags?: unknown; groups?: unknown };
+    return {
+      cards: Array.isArray(obj.cards) ? obj.cards.map(validateCard) : [],
+      tags: Array.isArray(obj.tags) ? obj.tags.map(validateTag) : [],
+      groups: Array.isArray(obj.groups) ? obj.groups.map(validateGroup) : [],
+      shape: "bundle",
+    };
+  }
+  return { cards: [], tags: [], groups: [], shape: "array" };
 }
 
 const sample = `[
@@ -78,6 +132,8 @@ export function ImportView() {
   const [text, setText] = useState("");
   const [importing, setImporting] = useState(false);
   const [copied, setCopied] = useState<"schema" | "prompt" | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function copy(kind: "schema" | "prompt") {
     const payload = kind === "schema" ? sample : aiPrompt;
@@ -91,35 +147,78 @@ export function ImportView() {
     }
   }
 
-  const { rows, parseError } = useMemo(() => {
-    if (!text.trim()) return { rows: [] as ValidatedRow[], parseError: null as string | null };
+  async function handleFile(file: File | null | undefined) {
+    if (!file) return;
+    try {
+      const raw = await file.text();
+      setText(raw);
+      toast("success", `Loaded ${file.name}`);
+    } catch {
+      toast("error", "Couldn't read file");
+    }
+  }
+
+  const { bundle, parseError } = useMemo(() => {
+    if (!text.trim()) {
+      return { bundle: null as ParsedBundle | null, parseError: null as string | null };
+    }
     try {
       const parsed = JSON.parse(text);
-      if (!Array.isArray(parsed)) return { rows: [], parseError: "Expected a JSON array." };
-      return { rows: validate(parsed), parseError: null };
+      return { bundle: parseBundle(parsed), parseError: null };
     } catch (e) {
-      return { rows: [], parseError: (e as Error).message };
+      return { bundle: null, parseError: (e as Error).message };
     }
   }, [text]);
 
-  const validRows = rows.filter((r) => r.errors.length === 0);
-  const invalidCount = rows.length - validRows.length;
+  const cardRows = bundle?.cards ?? [];
+  const tagRows = bundle?.tags ?? [];
+  const groupRows = bundle?.groups ?? [];
+
+  const validCards = cardRows.filter((r) => r.errors.length === 0);
+  const validTags = tagRows.filter((r) => r.errors.length === 0);
+  const validGroups = groupRows.filter((r) => r.errors.length === 0);
+
+  const totalValid = validCards.length + validTags.length + validGroups.length;
+  const totalInvalid =
+    cardRows.length - validCards.length +
+    (tagRows.length - validTags.length) +
+    (groupRows.length - validGroups.length);
 
   async function doImport() {
-    if (validRows.length === 0) return;
+    if (totalValid === 0) return;
     setImporting(true);
     try {
-      const payload = validRows.map((r) => ({
-        question: String(r.raw.question),
-        answer: String(r.raw.answer),
-        distractors: (r.raw.distractors as string[]).map(String),
-        explanation: r.raw.explanation ? String(r.raw.explanation) : "",
-        hint: r.raw.hint ? String(r.raw.hint) : "",
-        difficulty: Number(r.raw.difficulty ?? 3),
-        tags: Array.isArray(r.raw.tags) ? (r.raw.tags as unknown[]).map(String) : [],
-      }));
-      const res = await api.post("/cards/bulk", payload);
-      toast("success", `Imported ${res.data.inserted} cards`);
+      const payload = {
+        cards: validCards.map((r) => ({
+          question: String(r.raw.question),
+          answer: String(r.raw.answer),
+          distractors: (r.raw.distractors as string[]).map(String),
+          explanation: r.raw.explanation ? String(r.raw.explanation) : "",
+          hint: r.raw.hint ? String(r.raw.hint) : "",
+          difficulty: Number(r.raw.difficulty ?? 3),
+          tags: Array.isArray(r.raw.tags) ? (r.raw.tags as unknown[]).map(String) : [],
+        })),
+        tags: validTags.map((r) => ({
+          name: String(r.raw.name),
+          parents: Array.isArray(r.raw.parents) ? (r.raw.parents as unknown[]).map(String) : [],
+        })),
+        groups: validGroups.map((r) => ({
+          name: String(r.raw.name),
+          tags: Array.isArray(r.raw.tags) ? (r.raw.tags as unknown[]).map(String) : [],
+          tagIds: Array.isArray(r.raw.tagIds) ? (r.raw.tagIds as unknown[]).map(String) : [],
+        })),
+      };
+      const res = await api.post("/import", payload);
+      const r = res.data as {
+        cards: { inserted: number };
+        tags: { inserted: number; updated: number };
+        groups: { inserted: number; updated: number };
+      };
+      const parts: string[] = [];
+      if (r.cards.inserted) parts.push(`${r.cards.inserted} card${r.cards.inserted === 1 ? "" : "s"}`);
+      if (r.tags.inserted) parts.push(`${r.tags.inserted} tag${r.tags.inserted === 1 ? "" : "s"}`);
+      if (r.groups.inserted) parts.push(`${r.groups.inserted} group${r.groups.inserted === 1 ? "" : "s"}`);
+      toast("success", parts.length ? `Imported ${parts.join(", ")}` : "Nothing to import");
       router.push("/cards");
       router.refresh();
     } catch {
@@ -132,10 +231,11 @@ export function ImportView() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold">Import cards</h1>
+        <h1 className="text-2xl font-bold">Import</h1>
         <p className="text-sm text-zinc-500 mt-1">
-          Paste a JSON array of cards. Tags are matched by name (case-insensitive) and
-          created if they don&apos;t exist.
+          Paste a JSON array of cards, or a full bundle <code>{`{cards, tags, groups}`}</code>{" "}
+          exported from this app. Tags are matched by name (case-insensitive) and created if
+          they don&apos;t exist.
         </p>
       </div>
 
@@ -172,7 +272,67 @@ export function ImportView() {
 {sample}
         </pre>
       </div>
-      
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        onChange={(e) => {
+          handleFile(e.target.files?.[0]);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+        }}
+        className="hidden"
+      />
+
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          handleFile(e.dataTransfer.files?.[0]);
+        }}
+        className={[
+          "rounded-xl border-2 border-dashed px-4 py-6 sm:py-8 text-center cursor-pointer transition-colors",
+          dragOver
+            ? "border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/40"
+            : "border-zinc-300 dark:border-zinc-700 hover:border-indigo-400 hover:bg-zinc-50/60 dark:hover:bg-zinc-900/60",
+        ].join(" ")}
+      >
+        <div className="mx-auto w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-2 text-zinc-500">
+          <UploadIcon />
+        </div>
+        <div className="text-sm font-medium">
+          {dragOver ? "Drop to load" : "Drop a .json file, or click to browse"}
+        </div>
+        <div className="text-xs text-zinc-500 mt-1">
+          Accepts a card array or a full <code className="font-mono">{`{cards, tags, groups}`}</code> bundle
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 text-xs text-zinc-500">
+        <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+        <span className="uppercase tracking-wider">or paste below</span>
+        <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+        {text && (
+          <button
+            type="button"
+            onClick={() => setText("")}
+            className="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:underline"
+          >
+            Clear
+          </button>
+        )}
+      </div>
 
       <textarea
         value={text}
@@ -181,13 +341,22 @@ export function ImportView() {
         rows={12}
         className="w-full font-mono text-xs px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
       />
+
       <button
-            onClick={doImport}
-            disabled={importing || validRows.length === 0}
-            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium disabled:opacity-50"
-          >
-            {importing ? "Importing…" : `Import ${validRows.length} cards`}
-          </button>
+        onClick={doImport}
+        disabled={importing || totalValid === 0}
+        className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium disabled:opacity-50"
+      >
+        {importing
+          ? "Importing…"
+          : totalValid === 0
+          ? "Nothing to import"
+          : `Import ${[
+              validCards.length && `${validCards.length} card${validCards.length === 1 ? "" : "s"}`,
+              validTags.length && `${validTags.length} tag${validTags.length === 1 ? "" : "s"}`,
+              validGroups.length && `${validGroups.length} group${validGroups.length === 1 ? "" : "s"}`,
+            ].filter(Boolean).join(", ")}`}
+      </button>
 
       {parseError && (
         <div className="rounded-lg border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-sm text-rose-700 dark:text-rose-300">
@@ -195,50 +364,141 @@ export function ImportView() {
         </div>
       )}
 
-      {rows.length > 0 && (
-        <>
-          <div className="text-sm text-zinc-500">
-            {validRows.length} valid · {invalidCount} invalid
-          </div>
-          <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-            <table className="w-full text-sm">
-              <thead className="bg-zinc-50 dark:bg-zinc-900 text-xs uppercase tracking-wide text-zinc-500">
-                <tr>
-                  <th className="px-3 py-2 text-left">#</th>
-                  <th className="px-3 py-2 text-left">Question</th>
-                  <th className="px-3 py-2 text-left">Answer</th>
-                  <th className="px-3 py-2 text-left">Tags</th>
-                  <th className="px-3 py-2 text-left">Errors</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r, i) => (
-                  <tr
-                    key={i}
-                    className={[
-                      "border-t border-zinc-200 dark:border-zinc-800",
-                      r.errors.length > 0 && "bg-rose-50/60 dark:bg-rose-950/30",
-                    ].filter(Boolean).join(" ")}
-                  >
-                    <td className="px-3 py-2 text-zinc-500">{i + 1}</td>
-                    <td className="px-3 py-2">{String(r.raw.question ?? "—").slice(0, 60)}</td>
-                    <td className="px-3 py-2">{String(r.raw.answer ?? "—").slice(0, 40)}</td>
-                    <td className="px-3 py-2 text-xs text-zinc-500">
-                      {Array.isArray(r.raw.tags) ? (r.raw.tags as string[]).join(", ") : ""}
-                    </td>
-                    <td className="px-3 py-2 text-xs text-rose-700 dark:text-rose-300">
-                      {r.errors.join(", ")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {bundle && (cardRows.length + tagRows.length + groupRows.length > 0) && (
+        <div className="text-sm text-zinc-500">
+          {bundle.shape === "bundle" ? "Bundle detected · " : ""}
+          {totalValid} valid · {totalInvalid} invalid
+        </div>
+      )}
 
-          
-        </>
+      {cardRows.length > 0 && (
+        <Section title="Cards">
+          <table className="w-full text-sm">
+            <thead className="bg-zinc-50 dark:bg-zinc-900 text-xs uppercase tracking-wide text-zinc-500">
+              <tr>
+                <th className="px-3 py-2 text-left">#</th>
+                <th className="px-3 py-2 text-left">Question</th>
+                <th className="px-3 py-2 text-left">Answer</th>
+                <th className="px-3 py-2 text-left">Tags</th>
+                <th className="px-3 py-2 text-left">Errors</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cardRows.map((r, i) => (
+                <tr
+                  key={i}
+                  className={[
+                    "border-t border-zinc-200 dark:border-zinc-800",
+                    r.errors.length > 0 && "bg-rose-50/60 dark:bg-rose-950/30",
+                  ].filter(Boolean).join(" ")}
+                >
+                  <td className="px-3 py-2 text-zinc-500">{i + 1}</td>
+                  <td className="px-3 py-2">{String(r.raw.question ?? "—").slice(0, 60)}</td>
+                  <td className="px-3 py-2">{String(r.raw.answer ?? "—").slice(0, 40)}</td>
+                  <td className="px-3 py-2 text-xs text-zinc-500">
+                    {Array.isArray(r.raw.tags) ? (r.raw.tags as string[]).join(", ") : ""}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-rose-700 dark:text-rose-300">
+                    {r.errors.join(", ")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Section>
+      )}
+
+      {tagRows.length > 0 && (
+        <Section title="Tags">
+          <table className="w-full text-sm">
+            <thead className="bg-zinc-50 dark:bg-zinc-900 text-xs uppercase tracking-wide text-zinc-500">
+              <tr>
+                <th className="px-3 py-2 text-left">#</th>
+                <th className="px-3 py-2 text-left">Name</th>
+                <th className="px-3 py-2 text-left">Parents</th>
+                <th className="px-3 py-2 text-left">Errors</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tagRows.map((r, i) => (
+                <tr
+                  key={i}
+                  className={[
+                    "border-t border-zinc-200 dark:border-zinc-800",
+                    r.errors.length > 0 && "bg-rose-50/60 dark:bg-rose-950/30",
+                  ].filter(Boolean).join(" ")}
+                >
+                  <td className="px-3 py-2 text-zinc-500">{i + 1}</td>
+                  <td className="px-3 py-2">{String(r.raw.name ?? "—").slice(0, 60)}</td>
+                  <td className="px-3 py-2 text-xs text-zinc-500">
+                    {Array.isArray(r.raw.parents) ? (r.raw.parents as string[]).join(", ") : ""}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-rose-700 dark:text-rose-300">
+                    {r.errors.join(", ")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Section>
+      )}
+
+      {groupRows.length > 0 && (
+        <Section title="Groups">
+          <table className="w-full text-sm">
+            <thead className="bg-zinc-50 dark:bg-zinc-900 text-xs uppercase tracking-wide text-zinc-500">
+              <tr>
+                <th className="px-3 py-2 text-left">#</th>
+                <th className="px-3 py-2 text-left">Name</th>
+                <th className="px-3 py-2 text-left">Tags</th>
+                <th className="px-3 py-2 text-left">Errors</th>
+              </tr>
+            </thead>
+            <tbody>
+              {groupRows.map((r, i) => (
+                <tr
+                  key={i}
+                  className={[
+                    "border-t border-zinc-200 dark:border-zinc-800",
+                    r.errors.length > 0 && "bg-rose-50/60 dark:bg-rose-950/30",
+                  ].filter(Boolean).join(" ")}
+                >
+                  <td className="px-3 py-2 text-zinc-500">{i + 1}</td>
+                  <td className="px-3 py-2">{String(r.raw.name ?? "—").slice(0, 60)}</td>
+                  <td className="px-3 py-2 text-xs text-zinc-500">
+                    {Array.isArray(r.raw.tags) ? (r.raw.tags as string[]).join(", ") : ""}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-rose-700 dark:text-rose-300">
+                    {r.errors.join(", ")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Section>
       )}
     </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">{title}</h2>
+      <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function UploadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
   );
 }
 

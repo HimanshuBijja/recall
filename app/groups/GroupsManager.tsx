@@ -6,6 +6,8 @@ import type { Group, Tag } from "@/types";
 import { TagTree } from "@/components/TagTree";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
+import { ExportDialog } from "@/components/ExportDialog";
+import { exportGroup, exportGroups } from "@/lib/export";
 
 interface Props {
   initialGroups: Group[];
@@ -21,6 +23,9 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
   const [editor, setEditor] = useState<{ mode: "new" } | { mode: "edit"; group: Group } | null>(null);
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [exportPayload, setExportPayload] = useState<{
+    title: string; filename: string; payload: unknown;
+  } | null>(null);
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
@@ -115,29 +120,21 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
           <p className="text-sm text-zinc-500">Saved tag bundles you can quiz on with one click.</p>
         </div>
         <div className="flex items-center gap-2">
-          {visibleGroups.length > 0 && (
+          {groups.length > 0 && (
             <button
-              onClick={toggleSelectAll}
-              className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors whitespace-nowrap"
+              onClick={() =>
+                setExportPayload({
+                  title: "Export all groups",
+                  filename: "groups",
+                  payload: exportGroups(groups, tags),
+                })
+              }
+              title="Export all groups"
+              aria-label="Export all groups"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 whitespace-nowrap"
             >
-              {allSelected ? "Deselect all" : "Select all"}
+              <DownloadIcon /> <span className="hidden sm:inline">Export</span>
             </button>
-          )}
-          {selectedIds.size > 0 && (
-            <>
-              <button
-                onClick={deleteSelected}
-                className="px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium whitespace-nowrap"
-              >
-                Delete {selectedIds.size}
-              </button>
-              <button
-                onClick={() => setSelectedIds(new Set())}
-                className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm whitespace-nowrap"
-              >
-                Clear
-              </button>
-            </>
           )}
           <button
             onClick={() => setEditor({ mode: "new" })}
@@ -147,6 +144,60 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
           </button>
         </div>
       </div>
+
+      {visibleGroups.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={toggleSelectAll}
+            className="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
+          >
+            <span
+              className={[
+                "w-4 h-4 inline-flex items-center justify-center rounded border text-[10px]",
+                allSelected
+                  ? "bg-indigo-600 border-indigo-600 text-white"
+                  : "border-zinc-300 dark:border-zinc-700 text-transparent",
+              ].join(" ")}
+              aria-hidden="true"
+            >
+              ✓
+            </span>
+            {allSelected ? "Deselect all" : "Select all"}
+          </button>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2 ml-auto rounded-lg border border-indigo-200 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-1">
+              <span className="text-xs font-medium text-indigo-700 dark:text-indigo-300 pl-1.5">
+                {selectedIds.size} selected
+              </span>
+              <button
+                onClick={() => {
+                  const picked = groups.filter((g) => selectedIds.has(g.id));
+                  setExportPayload({
+                    title: `Export ${picked.length} group${picked.length === 1 ? "" : "s"}`,
+                    filename: `groups-selection-${picked.length}`,
+                    payload: picked.map((g) => exportGroup(g, tagById)),
+                  });
+                }}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950"
+              >
+                <DownloadIcon /> Export
+              </button>
+              <button
+                onClick={deleteSelected}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950"
+              >
+                ✕ Delete
+              </button>
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="px-2 py-1 rounded-md text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {groups.length > 0 && (
         <input
@@ -185,20 +236,43 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
               onTest={() => launchTest(g)}
               onEdit={() => setEditor({ mode: "edit", group: g })}
               onDelete={() => del(g)}
+              onExport={() => setExportPayload({
+                title: `Export group "${g.name}"`,
+                filename: `group-${g.name}`,
+                payload: [exportGroup(g, tagById)],
+              })}
             />
           ))}
         </ul>
       )}
+      <ExportDialog
+        open={exportPayload !== null}
+        title={exportPayload?.title ?? ""}
+        filename={exportPayload?.filename ?? "export"}
+        payload={exportPayload?.payload ?? []}
+        onClose={() => setExportPayload(null)}
+      />
     </div>
   );
 }
 
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
 function GroupCard({
-  group, tagById, cardCount, selected, onToggle, onTest, onEdit, onDelete,
+  group, tagById, cardCount, selected, onToggle, onTest, onEdit, onDelete, onExport,
 }: {
   group: Group; tagById: Map<string, Tag>; cardCount: number;
   selected: boolean; onToggle: () => void;
   onTest: () => void; onEdit: () => void; onDelete: () => void;
+  onExport: () => void;
 }) {
   const visibleTags = group.tagIds.slice(0, 6);
   const overflow = group.tagIds.length - visibleTags.length;
@@ -263,6 +337,14 @@ function GroupCard({
           title={cardCount === 0 ? "No cards match this group's tags" : undefined}
         >
           Test →
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onExport(); }}
+          aria-label="Export group"
+          title="Export"
+          className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:text-emerald-600 hover:border-emerald-300 dark:hover:border-emerald-800"
+        >
+          <DownloadIcon />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(); }}
