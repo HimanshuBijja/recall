@@ -128,6 +128,7 @@ When deleting a tag (`DELETE /api/tags/[id]`):
 3. Any tag listing it as a parent is updated
 4. Any card referencing it has the ID stripped from `card.tags`
 5. Any group referencing it has the ID stripped from `group.tagIds`
+6. **Empty group cleanup**: any group left with zero tags is soft-deleted to the bin
 
 When deleting a card (`DELETE /api/cards/[id]`):
 
@@ -135,13 +136,16 @@ When deleting a card (`DELETE /api/cards/[id]`):
 2. **Orphan tag cleanup**: for each tag the card referenced, if no
    remaining cards use that tag, the tag is also soft-deleted to the bin
    and stripped from other tags’ parents and from groups.
+3. **Empty group cleanup**: any group left with zero tags after orphan
+   tag removal is also soft-deleted to the bin.
 
 > **Invariant:** Tags only exist while at least one card uses them.
+> Groups only exist while they contain at least one tag.
 > There is no standalone tag creation UI — tags are created exclusively
 > through the CardForm when saving a card (create-on-save semantics).
 > The `/tags` page is for browsing, editing, and deleting tags only.
 
-Cards and groups also soft-delete to the same bin (see Bin section below).
+Cards, tags, and groups all soft-delete to the same bin (see Bin section below).
 
 ## Groups (`/groups`)
 

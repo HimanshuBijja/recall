@@ -9825,5 +9825,85 @@
       "createdAt": "2026-05-15T20:41:28.164Z"
     },
     "deletedAt": "2026-05-17T16:01:11.371Z"
+  },
+  {
+    "id": "c650270e-936b-48f5-9c65-2040e30112a1",
+    "kind": "card",
+    "name": "1",
+    "data": {
+      "id": "c650270e-936b-48f5-9c65-2040e30112a1",
+      "question": "1",
+      "answer": "1",
+      "distractors": [
+        "1",
+        "1",
+        "1"
+      ],
+      "explanation": "1",
+      "hint": "1",
+      "difficulty": 3,
+      "tags": [
+        "135049c0-33a6-4ad0-a907-e035c57d0d2e"
+      ],
+      "createdAt": "2026-05-17T16:00:50.640Z"
+    },
+    "deletedAt": "2026-05-17T16:08:46.570Z"
+  },
+  {
+    "id": "135049c0-33a6-4ad0-a907-e035c57d0d2e",
+    "kind": "tag",
+    "name": "1",
+    "data": {
+      "id": "135049c0-33a6-4ad0-a907-e035c57d0d2e",
+      "name": "1",
+      "parents": []
+    },
+    "deletedAt": "2026-05-17T16:08:46.570Z"
+  },
+  {
+    "id": "5e098f80-f7e1-47e7-9639-2e018bede5db",
+    "kind": "group",
+    "name": "1",
+    "data": {
+      "id": "5e098f80-f7e1-47e7-9639-2e018bede5db",
+      "name": "1",
+      "tagIds": [],
+      "createdAt": "2026-05-17T16:08:41.825Z"
+    },
+    "deletedAt": "2026-05-17T16:08:46.570Z"
+  },
+  {
+    "id": "05ba3f5a-a57a-44ac-81b4-d01e3664e160",
+    "kind": "tag",
+    "name": "2",
+    "data": {
+      "id": "05ba3f5a-a57a-44ac-81b4-d01e3664e160",
+      "name": "2",
+      "parents": []
+    },
+    "deletedAt": "2026-05-17T16:09:02.537Z"
+  },
+  {
+    "id": "0f9836e0-e32b-4c6d-be2e-0bfc67a81fd7",
+    "kind": "tag",
+    "name": "22",
+    "data": {
+      "id": "0f9836e0-e32b-4c6d-be2e-0bfc67a81fd7",
+      "name": "22",
+      "parents": []
+    },
+    "deletedAt": "2026-05-17T16:09:02.560Z"
+  },
+  {
+    "id": "a3201c10-daa2-4201-b0a5-8ccdd072390a",
+    "kind": "group",
+    "name": "3",
+    "data": {
+      "id": "a3201c10-daa2-4201-b0a5-8ccdd072390a",
+      "name": "3",
+      "tagIds": [],
+      "createdAt": "2026-05-17T16:08:29.176Z"
+    },
+    "deletedAt": "2026-05-17T16:09:02.560Z"
   }
 ]

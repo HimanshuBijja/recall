@@ -1,19 +1,17 @@
 [
   {
-    "id": "c650270e-936b-48f5-9c65-2040e30112a1",
-    "question": "1",
-    "answer": "1",
+    "id": "743fe062-7aca-4cae-a7db-d8ff27474391",
+    "question": "2",
+    "answer": "2",
     "distractors": [
-      "1",
-      "1",
-      "1"
+      "2",
+      "2",
+      "2"
     ],
-    "explanation": "1",
-    "hint": "1",
+    "explanation": "2",
+    "hint": "2",
     "difficulty": 3,
-    "tags": [
-      "135049c0-33a6-4ad0-a907-e035c57d0d2e"
-    ],
-    "createdAt": "2026-05-17T16:00:50.640Z"
+    "tags": [],
+    "createdAt": "2026-05-17T16:08:16.266Z"
   }
 ]

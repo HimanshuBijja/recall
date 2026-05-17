@@ -32,15 +32,15 @@ export async function DELETE(
   }
 
   // Soft-delete to bin
+  const now = new Date().toISOString();
   const bin = readDb<BinItem>("bin.json");
   bin.push({
     id: deleted.id,
     kind: "tag",
     name: deleted.name,
     data: { ...deleted },
-    deletedAt: new Date().toISOString(),
+    deletedAt: now,
   });
-  writeDb("bin.json", bin);
 
   const next = tags
     .filter((t) => t.id !== id)
@@ -54,12 +54,23 @@ export async function DELETE(
   );
   writeDb("cards.json", updated);
 
-  // ...and from any groups referencing it.
+  // Strip from groups; auto-delete groups left with zero tags.
   const groups = readDb<Group>("groups.json");
   const updatedGroups = groups.map((g) =>
     g.tagIds.includes(id) ? { ...g, tagIds: g.tagIds.filter((t) => t !== id) } : g
   );
-  writeDb("groups.json", updatedGroups);
+  const emptyGroups = updatedGroups.filter((g) => g.tagIds.length === 0);
+  for (const g of emptyGroups) {
+    bin.push({
+      id: g.id,
+      kind: "group",
+      name: g.name,
+      data: { ...g } as unknown as Record<string, unknown>,
+      deletedAt: now,
+    });
+  }
+  writeDb("groups.json", updatedGroups.filter((g) => g.tagIds.length > 0));
+  writeDb("bin.json", bin);
 
   return Response.json({ ok: true });
 }
