@@ -6,8 +6,6 @@ import type { Group, Tag } from "@/types";
 import { TagTree } from "@/components/TagTree";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
-import { ExportDialog } from "@/components/ExportDialog";
-import { exportGroup, exportGroups } from "@/lib/export";
 
 interface Props {
   initialGroups: Group[];
@@ -23,9 +21,6 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
   const [editor, setEditor] = useState<{ mode: "new" } | { mode: "edit"; group: Group } | null>(null);
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [exportPayload, setExportPayload] = useState<{
-    title: string; filename: string; payload: unknown;
-  } | null>(null);
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
@@ -131,19 +126,6 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
           {selectedIds.size > 0 && (
             <>
               <button
-                onClick={() => {
-                  const picked = groups.filter((g) => selectedIds.has(g.id));
-                  setExportPayload({
-                    title: `Export ${picked.length} group${picked.length === 1 ? "" : "s"}`,
-                    filename: `groups-selection-${picked.length}`,
-                    payload: picked.map((g) => exportGroup(g, tagById)),
-                  });
-                }}
-                className="px-3 py-1.5 rounded-md border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-sm font-medium hover:bg-emerald-50 dark:hover:bg-emerald-950/40 whitespace-nowrap"
-              >
-                Export {selectedIds.size}
-              </button>
-              <button
                 onClick={deleteSelected}
                 className="px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium whitespace-nowrap"
               >
@@ -156,20 +138,6 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
                 Clear
               </button>
             </>
-          )}
-          {groups.length > 0 && selectedIds.size === 0 && (
-            <button
-              onClick={() =>
-                setExportPayload({
-                  title: "Export all groups",
-                  filename: "groups",
-                  payload: exportGroups(groups, tags),
-                })
-              }
-              className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 whitespace-nowrap"
-            >
-              Export all
-            </button>
           )}
           <button
             onClick={() => setEditor({ mode: "new" })}
@@ -217,33 +185,20 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
               onTest={() => launchTest(g)}
               onEdit={() => setEditor({ mode: "edit", group: g })}
               onDelete={() => del(g)}
-              onExport={() => setExportPayload({
-                title: `Export group "${g.name}"`,
-                filename: `group-${g.name}`,
-                payload: [exportGroup(g, tagById)],
-              })}
             />
           ))}
         </ul>
       )}
-      <ExportDialog
-        open={exportPayload !== null}
-        title={exportPayload?.title ?? ""}
-        filename={exportPayload?.filename ?? "export"}
-        payload={exportPayload?.payload ?? []}
-        onClose={() => setExportPayload(null)}
-      />
     </div>
   );
 }
 
 function GroupCard({
-  group, tagById, cardCount, selected, onToggle, onTest, onEdit, onDelete, onExport,
+  group, tagById, cardCount, selected, onToggle, onTest, onEdit, onDelete,
 }: {
   group: Group; tagById: Map<string, Tag>; cardCount: number;
   selected: boolean; onToggle: () => void;
   onTest: () => void; onEdit: () => void; onDelete: () => void;
-  onExport: () => void;
 }) {
   const visibleTags = group.tagIds.slice(0, 6);
   const overflow = group.tagIds.length - visibleTags.length;
@@ -308,14 +263,6 @@ function GroupCard({
           title={cardCount === 0 ? "No cards match this group's tags" : undefined}
         >
           Test →
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onExport(); }}
-          aria-label="Export group"
-          title="Export"
-          className="px-2 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm text-zinc-500 hover:text-emerald-600 hover:border-emerald-300 dark:hover:border-emerald-800"
-        >
-          ⤓
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(); }}

@@ -6,8 +6,6 @@ import type { Card, Tag } from "@/types";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { Skeleton } from "@/components/Skeleton";
-import { ExportDialog } from "@/components/ExportDialog";
-import { exportCard, exportCards } from "@/lib/export";
 
 export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tags: Tag[] }) {
   const toast = useToast();
@@ -17,9 +15,6 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
   const [diffFilter, setDiffFilter] = useState<number>(0);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [exportPayload, setExportPayload] = useState<{
-    title: string; filename: string; payload: unknown;
-  } | null>(null);
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
@@ -114,19 +109,6 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
           {selectedIds.size > 0 && (
             <>
               <button
-                onClick={() => {
-                  const picked = cards.filter((c) => selectedIds.has(c.id));
-                  setExportPayload({
-                    title: `Export ${picked.length} card${picked.length === 1 ? "" : "s"}`,
-                    filename: `cards-selection-${picked.length}`,
-                    payload: exportCards(picked, tags),
-                  });
-                }}
-                className="px-3 py-1.5 rounded-md border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-sm font-medium hover:bg-emerald-50 dark:hover:bg-emerald-950/40 whitespace-nowrap"
-              >
-                Export {selectedIds.size}
-              </button>
-              <button
                 onClick={deleteSelected}
                 className="px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium whitespace-nowrap"
               >
@@ -139,20 +121,6 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                 Clear
               </button>
             </>
-          )}
-          {cards.length > 0 && selectedIds.size === 0 && (
-            <button
-              onClick={() =>
-                setExportPayload({
-                  title: "Export all cards",
-                  filename: "cards",
-                  payload: exportCards(cards, tags),
-                })
-              }
-              className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 whitespace-nowrap"
-            >
-              Export all
-            </button>
           )}
           <Link
             href="/cards/new"
@@ -250,19 +218,6 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                 <div className="font-medium text-sm flex-1 line-clamp-3">{c.question}</div>
                 <div className="text-xs text-zinc-500 line-clamp-2">→ {c.answer}</div>
                 <div className="flex justify-end gap-2 pt-1">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExportPayload({
-                        title: "Export card",
-                        filename: `card-${c.id.slice(0, 8)}`,
-                        payload: [exportCard(c, tagById)],
-                      });
-                    }}
-                    className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
-                  >
-                    Export
-                  </button>
                   <Link
                     href={`/cards/${c.id}/edit`}
                     onClick={(e) => e.stopPropagation()}
@@ -283,13 +238,6 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
           })}
         </ul>
       )}
-      <ExportDialog
-        open={exportPayload !== null}
-        title={exportPayload?.title ?? ""}
-        filename={exportPayload?.filename ?? "export"}
-        payload={exportPayload?.payload ?? []}
-        onClose={() => setExportPayload(null)}
-      />
     </div>
   );
 }
