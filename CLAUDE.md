@@ -2,10 +2,15 @@
 
 # Recall — flashcard revision app
 
-Local-first, single-user MCQ flashcard app for spaced revision. Built on
+Local-first, single-user flashcard app for spaced revision. Built on
 Next.js 16 App Router + React 19 + Tailwind v4. Data lives in flat JSON
 files at `/data` so the whole thing works offline and ships to Vercel as
 a read-only snapshot.
+
+Two card kinds are supported: classic **MCQ** (single answer + 3 distractors)
+and **tf-sort** (a set of statements the learner sorts into True/False bins,
+scored all-or-nothing). Most of the app is kind-agnostic — only the form,
+session, and result views branch on `card.kind`.
 
 ## Stack
 
@@ -90,7 +95,10 @@ All shapes are TypeScript interfaces (not classes). IDs are
 `crypto.randomUUID()`.
 
 ```ts
-Card       = { id, question, answer, distractors[3], explanation, hint,
+Card       = { id, kind?: "mcq"|"tf-sort" (default "mcq"),
+               question, answer, distractors[3],
+               statements?: { text, isTrue }[],   // tf-sort only, ≥2 entries
+               explanation, hint,
                difficulty 1-5, tags: TagId[], createdAt: ISO }
 Tag        = { id, name, parents: TagId[] }            // DAG, multi-parent
 Group      = { id, name, tagIds: TagId[], createdAt: ISO }
@@ -98,6 +106,14 @@ Session    = { id, tagIds, results[], score 0-100, completedAt: ISO }
 SessionResult = { cardId, correct, timeTaken (ms), confidence 1|2|3 }
 BinItem    = { id, kind: "tag"|"card"|"group", name, data: {…}, deletedAt: ISO }
 ```
+
+- For `kind: "mcq"` (or missing/undefined — legacy data): `answer` and
+  exactly 3 `distractors` are required; `statements` is unused.
+- For `kind: "tf-sort"`: `statements` (≥ 2 entries) is required; `answer`
+  is empty and `distractors` is `[]`. Scoring is **all-or-nothing** — the
+  card's `SessionResult.correct` is `true` only when every statement
+  matches its `isTrue`. There is no per-statement breakdown in the
+  session record by design (keeps the existing analytics math intact).
 
 ## Persistence: `lib/db.ts`
 
@@ -170,6 +186,29 @@ which is the same URL contract any other launch point uses.
   the same query-param contract — there is no group-aware endpoint.
 - Tag deletion cascades into `groups.json` (see above). Groups never
   hold orphaned tag IDs after a tag delete.
+
+## Card kinds (CardForm)
+
+`components/CardForm.tsx` opens with a small segmented control:
+**Multiple choice / True-False sort**. Switching kinds swaps the body
+fields entirely:
+
+- **MCQ** shows: Question · Correct answer · 3 Distractors (validated as
+  exactly 3 filled).
+- **tf-sort** shows: Question · a list of statement rows, each with a
+  `T`/`F` pill toggle, a text input, and a remove button. There's an
+  `+ Add statement` button; the form enforces a minimum of 2 filled
+  statements (matching the API).
+
+The submit handler builds the payload based on `kind`: MCQ-only fields
+are empty/zero-length when kind is `tf-sort`, and vice versa. This is
+the contract `app/api/cards/*` validates against, so don't loosen it
+client-side without updating the route handlers too.
+
+> **Why no per-statement edit mode in `/test/session`:** the session is
+> for *answering*, not authoring. Statement edits happen in CardForm
+> (or in the import preview — see below). If a learner spots a typo
+> mid-test there's an "edit card →" link on the result page.
 
 ## Tag selection UX (CardForm)
 
@@ -288,13 +327,39 @@ objects and auto-purged 30 days after `deletedAt`.
    `{ session, cards, tags }` is stashed in `sessionStorage` under
    `lastSession` and the user is sent to `/test/result`.
 
-**Keyboard shortcuts during a session:**
+**Keyboard shortcuts during a session — MCQ card:**
 - `1–4` pick the option in that position
 - `H` toggle hint
 - `S` skip (counts as wrong, low confidence)
 - After answering: `1/2/3` set confidence and advance
 
+**Keyboard shortcuts during a session — tf-sort card:**
+The session tracks a `tfFocus` cursor (display index into the shuffled
+statement order). The currently-focused row gets an indigo ring.
+- `T` / `1` / `←` assign True to the focused statement and advance focus
+- `F` / `2` / `→` assign False and advance focus
+- `↑` / `↓` (or `k` / `j`) move focus without assigning
+- `Enter` submit (only when every statement has been assigned)
+- `S` submit anyway (matches MCQ's skip semantics)
+- `H` toggle hint
+- After submitting: `1/2/3` set confidence and advance
+
+Clicking a statement row also moves focus there, so mouse + keyboard
+can be mixed freely. A post-submit wrong-bin pill renders **grey**
+(zinc), not red — only the correct bin is emerald — so it's instantly
+readable as "your answer didn't match" without competing with the
+green correct marker.
+
 `beforeunload` is wired to warn if you nav away mid-session.
+
+### tf-sort scoring (the only invariant that matters)
+
+`recordAndAdvance(conf, "", overrideCorrect)` accepts an optional
+`overrideCorrect` flag. For MCQ it's omitted and correctness is derived
+from `picked === card.answer`. For tf-sort it's passed `tfAllCorrect`
+(every assignment matches `statement.isTrue`). This keeps
+`SessionResult.correct` a single boolean across kinds — analytics,
+retry-missed, weak-tags etc. all keep working without branching.
 
 ## Analytics (`/analytics`)
 
@@ -361,8 +426,98 @@ for the weak-tags sidebar. If you generalize either, lift the
 Snapshot fields (`{ session, cards, tags }`) are pulled from
 `sessionStorage.lastSession`. The per-tag breakdown joins `tagId →
 tagById.get(id).name`, **never** display raw IDs. Missed-card rows
-show: question, correct answer, explanation, tag chips, time taken,
-and a direct edit link.
+show: question, the correct view (see below), explanation, tag chips,
+time taken, and a direct edit link.
+
+For an MCQ miss the row shows `Correct: <answer>`. For a tf-sort miss
+it instead lists every statement with a `T` or `F` chip indicating its
+*real* truth value, so the learner can see which statements they
+sorted the wrong way. The per-statement assignments they actually made
+are **not** displayed — `SessionResult` doesn't store them (see the
+tf-sort scoring invariant above).
+
+## Import / export round-trip
+
+`lib/export.ts` emits `kind` and `statements` on every card, and the
+bulk import API (`app/api/import/route.ts`) reads them back, so a full
+bundle export → import preserves card kinds and statements exactly.
+`ExportedCard` carries `kind?: CardKind` plus an optional `statements`
+array; for MCQ cards the statements field is omitted (keeps exports
+small and obviously MCQ-shaped). Tag-name → tag-ID resolution still
+happens by lowercase name match.
+
+## Import view (`/import`)
+
+The import view is the most opinionated screen in the app. Three things
+to know before changing it:
+
+### Schema/prompt copy is a dropdown, not a single button
+`SCHEMA_OPTIONS` and `PROMPT_OPTIONS` (top of `ImportView.tsx`) drive
+two split-button menus in the toolbar:
+
+- **Schema ▾** copies one of: single MCQ card, single tf-sort card,
+  mixed array (one of each), or full bundle (`{cards, tags, groups}`).
+  The bundle variant is the literal export shape, so users can round-
+  trip exports. Hovering or focusing a menu item also updates the live
+  `<pre>` preview pill row below the toolbar.
+- **AI prompt ▾** copies one of: MCQ generator prompt or tf-sort
+  generator prompt. Each prompt embeds its matching example card as
+  the few-shot demonstration.
+
+When adding a new schema variant: add to `SCHEMA_OPTIONS`, make sure
+the textarea validator (`validateCard`) and the API import route both
+already accept its shape. The validator branches on `kind` — keep
+those branches in sync with the API.
+
+### Paste box is dynamic and accepts everything
+
+The textarea auto-resizes to fit pasted content (no upper cap; min
+180px). The toolbar inside the box has `Paste` (clipboard read),
+`Format` (`JSON.parse → stringify(_, null, 2)`), and `Clear` actions.
+`Tab` inserts 2 spaces instead of escaping the field.
+
+A single paste can mix card kinds freely — the validator inspects each
+card's `kind` and applies the right rule set. Pasting a card array,
+a `{cards, tags, groups}` bundle, or anything in between all works
+through the same `parseBundle` codepath.
+
+### Cards preview is editable
+Once JSON parses, each card renders as a row with a kind badge (`MCQ`
+/ `T/F`), question summary, tag chips, and errors. Each row has:
+
+- A ▸ chevron that expands an inline editor.
+- A trash button at the row level (deletes that card from the paste —
+  mutates the JSON via `mutateCards` and re-serializes the text).
+
+The inline editor branches on kind:
+
+- **MCQ:** editable question + answer, distractors read-only.
+- **tf-sort:** editable question, plus a statement list. Each statement
+  row has, left-to-right: a clickable `T`/`F` pill (toggles `isTrue`),
+  an editable text input, a `✓` keeper mark, and a `✕` delete button.
+  Hovering ✓ tints the row strong emerald + indigo ring; hovering ✕
+  tints it strong rose. (Both use `ring-2` so they win over the soft
+  marked-row tint.)
+
+**Keeper marks are UI-only.** They live in `marked: Set<"cardIdx:sIdx">`
+component state. They never persist into the imported JSON — they're
+a triage tool so the user can mark statements they've already approved
+as "kept" and hide them via the per-card "Hide kept" toggle, leaving
+only the still-to-review statements visible. Marked statements render
+in a separate **Kept (N)** section at the top of the list (with a
+dashed emerald frame); the rest sit under **To review (N)** below.
+Order in the underlying JSON does **not** change — the split is purely
+visual.
+
+When a statement is deleted, `shiftMarksOnStatementDelete` re-keys the
+mark set so indices above the deletion shift down. When a *card* is
+deleted, `clearMarksForCard` wipes all marks for that card. Don't
+re-introduce index drift without re-implementing these shifters.
+
+All edits flow through `mutateCards(fn)`, which `JSON.parse` → mutates
+the parsed value in place → `JSON.stringify(_, null, 2)` back into the
+textarea. The text remains the single source of truth for what gets
+imported.
 
 ## Theming
 
@@ -451,14 +606,26 @@ so they fill the row width on phone.
 ## Common tasks
 
 - **Add a new API field on Card:** update `types/index.ts`, add it to the
-  `POST /api/cards` body construction, update `CardForm` UI, update
-  bulk-import validation in `app/import/ImportView.tsx`.
+  `POST /api/cards` body construction, the `PUT /api/cards/[id]` merge,
+  the `CardForm` UI (likely branched by `kind`), the import API
+  (`app/api/import/route.ts`), the import view validator
+  (`validateCard` in `ImportView.tsx`), and `lib/export.ts` so
+  round-trips preserve it.
+- **Add a new card kind:** extend `CardKind` in `types/index.ts`; teach
+  the cards API routes (POST validation, PUT normalization), CardForm
+  (segmented control + branched body), TestSession (prepared-card
+  derivation, answered/correctness logic, keyboard handler, JSX
+  branch), Result view (missed-row rendering), CardsBrowser (badge
+  + summary line), and the import/export round-trip. Keep
+  `SessionResult.correct` a single boolean — derive it however the
+  kind requires.
 - **Add a new analytics metric:** derive it inside `AnalyticsView` from
   `allResults` / `cardById` / `tagById`. Add a `<ChartCard>` or row.
 - **Launch a quiz from a new entry point:** push the user to
   `/test/session?tags=ID,ID&shuffle=true&min=1&max=5`. Setup is optional.
-- **Bulk-load cards:** paste a JSON array into `/import`. Tag names match
-  case-insensitively against existing tags; missing names are created.
+- **Bulk-load cards:** paste a JSON array (MCQ, tf-sort, or mixed) or a
+  full bundle into `/import`. Tag names match case-insensitively against
+  existing tags; missing names are created.
 
 ## Env
 

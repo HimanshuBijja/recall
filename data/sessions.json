@@ -11167,5 +11167,19 @@
     ],
     "score": 50,
     "completedAt": "2026-05-20T07:40:26.785Z"
+  },
+  {
+    "id": "68d7fc64-e05d-4ffb-873b-56af8099d283",
+    "tagIds": [],
+    "results": [
+      {
+        "cardId": "08dc1dd9-a865-46e7-acbb-19a411ea62ee",
+        "correct": false,
+        "timeTaken": 36581,
+        "confidence": 2
+      }
+    ],
+    "score": 0,
+    "completedAt": "2026-05-20T07:43:45.257Z"
   }
 ]

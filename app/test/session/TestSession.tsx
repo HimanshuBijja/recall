@@ -92,6 +92,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     setPicked(null);
     setTfAssignments({});
     setTfSubmitted(false);
+    setTfFocus(0);
     setHintShown(false);
     setElapsed(0);
   }, [idx]);
@@ -177,7 +178,45 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     const onKey = (e: KeyboardEvent) => {
       if (e.target && (e.target as HTMLElement).tagName === "INPUT") return;
       if (!answered) {
-        if (!isTfSort && e.key >= "1" && e.key <= "4") {
+        if (isTfSort) {
+          const order = current.statementOrder;
+          const n = order.length;
+          const key = e.key.toLowerCase();
+          const advance = () => setTfFocus((f) => Math.min(n - 1, f + 1));
+          const assign = (val: boolean) => {
+            const sIdx = order[tfFocus];
+            if (sIdx === undefined) return;
+            setTfAssignments((m) => ({ ...m, [sIdx]: val }));
+            advance();
+          };
+          if (key === "t" || e.key === "1" || e.key === "ArrowLeft") {
+            e.preventDefault();
+            assign(true);
+          } else if (key === "f" || e.key === "2" || e.key === "ArrowRight") {
+            e.preventDefault();
+            assign(false);
+          } else if (e.key === "ArrowDown" || key === "j") {
+            e.preventDefault();
+            setTfFocus((f) => Math.min(n - 1, f + 1));
+          } else if (e.key === "ArrowUp" || key === "k") {
+            e.preventDefault();
+            setTfFocus((f) => Math.max(0, f - 1));
+          } else if (e.key === "Enter") {
+            e.preventDefault();
+            const allAssigned = order.every(
+              (sIdx) => tfAssignments[sIdx] === true || tfAssignments[sIdx] === false
+            );
+            if (allAssigned) setTfSubmitted(true);
+          } else if (key === "h") {
+            if (current.card.hint) {
+              e.preventDefault();
+              setHintShown((s) => !s);
+            }
+          } else if (key === "s") {
+            e.preventDefault();
+            setTfSubmitted(true);
+          }
+        } else if (e.key >= "1" && e.key <= "4") {
           const i = Number(e.key) - 1;
           if (i < current.options.length) {
             e.preventDefault();
@@ -190,11 +229,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
           }
         } else if (e.key.toLowerCase() === "s") {
           e.preventDefault();
-          if (isTfSort) {
-            setTfSubmitted(true);
-          } else {
-            recordAndAdvance(1, "__skipped__");
-          }
+          recordAndAdvance(1, "__skipped__");
         }
       } else {
         if (e.key >= "1" && e.key <= "3") {
@@ -209,7 +244,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current, picked, answered, isTfSort, tfAllCorrect, recordAndAdvance]);
+  }, [current, picked, answered, isTfSort, tfAllCorrect, tfAssignments, tfFocus, recordAndAdvance]);
 
   if (prepared.length === 0) {
     return (
@@ -275,20 +310,23 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
               <span>Statement</span>
               <span className="text-right">Sort into bin</span>
             </div>
-            {current.statementOrder.map((sIdx) => {
+            {current.statementOrder.map((sIdx, displayIdx) => {
               const s = tfStatements[sIdx];
               const assigned = tfAssignments[sIdx];
               const correctAnswer = s.isTrue;
               const rowCorrect = tfSubmitted && assigned === correctAnswer;
               const rowWrong = tfSubmitted && assigned !== correctAnswer;
+              const isFocused = !tfSubmitted && displayIdx === tfFocus;
               return (
                 <div
                   key={sIdx}
+                  onClick={() => !tfSubmitted && setTfFocus(displayIdx)}
                   className={[
                     "flex items-center gap-2 sm:gap-3 px-3 py-2.5 rounded-lg border transition-colors",
                     rowCorrect && "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60",
                     rowWrong && "border-rose-500 bg-rose-50 dark:bg-rose-950/60",
-                    !tfSubmitted && "border-zinc-300 dark:border-zinc-700",
+                    !tfSubmitted && !isFocused && "border-zinc-300 dark:border-zinc-700",
+                    isFocused && "border-indigo-500 ring-2 ring-indigo-200 dark:ring-indigo-900",
                   ].filter(Boolean).join(" ")}
                 >
                   <span className="flex-1 text-sm leading-relaxed">{s.text}</span>
@@ -481,7 +519,19 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
       <div className="text-[11px] text-zinc-500 flex flex-wrap gap-x-4 gap-y-1 justify-center">
         {!answered ? (
           <>
-            {!isTfSort && (
+            {isTfSort ? (
+              <>
+                <span>
+                  <Kbd>T</Kbd>/<Kbd>F</Kbd> assign
+                </span>
+                <span>
+                  <Kbd>↑</Kbd><Kbd>↓</Kbd> move
+                </span>
+                <span>
+                  <Kbd>Enter</Kbd> submit
+                </span>
+              </>
+            ) : (
               <span>
                 <Kbd>1</Kbd>–<Kbd>4</Kbd> answer
               </span>

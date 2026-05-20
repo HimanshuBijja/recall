@@ -9993,5 +9993,49 @@
       "parents": []
     },
     "deletedAt": "2026-05-20T06:30:23.942Z"
+  },
+  {
+    "id": "8afae184-83bc-4690-8c71-786f6662a483",
+    "kind": "tag",
+    "name": "deployment",
+    "data": {
+      "id": "8afae184-83bc-4690-8c71-786f6662a483",
+      "name": "deployment",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T08:00:23.140Z"
+  },
+  {
+    "id": "367e0178-95a8-4f99-8aed-2dfff0a9a190",
+    "kind": "tag",
+    "name": "go-build",
+    "data": {
+      "id": "367e0178-95a8-4f99-8aed-2dfff0a9a190",
+      "name": "go-build",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T08:00:23.171Z"
+  },
+  {
+    "id": "2af290b8-8534-4d69-93de-7229e90a05cc",
+    "kind": "tag",
+    "name": "cross-platform",
+    "data": {
+      "id": "2af290b8-8534-4d69-93de-7229e90a05cc",
+      "name": "cross-platform",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T08:00:23.195Z"
+  },
+  {
+    "id": "5fcabd51-0e85-4fc2-ad45-2f91157ff483",
+    "kind": "tag",
+    "name": "tooling",
+    "data": {
+      "id": "5fcabd51-0e85-4fc2-ad45-2f91157ff483",
+      "name": "tooling",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T08:00:23.214Z"
   }
 ]
