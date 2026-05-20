@@ -11029,5 +11029,143 @@
     ],
     "score": 68,
     "completedAt": "2026-05-15T18:52:22.515Z"
+  },
+  {
+    "id": "015541b3-c01d-4ca6-b05e-bf8ae4dfd3a5",
+    "tagIds": [
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d"
+    ],
+    "results": [
+      {
+        "cardId": "cc3b583e-d2f3-4c38-b9a4-34da2e12be42",
+        "correct": true,
+        "timeTaken": 8819,
+        "confidence": 2
+      },
+      {
+        "cardId": "58d6b972-5123-49f8-bdd4-0bef79399581",
+        "correct": true,
+        "timeTaken": 13771,
+        "confidence": 2
+      },
+      {
+        "cardId": "7ee1bf97-d4eb-40e5-b193-88dea494389d",
+        "correct": true,
+        "timeTaken": 8381,
+        "confidence": 2
+      },
+      {
+        "cardId": "08dc1dd9-a865-46e7-acbb-19a411ea62ee",
+        "correct": true,
+        "timeTaken": 157378,
+        "confidence": 2
+      },
+      {
+        "cardId": "0f85c0a2-ce26-450b-98ff-38d3695d1eab",
+        "correct": true,
+        "timeTaken": 32393,
+        "confidence": 2
+      },
+      {
+        "cardId": "1c732be4-e70b-4f0b-9320-bebdc3bec585",
+        "correct": true,
+        "timeTaken": 10236,
+        "confidence": 2
+      }
+    ],
+    "score": 100,
+    "completedAt": "2026-05-20T07:32:48.383Z"
+  },
+  {
+    "id": "321e516e-9ab1-46e8-977d-bf143d815fee",
+    "tagIds": [
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d"
+    ],
+    "results": [
+      {
+        "cardId": "0f85c0a2-ce26-450b-98ff-38d3695d1eab",
+        "correct": true,
+        "timeTaken": 12037,
+        "confidence": 2
+      },
+      {
+        "cardId": "1c732be4-e70b-4f0b-9320-bebdc3bec585",
+        "correct": true,
+        "timeTaken": 5694,
+        "confidence": 2
+      },
+      {
+        "cardId": "58d6b972-5123-49f8-bdd4-0bef79399581",
+        "correct": true,
+        "timeTaken": 12532,
+        "confidence": 2
+      },
+      {
+        "cardId": "08dc1dd9-a865-46e7-acbb-19a411ea62ee",
+        "correct": false,
+        "timeTaken": 32669,
+        "confidence": 1
+      },
+      {
+        "cardId": "7ee1bf97-d4eb-40e5-b193-88dea494389d",
+        "correct": false,
+        "timeTaken": 2434,
+        "confidence": 1
+      },
+      {
+        "cardId": "cc3b583e-d2f3-4c38-b9a4-34da2e12be42",
+        "correct": false,
+        "timeTaken": 1106,
+        "confidence": 1
+      }
+    ],
+    "score": 50,
+    "completedAt": "2026-05-20T07:39:24.787Z"
+  },
+  {
+    "id": "231c870d-22ea-4d8c-a3a1-34b3219fcc22",
+    "tagIds": [],
+    "results": [
+      {
+        "cardId": "7ee1bf97-d4eb-40e5-b193-88dea494389d",
+        "correct": false,
+        "timeTaken": 2022,
+        "confidence": 1
+      },
+      {
+        "cardId": "cc3b583e-d2f3-4c38-b9a4-34da2e12be42",
+        "correct": true,
+        "timeTaken": 979,
+        "confidence": 1
+      },
+      {
+        "cardId": "08dc1dd9-a865-46e7-acbb-19a411ea62ee",
+        "correct": false,
+        "timeTaken": 15007,
+        "confidence": 2
+      }
+    ],
+    "score": 33,
+    "completedAt": "2026-05-20T07:39:46.411Z"
+  },
+  {
+    "id": "1f7fccf1-911f-497d-bc55-475ac572dcf1",
+    "tagIds": [],
+    "results": [
+      {
+        "cardId": "08dc1dd9-a865-46e7-acbb-19a411ea62ee",
+        "correct": false,
+        "timeTaken": 32384,
+        "confidence": 2
+      },
+      {
+        "cardId": "7ee1bf97-d4eb-40e5-b193-88dea494389d",
+        "correct": true,
+        "timeTaken": 6918,
+        "confidence": 2
+      }
+    ],
+    "score": 50,
+    "completedAt": "2026-05-20T07:40:26.785Z"
   }
 ]

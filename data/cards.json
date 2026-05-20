@@ -13,5 +13,172 @@
     "difficulty": 3,
     "tags": [],
     "createdAt": "2026-05-17T16:08:16.266Z"
+  },
+  {
+    "id": "cc3b583e-d2f3-4c38-b9a4-34da2e12be42",
+    "question": "When are variable types determined in a statically typed language?",
+    "answer": "At compile time",
+    "distractors": [
+      "At runtime",
+      "After execution",
+      "During installation"
+    ],
+    "explanation": "Statically typed languages determine and check variable types during compilation.",
+    "hint": "The compiler checks it before execution.",
+    "difficulty": 1,
+    "tags": [
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d"
+    ],
+    "createdAt": "2026-05-20T06:21:45.203Z"
+  },
+  {
+    "id": "7ee1bf97-d4eb-40e5-b193-88dea494389d",
+    "question": "When are variable types determined in a dynamically typed language?",
+    "answer": "At runtime",
+    "distractors": [
+      "At compile time",
+      "Before coding",
+      "During installation"
+    ],
+    "explanation": "Dynamically typed languages determine variable types while the program is running.",
+    "hint": "The program must already be executing.",
+    "difficulty": 1,
+    "tags": [
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d"
+    ],
+    "createdAt": "2026-05-20T06:21:45.204Z"
+  },
+  {
+    "id": "58d6b972-5123-49f8-bdd4-0bef79399581",
+    "question": "What happens to the temporary executable created by `go run`?",
+    "answer": "It is removed after execution",
+    "distractors": [
+      "It is permanently stored",
+      "It is uploaded to the cloud",
+      "It replaces the source code"
+    ],
+    "explanation": "`go run` uses a temporary binary that is deleted after the program finishes running.",
+    "hint": "The executable is not meant to be reused.",
+    "difficulty": 2,
+    "tags": [
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d"
+    ],
+    "createdAt": "2026-05-20T06:29:43.308Z"
+  },
+  {
+    "id": "1c732be4-e70b-4f0b-9320-bebdc3bec585",
+    "question": "Which command separates compilation from execution in Go?",
+    "answer": "go build",
+    "distractors": [
+      "go run",
+      "go mod",
+      "go env"
+    ],
+    "explanation": "`go build` only compiles the program and does not automatically execute it.",
+    "hint": "You run the executable manually afterward.",
+    "difficulty": 2,
+    "tags": [
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d"
+    ],
+    "createdAt": "2026-05-20T06:29:43.308Z"
+  },
+  {
+    "id": "0f85c0a2-ce26-450b-98ff-38d3695d1eab",
+    "question": "Why is `go build` preferred for production deployment?",
+    "answer": "It creates a standalone executable",
+    "distractors": [
+      "It automatically updates the operating system",
+      "It permanently stores temporary files",
+      "It converts Go into JavaScript"
+    ],
+    "explanation": "The compiled executable can run independently on the target machine.",
+    "hint": "The final output can be shared directly.",
+    "difficulty": 2,
+    "tags": [
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d",
+      "8afae184-83bc-4690-8c71-786f6662a483",
+      "367e0178-95a8-4f99-8aed-2dfff0a9a190"
+    ],
+    "createdAt": "2026-05-20T06:40:51.891Z"
+  },
+  {
+    "id": "08dc1dd9-a865-46e7-acbb-19a411ea62ee",
+    "kind": "tf-sort",
+    "question": "Sort each statement as True or False — advantages and practical uses of using `go build`.",
+    "answer": "",
+    "distractors": [],
+    "statements": [
+      {
+        "text": "Programs built with `go build` start faster because they are precompiled.",
+        "isTrue": true
+      },
+      {
+        "text": "Go must always be installed on the target machine.",
+        "isTrue": false
+      },
+      {
+        "text": "The binary can only run on the same OS where it was built.",
+        "isTrue": false
+      },
+      {
+        "text": "Compiled binaries are convenient for production deployment.",
+        "isTrue": true
+      },
+      {
+        "text": "You can share the executable directly with other users.",
+        "isTrue": true
+      },
+      {
+        "text": "Every user must compile the source code themselves before running.",
+        "isTrue": false
+      },
+      {
+        "text": "Cross-compilation is supported in Go.",
+        "isTrue": true
+      },
+      {
+        "text": "A Go program can only be built for the current operating system.",
+        "isTrue": false
+      },
+      {
+        "text": "Environment variables like GOOS and GOARCH help target platforms.",
+        "isTrue": true
+      },
+      {
+        "text": "Syntax errors are only detected while the program is running.",
+        "isTrue": false
+      },
+      {
+        "text": "The `go build` command deletes the source code after compilation.",
+        "isTrue": false
+      },
+      {
+        "text": "A Go executable can be distributed as a standalone application.",
+        "isTrue": true
+      },
+      {
+        "text": "Docker images often include prebuilt Go binaries.",
+        "isTrue": true
+      },
+      {
+        "text": "The target computer must contain the original Go source files.",
+        "isTrue": false
+      },
+      {
+        "text": "Using `go build` makes applications impossible to share.",
+        "isTrue": false
+      }
+    ],
+    "explanation": "`go build` creates reusable compiled binaries that are fast to start, easy to deploy, and portable across platforms. It catches compile-time errors early, supports cross-compilation, and allows binaries to run without requiring Go to be installed on the target system.",
+    "hint": "Think about compilation, portability, deployment, and binary execution.",
+    "difficulty": 3,
+    "tags": [
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d",
+      "367e0178-95a8-4f99-8aed-2dfff0a9a190",
+      "8afae184-83bc-4690-8c71-786f6662a483",
+      "2af290b8-8534-4d69-93de-7229e90a05cc",
+      "5fcabd51-0e85-4fc2-ad45-2f91157ff483"
+    ],
+    "createdAt": "2026-05-20T07:28:23.906Z"
   }
 ]

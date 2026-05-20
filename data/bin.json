@@ -9905,5 +9905,93 @@
       "createdAt": "2026-05-17T16:08:29.176Z"
     },
     "deletedAt": "2026-05-17T16:09:02.560Z"
+  },
+  {
+    "id": "fd1a0344-d81b-420d-ae81-e1997d58bf06",
+    "kind": "tag",
+    "name": "static-typing",
+    "data": {
+      "id": "fd1a0344-d81b-420d-ae81-e1997d58bf06",
+      "name": "static-typing",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T06:30:17.631Z"
+  },
+  {
+    "id": "3599749d-b60d-4a6a-a329-357152d85e6a",
+    "kind": "tag",
+    "name": "compiler",
+    "data": {
+      "id": "3599749d-b60d-4a6a-a329-357152d85e6a",
+      "name": "compiler",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T06:30:23.817Z"
+  },
+  {
+    "id": "e78be561-7b6c-49c8-94c5-7c102683a397",
+    "kind": "tag",
+    "name": "programming-basics",
+    "data": {
+      "id": "e78be561-7b6c-49c8-94c5-7c102683a397",
+      "name": "programming-basics",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T06:30:23.836Z"
+  },
+  {
+    "id": "324459d8-c590-402c-9ff7-ffb583a800c4",
+    "kind": "tag",
+    "name": "dynamic-typing",
+    "data": {
+      "id": "324459d8-c590-402c-9ff7-ffb583a800c4",
+      "name": "dynamic-typing",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T06:30:23.855Z"
+  },
+  {
+    "id": "e0656bd5-0a24-4431-a55c-6a87c90d14e4",
+    "kind": "tag",
+    "name": "runtime",
+    "data": {
+      "id": "e0656bd5-0a24-4431-a55c-6a87c90d14e4",
+      "name": "runtime",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T06:30:23.876Z"
+  },
+  {
+    "id": "a016bbce-d151-43c0-a4ec-1ce3d4021155",
+    "kind": "tag",
+    "name": "go-run",
+    "data": {
+      "id": "a016bbce-d151-43c0-a4ec-1ce3d4021155",
+      "name": "go-run",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T06:30:23.896Z"
+  },
+  {
+    "id": "2f9cb81e-4d0c-4023-8b53-0bcc54064b78",
+    "kind": "tag",
+    "name": "executables",
+    "data": {
+      "id": "2f9cb81e-4d0c-4023-8b53-0bcc54064b78",
+      "name": "executables",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T06:30:23.917Z"
+  },
+  {
+    "id": "f1c1edd2-2443-4e5f-a9d4-7f2a80955db3",
+    "kind": "tag",
+    "name": "go-build",
+    "data": {
+      "id": "f1c1edd2-2443-4e5f-a9d4-7f2a80955db3",
+      "name": "go-build",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T06:30:23.942Z"
   }
 ]

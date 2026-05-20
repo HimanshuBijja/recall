@@ -1,6 +1,19 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
-import type { BinItem, Card, Group, Tag } from "@/types";
+import type { BinItem, Card, Group, Tag, TfStatement } from "@/types";
+
+function normalizeStatements(raw: unknown): TfStatement[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((s) => {
+      if (s && typeof s === "object") {
+        const o = s as { text?: unknown; isTrue?: unknown };
+        return { text: String(o.text ?? "").trim(), isTrue: Boolean(o.isTrue) };
+      }
+      return { text: "", isTrue: false };
+    })
+    .filter((s) => s.text.length > 0);
+}
 
 export async function PUT(
   req: NextRequest,
@@ -11,7 +24,26 @@ export async function PUT(
   const cards = readDb<Card>("cards.json");
   const idx = cards.findIndex((c) => c.id === id);
   if (idx === -1) return Response.json({ error: "not found" }, { status: 404 });
-  cards[idx] = { ...cards[idx], ...body, id: cards[idx].id, createdAt: cards[idx].createdAt };
+  const merged: Card = {
+    ...cards[idx],
+    ...body,
+    id: cards[idx].id,
+    createdAt: cards[idx].createdAt,
+  };
+  if (body.statements !== undefined) {
+    merged.statements = normalizeStatements(body.statements);
+  }
+  if (merged.kind === "tf-sort") {
+    if (!merged.statements || merged.statements.length < 2) {
+      return Response.json(
+        { error: "tf-sort cards need at least 2 statements" },
+        { status: 400 }
+      );
+    }
+  } else {
+    merged.statements = undefined;
+  }
+  cards[idx] = merged;
   writeDb("cards.json", cards);
   return Response.json(cards[idx]);
 }

@@ -1,9 +1,11 @@
-import type { Card, Group, Tag } from "@/types";
+import type { Card, CardKind, Group, Tag, TfStatement } from "@/types";
 
 export interface ExportedCard {
+  kind?: CardKind;
   question: string;
   answer: string;
   distractors: string[];
+  statements?: TfStatement[];
   explanation: string;
   hint: string;
   difficulty: number;
@@ -27,10 +29,13 @@ export interface ExportedBundle {
 }
 
 export function exportCard(card: Card, tagById: Map<string, Tag>): ExportedCard {
+  const isTf = card.kind === "tf-sort";
   return {
+    kind: card.kind ?? "mcq",
     question: card.question,
-    answer: card.answer,
-    distractors: [...card.distractors],
+    answer: isTf ? "" : card.answer,
+    distractors: isTf ? [] : [...card.distractors],
+    statements: isTf && card.statements ? card.statements.map((s) => ({ ...s })) : undefined,
     explanation: card.explanation ?? "",
     hint: card.hint ?? "",
     difficulty: card.difficulty,

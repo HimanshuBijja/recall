@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "id": "0da6a24a-5846-42c2-9e90-07a2eb3e746d",
+    "name": "go",
+    "parents": []
+  },
+  {
+    "id": "8afae184-83bc-4690-8c71-786f6662a483",
+    "name": "deployment",
+    "parents": []
+  },
+  {
+    "id": "367e0178-95a8-4f99-8aed-2dfff0a9a190",
+    "name": "go-build",
+    "parents": []
+  },
+  {
+    "id": "2af290b8-8534-4d69-93de-7229e90a05cc",
+    "name": "cross-platform",
+    "parents": []
+  },
+  {
+    "id": "5fcabd51-0e85-4fc2-ad45-2f91157ff483",
+    "name": "tooling",
+    "parents": []
+  }
+]

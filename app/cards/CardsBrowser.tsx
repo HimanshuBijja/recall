@@ -254,6 +254,14 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                     <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                       D{c.difficulty}
                     </span>
+                    {c.kind === "tf-sort" && (
+                      <span
+                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300"
+                        title="True / False sort"
+                      >
+                        T/F
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-wrap justify-end gap-1">
                     {c.tags.slice(0, 3).map((tid) => (
@@ -267,7 +275,11 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                   </div>
                 </div>
                 <div className="font-medium text-sm flex-1 line-clamp-3">{c.question}</div>
-                <div className="text-xs text-zinc-500 line-clamp-2">→ {c.answer}</div>
+                <div className="text-xs text-zinc-500 line-clamp-2">
+                  {c.kind === "tf-sort"
+                    ? `→ ${(c.statements?.length ?? 0)} statement${(c.statements?.length ?? 0) === 1 ? "" : "s"}`
+                    : `→ ${c.answer}`}
+                </div>
                 <div className="flex justify-end gap-2 pt-1">
                   <button
                     onClick={(e) => {

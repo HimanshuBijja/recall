@@ -1,11 +1,18 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
-import type { Card, Group, Tag } from "@/types";
+import type { Card, CardKind, Group, Tag, TfStatement } from "@/types";
+
+interface BundleStatement {
+  text?: unknown;
+  isTrue?: unknown;
+}
 
 interface BundleCard {
+  kind?: CardKind;
   question: string;
-  answer: string;
-  distractors: string[];
+  answer?: string;
+  distractors?: string[];
+  statements?: BundleStatement[];
   explanation?: string;
   hint?: string;
   difficulty?: number;
@@ -70,15 +77,31 @@ export async function POST(req: NextRequest) {
 
   let cardsInserted = 0;
   for (const item of bundle.cards ?? []) {
-    if (typeof item?.question !== "string" || typeof item?.answer !== "string") continue;
+    if (typeof item?.question !== "string") continue;
+    const kind: CardKind = item.kind === "tf-sort" ? "tf-sort" : "mcq";
+    const statements: TfStatement[] = Array.isArray(item.statements)
+      ? item.statements
+          .map((s) => ({
+            text: typeof s?.text === "string" ? s.text.trim() : "",
+            isTrue: Boolean(s?.isTrue),
+          }))
+          .filter((s) => s.text.length > 0)
+      : [];
+    if (kind === "mcq" && typeof item.answer !== "string") continue;
+    if (kind === "tf-sort" && statements.length < 2) continue;
     const tagIds = (item.tags ?? [])
       .filter((n): n is string => typeof n === "string" && !!n.trim())
       .map((n) => ensureTag(n.trim()).id);
     const card: Card = {
       id: crypto.randomUUID(),
+      kind,
       question: item.question,
-      answer: item.answer,
-      distractors: Array.isArray(item.distractors) ? item.distractors.map(String) : [],
+      answer: kind === "mcq" ? (item.answer ?? "") : "",
+      distractors:
+        kind === "mcq" && Array.isArray(item.distractors)
+          ? item.distractors.map(String)
+          : [],
+      statements: kind === "tf-sort" ? statements : undefined,
       explanation: item.explanation ?? "",
       hint: item.hint ?? "",
       difficulty: ((item.difficulty ?? 3) as Card["difficulty"]),

@@ -1,11 +1,27 @@
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 export type Confidence = 1 | 2 | 3;
 
+export type CardKind = "mcq" | "tf-sort";
+
+export interface TfStatement {
+  text: string;
+  isTrue: boolean;
+}
+
+/**
+ * A flashcard. Two kinds:
+ * - "mcq" (default): single correct answer + 3 distractors.
+ * - "tf-sort": user sorts each `statements[]` entry into True/False;
+ *   `answer`, `distractors`, `explanation`, `hint` remain available.
+ *   Scoring is all-or-nothing (every statement must be placed correctly).
+ */
 export interface Card {
   id: string;
+  kind?: CardKind;
   question: string;
   answer: string;
   distractors: string[];
+  statements?: TfStatement[];
   explanation: string;
   hint: string;
   difficulty: Difficulty;

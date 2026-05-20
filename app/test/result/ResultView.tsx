@@ -152,11 +152,30 @@ export function ResultView() {
                   className="border-l-2 border-rose-500 pl-3 space-y-1"
                 >
                   <div className="text-sm font-medium">{card.question}</div>
-                  <div className="text-xs">
-                    <span className="text-emerald-600 dark:text-emerald-400">
-                      Correct: {card.answer}
-                    </span>
-                  </div>
+                  {card.kind === "tf-sort" && card.statements ? (
+                    <ul className="text-xs space-y-0.5 mt-1">
+                      {card.statements.map((s, j) => (
+                        <li key={j} className="flex gap-2">
+                          <span
+                            className={
+                              s.isTrue
+                                ? "text-emerald-600 dark:text-emerald-400 font-semibold w-4 shrink-0"
+                                : "text-rose-600 dark:text-rose-400 font-semibold w-4 shrink-0"
+                            }
+                          >
+                            {s.isTrue ? "T" : "F"}
+                          </span>
+                          <span className="text-zinc-600 dark:text-zinc-400">{s.text}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-xs">
+                      <span className="text-emerald-600 dark:text-emerald-400">
+                        Correct: {card.answer}
+                      </span>
+                    </div>
+                  )}
                   {card.explanation && (
                     <div className="text-xs text-zinc-500">{card.explanation}</div>
                   )}
