@@ -174,5 +174,1068 @@
       "0da6a24a-5846-42c2-9e90-07a2eb3e746d"
     ],
     "createdAt": "2026-05-20T07:28:23.906Z"
+  },
+  {
+    "id": "80b92c4c-4722-4273-970a-241bf3e15757",
+    "kind": "tf-sort",
+    "question": "Sort each statement as True or False — what `go mod tidy` does.",
+    "answer": "",
+    "distractors": [],
+    "statements": [
+      {
+        "text": "`go mod tidy` removes unused dependencies from `go.mod`.",
+        "isTrue": true
+      },
+      {
+        "text": "`go mod tidy` automatically adds missing required modules.",
+        "isTrue": true
+      },
+      {
+        "text": "`go mod tidy` updates the `go.sum` file.",
+        "isTrue": true
+      },
+      {
+        "text": "`go mod tidy` permanently deletes packages from the global Go cache.",
+        "isTrue": false
+      },
+      {
+        "text": "`go mod tidy` compiles the application into a binary executable.",
+        "isTrue": false
+      },
+      {
+        "text": "`go mod tidy` may download dependencies if they are missing locally.",
+        "isTrue": true
+      }
+    ],
+    "explanation": "`go mod tidy` synchronizes module dependencies by adding missing ones, removing unused ones, and updating checksums in `go.sum`. It does not build binaries or clear the global module cache.",
+    "hint": "Think about dependency cleanup and synchronization.",
+    "difficulty": 2,
+    "tags": [
+      "ee588f96-1ff5-4664-80b2-cc6ea0951e89"
+    ],
+    "createdAt": "2026-05-20T11:35:30.749Z"
+  },
+  {
+    "id": "eea5b96f-e330-48d7-bf31-44731f9360df",
+    "kind": "mcq",
+    "question": "What does `log.Fatal(err)` do in Go?",
+    "answer": "Prints the error and immediately exits the program",
+    "distractors": [
+      "Prints the error and continues execution",
+      "Retries the failed operation automatically",
+      "Logs the error only in debug mode"
+    ],
+    "explanation": "`log.Fatal()` logs the message and then calls `os.Exit(1)`, which terminates the program immediately.",
+    "hint": "Think about what happens after the error is logged.",
+    "difficulty": 1,
+    "tags": [
+      "7eafb332-bf80-4399-916c-3bd633e8e07e",
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d"
+    ],
+    "createdAt": "2026-05-20T12:01:38.702Z"
+  },
+  {
+    "id": "4d0475f5-ed6b-46cc-906c-16dfe2f84019",
+    "kind": "mcq",
+    "question": "What does `context.WithTimeout(context.Background(), 10*time.Second)` do in Go?",
+    "answer": "Creates a context that automatically cancels after 10 seconds",
+    "distractors": [
+      "Pauses the program for 10 seconds before execution",
+      "Runs a goroutine repeatedly every 10 seconds",
+      "Creates a permanent context with no cancellation"
+    ],
+    "explanation": "`context.WithTimeout` creates a new context derived from another context that automatically gets canceled after the specified timeout duration.",
+    "hint": "Think about controlling long-running operations.",
+    "difficulty": 2,
+    "tags": [
+      "ed3b5622-2ee5-46e9-8181-059ec8dabe20",
+      "d0927470-4911-44dd-8b44-2bdcc36231b5",
+      "971db3ff-b1f1-4422-a29b-fd96a093712f"
+    ],
+    "createdAt": "2026-05-20T12:20:34.092Z"
+  },
+  {
+    "id": "34740cab-7252-4f7c-ad8a-2bcdbb11037d",
+    "kind": "mcq",
+    "question": "What does `context.WithTimeout(context.Background(), 10*time.Second)` do in Go?",
+    "answer": "Creates a context that automatically cancels after 10 seconds",
+    "distractors": [
+      "Pauses the program for 10 seconds before execution",
+      "Runs a goroutine repeatedly every 10 seconds",
+      "Creates a permanent context with no cancellation"
+    ],
+    "explanation": "`context.WithTimeout` creates a new context derived from another context that automatically gets canceled after the specified timeout duration.",
+    "hint": "Think about controlling long-running operations.",
+    "difficulty": 2,
+    "tags": [
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d",
+      "ed3b5622-2ee5-46e9-8181-059ec8dabe20",
+      "d0927470-4911-44dd-8b44-2bdcc36231b5",
+      "971db3ff-b1f1-4422-a29b-fd96a093712f"
+    ],
+    "createdAt": "2026-05-20T12:21:21.076Z"
+  },
+  {
+    "id": "bf249ea9-2e90-4ad0-98d0-53fe2198ffc0",
+    "kind": "mcq",
+    "question": "What is the purpose of `context` in Go?",
+    "answer": "To manage cancellation, timeouts, and request-scoped values across operations",
+    "distractors": [
+      "To automatically compile Go programs in the background",
+      "To permanently store application configuration data",
+      "To create new goroutines for parallel execution"
+    ],
+    "explanation": "The `context` package helps control long-running operations by supporting cancellation signals, deadlines, timeouts, and passing request-scoped data between functions.",
+    "hint": "Think about controlling and coordinating operations.",
+    "difficulty": 2,
+    "tags": [
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d",
+      "ed3b5622-2ee5-46e9-8181-059ec8dabe20",
+      "971db3ff-b1f1-4422-a29b-fd96a093712f",
+      "2c61b5ad-64ef-4536-90ea-8dd2b6ee85a0"
+    ],
+    "createdAt": "2026-05-20T12:26:02.522Z"
+  },
+  {
+    "id": "a48821bc-cd41-4ddd-9739-9aa952d267d5",
+    "kind": "mcq",
+    "question": "What is a slice in Go?",
+    "answer": "A dynamically-sized view over an array",
+    "distractors": [
+      "A fixed-size array with automatic indexing",
+      "A dynamically-sized map for storing key-value pairs",
+      "A pointer to a single element inside an array"
+    ],
+    "explanation": "A slice in Go is a lightweight, flexible structure that references an underlying array and can grow dynamically.",
+    "hint": "Think about flexible arrays in Go.",
+    "difficulty": 2,
+    "tags": [
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d",
+      "4bfdac65-0d8d-432c-babd-931fa6fa0942",
+      "c3634b48-2527-42c1-a3a8-e11787fd1dcc",
+      "752c9af6-de69-4ced-855d-9ca4e555099e"
+    ],
+    "createdAt": "2026-05-20T13:05:23.879Z"
+  },
+  {
+    "id": "59c7530c-bab4-4312-9009-9efb1ca87839",
+    "kind": "mcq",
+    "question": "In Go, what is `u` called in `func (u *User) SayHello()`?",
+    "answer": "Method receiver",
+    "distractors": [
+      "Function argument",
+      "Interface implementation",
+      "Pointer initializer"
+    ],
+    "explanation": "In Go, the value between `func` and the method name is called the receiver. It attaches the method to a specific type.",
+    "hint": "It connects a method to a struct type.",
+    "difficulty": 2,
+    "tags": [
+      "0da6a24a-5846-42c2-9e90-07a2eb3e746d",
+      "a11d82f9-9e96-48bc-a90e-d734c83b8576",
+      "8778644a-3dad-43f0-9a67-ed8b2139dce9",
+      "641bea64-263f-4d07-bdab-7629d05700ea"
+    ],
+    "createdAt": "2026-05-20T13:12:02.692Z"
+  },
+  {
+    "id": "32e3f1a0-7e19-4ab0-a2f3-55681d49f9b6",
+    "kind": "mcq",
+    "question": "What type of database system is PostgreSQL?",
+    "answer": "Open-source relational database",
+    "distractors": [
+      "Proprietary NoSQL database",
+      "Open-source document store",
+      "Commercial in-memory database"
+    ],
+    "explanation": "PostgreSQL is a free, open-source object-relational database system that supports both SQL and JSON querying.",
+    "hint": "Think about its licensing and data model.",
+    "difficulty": 1,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:06:52.806Z"
+  },
+  {
+    "id": "f405aed0-6dd9-4c61-ac38-f5ac4268a918",
+    "kind": "mcq",
+    "question": "Which command creates a new PostgreSQL database named 'shop'?",
+    "answer": "CREATE DATABASE shop;",
+    "distractors": [
+      "NEW DATABASE shop;",
+      "MAKE DATABASE shop;",
+      "ADD DATABASE shop;"
+    ],
+    "explanation": "CREATE DATABASE is the standard SQL DDL command to create a new database in PostgreSQL.",
+    "hint": "PostgreSQL uses standard SQL DDL syntax.",
+    "difficulty": 1,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:06:52.806Z"
+  },
+  {
+    "id": "554a3b38-7b8b-4864-9804-22f08c71cf1a",
+    "kind": "mcq",
+    "question": "What constraint ensures a column's values are unique and never NULL?",
+    "answer": "PRIMARY KEY",
+    "distractors": [
+      "UNIQUE",
+      "NOT NULL",
+      "FOREIGN KEY"
+    ],
+    "explanation": "A PRIMARY KEY combines UNIQUE and NOT NULL, guaranteeing each row has a distinct, non-null identifier.",
+    "hint": "It uniquely identifies every row in a table.",
+    "difficulty": 2,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:06:52.806Z"
+  },
+  {
+    "id": "c4a961c2-959a-4435-9642-aaf46c3a2386",
+    "kind": "mcq",
+    "question": "Which PostgreSQL data type auto-increments and is commonly used for primary keys?",
+    "answer": "SERIAL",
+    "distractors": [
+      "INTEGER",
+      "BIGINT",
+      "AUTO_INCREMENT"
+    ],
+    "explanation": "SERIAL is a PostgreSQL shorthand that creates an INTEGER column backed by a sequence, auto-incrementing with each insert. AUTO_INCREMENT is MySQL syntax.",
+    "hint": "It is a PostgreSQL-specific shorthand type.",
+    "difficulty": 2,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:06:52.806Z"
+  },
+  {
+    "id": "8eb556d9-7b91-4dac-a8a6-d546fd005358",
+    "kind": "mcq",
+    "question": "What does ACID stand for in the context of database transactions?",
+    "answer": "Atomicity, Consistency, Isolation, Durability",
+    "distractors": [
+      "Accuracy, Consistency, Integrity, Durability",
+      "Atomicity, Concurrency, Isolation, Distribution",
+      "Availability, Consistency, Integrity, Durability"
+    ],
+    "explanation": "ACID guarantees reliable transactions: Atomicity (all-or-nothing), Consistency (valid state), Isolation (concurrent safety), Durability (persisted commits).",
+    "hint": "Each letter maps to a transaction guarantee.",
+    "difficulty": 2,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:06:52.806Z"
+  },
+  {
+    "id": "03d12b9d-f36e-4c0c-b84c-028945f80f27",
+    "kind": "mcq",
+    "question": "What does a FOREIGN KEY constraint enforce between two tables?",
+    "answer": "Referential integrity",
+    "distractors": [
+      "Row uniqueness",
+      "Column ordering",
+      "Index performance"
+    ],
+    "explanation": "A FOREIGN KEY ensures a value in one table's column matches an existing value in the referenced column of another table.",
+    "hint": "It links related data across two tables.",
+    "difficulty": 2,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:06:52.806Z"
+  },
+  {
+    "id": "4557f066-9d5f-4811-b397-96abdc8002f7",
+    "kind": "mcq",
+    "question": "Which SQL statement is used to add new rows to a PostgreSQL table?",
+    "answer": "INSERT INTO",
+    "distractors": [
+      "ADD INTO",
+      "APPEND INTO",
+      "PUT INTO"
+    ],
+    "explanation": "INSERT INTO is the standard DML command used to insert one or more rows into a table.",
+    "hint": "It is followed by the table name and VALUES keyword.",
+    "difficulty": 1,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:06:52.806Z"
+  },
+  {
+    "id": "509135cd-723b-48b5-a34c-7b634b4c45c8",
+    "kind": "mcq",
+    "question": "Which statement is used to modify existing rows in a PostgreSQL table?",
+    "answer": "UPDATE",
+    "distractors": [
+      "ALTER",
+      "MODIFY",
+      "REPLACE"
+    ],
+    "explanation": "UPDATE changes existing row values using SET and WHERE. ALTER modifies table structure; MODIFY and REPLACE are not standard PostgreSQL DML commands.",
+    "hint": "It is paired with SET and WHERE.",
+    "difficulty": 1,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:06:52.806Z"
+  },
+  {
+    "id": "cc0bc267-0899-4725-9b4a-e7dbd505fa43",
+    "kind": "mcq",
+    "question": "Which SQL clause filters rows returned by a SELECT statement?",
+    "answer": "WHERE",
+    "distractors": [
+      "HAVING",
+      "FILTER",
+      "LIMIT"
+    ],
+    "explanation": "WHERE filters individual rows before grouping. HAVING filters groups after aggregation; LIMIT restricts the number of rows returned.",
+    "hint": "It appears right after the table name in a SELECT.",
+    "difficulty": 1,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:06:52.806Z"
+  },
+  {
+    "id": "31ee9227-1e31-418d-835a-cf999b4acf1b",
+    "kind": "mcq",
+    "question": "Which PostgreSQL command removes specific rows from a table?",
+    "answer": "DELETE FROM",
+    "distractors": [
+      "DROP TABLE",
+      "TRUNCATE",
+      "REMOVE FROM"
+    ],
+    "explanation": "DELETE FROM removes rows matching a WHERE condition. TRUNCATE removes all rows at once; DROP TABLE removes the entire table structure.",
+    "hint": "It is usually paired with WHERE to target specific rows.",
+    "difficulty": 2,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:06:52.806Z"
+  },
+  {
+    "id": "3b97d4d7-ef94-454c-a1fb-0da1dd8c8f2a",
+    "kind": "mcq",
+    "question": "What is a view in PostgreSQL?",
+    "answer": "A virtual table based on the result of a SELECT query",
+    "distractors": [
+      "A physical copy of a table stored on disk",
+      "A temporary table created during a transaction",
+      "An index used to speed up SELECT queries"
+    ],
+    "explanation": "A view is a virtual table that encapsulates a SELECT query, allowing complex queries to be reused as if they were regular tables.",
+    "hint": "It does not store data itself.",
+    "difficulty": 2,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:07:33.803Z"
+  },
+  {
+    "id": "6a380ff9-fb27-4b71-b806-f296f2a4e11f",
+    "kind": "mcq",
+    "question": "Which PostgreSQL statement is used to create an index on a table column?",
+    "answer": "CREATE INDEX",
+    "distractors": [
+      "ADD INDEX",
+      "MAKE INDEX",
+      "BUILD INDEX"
+    ],
+    "explanation": "CREATE INDEX creates an index on one or more columns to improve query performance by allowing faster record retrieval.",
+    "hint": "It follows the same CREATE keyword pattern as other DDL commands.",
+    "difficulty": 1,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:07:33.803Z"
+  },
+  {
+    "id": "664b17ea-d34c-4631-9ef5-b8ffca8b9ff6",
+    "kind": "mcq",
+    "question": "What is the correct order of commands to complete a PostgreSQL transaction successfully?",
+    "answer": "BEGIN, SQL statement, COMMIT",
+    "distractors": [
+      "START, SQL statement, END",
+      "OPEN, SQL statement, SAVE",
+      "INIT, SQL statement, APPLY"
+    ],
+    "explanation": "A transaction starts with BEGIN, followed by one or more SQL statements, and ends with COMMIT to permanently apply all changes.",
+    "hint": "The last command makes the changes permanent.",
+    "difficulty": 2,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:07:33.803Z"
+  },
+  {
+    "id": "0f0fc668-ad1d-459c-a195-caa90ccb1d6a",
+    "kind": "mcq",
+    "question": "What does the VACUUM command do in PostgreSQL?",
+    "answer": "Cleans up dead rows created by UPDATE and DELETE operations",
+    "distractors": [
+      "Backs up the database to an external file",
+      "Removes all indexes from a table",
+      "Resets all sequences in the database"
+    ],
+    "explanation": "VACUUM reclaims storage occupied by dead tuples (rows) left behind after UPDATE and DELETE operations, keeping the database healthy.",
+    "hint": "Think of it as a cleanup process for stale data.",
+    "difficulty": 3,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:07:33.803Z"
+  },
+  {
+    "id": "2827f3f6-7214-4316-86ab-f79a2747ef68",
+    "kind": "mcq",
+    "question": "Which utility is used to back up a PostgreSQL database?",
+    "answer": "pg_dump",
+    "distractors": [
+      "pg_backup",
+      "psql",
+      "pg_restore"
+    ],
+    "explanation": "pg_dump exports a PostgreSQL database into a SQL script file. psql is used to restore from that file, and pg_restore is used for non-plain-text formats.",
+    "hint": "Its name suggests it dumps database contents.",
+    "difficulty": 2,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:07:33.803Z"
+  },
+  {
+    "id": "106d1f64-4a32-4c63-85a2-b0bc2550c6b0",
+    "kind": "mcq",
+    "question": "What is the purpose of a schema in PostgreSQL?",
+    "answer": "To organize and group database objects like tables and views",
+    "distractors": [
+      "To define the data types of table columns",
+      "To encrypt sensitive data in a database",
+      "To manage user authentication and permissions"
+    ],
+    "explanation": "A schema is a namespace that organizes database objects such as tables, views, and functions, allowing objects with the same name to coexist in different schemas.",
+    "hint": "It acts like a folder for database objects.",
+    "difficulty": 2,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:07:33.803Z"
+  },
+  {
+    "id": "907b0152-81dc-4d69-aa1f-11e7f307ebaf",
+    "kind": "mcq",
+    "question": "What are JOINs used for in PostgreSQL?",
+    "answer": "To combine rows from two or more tables based on a related column",
+    "distractors": [
+      "To merge two databases into one",
+      "To duplicate rows within a single table",
+      "To split a table into multiple smaller tables"
+    ],
+    "explanation": "JOINs retrieve related data from multiple tables in a single query by matching rows based on a shared column value.",
+    "hint": "They help retrieve related data spread across multiple tables.",
+    "difficulty": 1,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:07:33.803Z"
+  },
+  {
+    "id": "26136986-3e22-4e2f-ac11-1e6d3fabce11",
+    "kind": "mcq",
+    "question": "What is a subquery in PostgreSQL?",
+    "answer": "A query written inside another SQL query",
+    "distractors": [
+      "A stored procedure that runs on a schedule",
+      "A backup query saved for later use",
+      "A query that runs across multiple databases"
+    ],
+    "explanation": "A subquery is a nested query used to perform operations that depend on the result of another query, appearing inside SELECT, WHERE, or FROM clauses.",
+    "hint": "It is nested inside an outer query.",
+    "difficulty": 2,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:07:33.803Z"
+  },
+  {
+    "id": "6f7582e9-da66-478a-87a0-13840606cb73",
+    "kind": "mcq",
+    "question": "When does a trigger automatically execute in PostgreSQL?",
+    "answer": "When INSERT, UPDATE, or DELETE events occur on a table",
+    "distractors": [
+      "When a new user connects to the database",
+      "When a SELECT query is run on a table",
+      "When a new index is created on a table"
+    ],
+    "explanation": "Triggers are special procedures that fire automatically in response to INSERT, UPDATE, or DELETE events on a table, either before or after the operation.",
+    "hint": "They respond to data modification events.",
+    "difficulty": 3,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:07:33.803Z"
+  },
+  {
+    "id": "7c3e78b9-1e5b-4f04-b967-eccc0b09f97f",
+    "kind": "mcq",
+    "question": "Which PostgreSQL constraint prevents a column from storing NULL values?",
+    "answer": "NOT NULL",
+    "distractors": [
+      "UNIQUE",
+      "CHECK",
+      "DEFAULT"
+    ],
+    "explanation": "The NOT NULL constraint ensures a column must always have a value and cannot be left empty, preventing NULL from being inserted or updated into that column.",
+    "hint": "Its name directly describes what it prevents.",
+    "difficulty": 1,
+    "tags": [
+      "4d4b5c00-265a-48a8-afa4-3b25a88fc58f"
+    ],
+    "createdAt": "2026-05-21T07:07:33.803Z"
+  },
+  {
+    "id": "3c299823-5406-4fd6-b9a8-a36bf5f9a027",
+    "kind": "mcq",
+    "question": "Which SQL keyword is used to create a view in PostgreSQL?",
+    "answer": "CREATE VIEW",
+    "distractors": [
+      "CREATE VIRTUAL TABLE",
+      "CREATE TEMP",
+      "CREATE QUERY"
+    ],
+    "explanation": "CREATE VIEW defines a named virtual table based on a SELECT query, allowing it to be reused like a regular table.",
+    "hint": "It follows the same CREATE keyword pattern as other DDL commands.",
+    "difficulty": 1,
+    "tags": [
+      "7e452dfe-f921-41d4-b5a5-d51bad9e4a27"
+    ],
+    "createdAt": "2026-05-21T07:09:48.517Z"
+  },
+  {
+    "id": "80a0a0d3-e84e-4950-9cfd-c172f76eebfe",
+    "kind": "mcq",
+    "question": "Which block is used to handle exceptions in PL/pgSQL?",
+    "answer": "EXCEPTION",
+    "distractors": [
+      "CATCH",
+      "ERROR",
+      "RESCUE"
+    ],
+    "explanation": "In PL/pgSQL, the EXCEPTION block catches and handles errors that occur during execution, similar to try-catch in other languages.",
+    "hint": "It appears inside a BEGIN...END block.",
+    "difficulty": 2,
+    "tags": [
+      "7e452dfe-f921-41d4-b5a5-d51bad9e4a27"
+    ],
+    "createdAt": "2026-05-21T07:09:48.517Z"
+  },
+  {
+    "id": "b65d284d-6885-498c-a267-7b6e97fc5c41",
+    "kind": "mcq",
+    "question": "What keyword is used to define a Common Table Expression (CTE) in PostgreSQL?",
+    "answer": "WITH",
+    "distractors": [
+      "TEMP",
+      "DEFINE",
+      "AS"
+    ],
+    "explanation": "CTEs are introduced using the WITH keyword, creating a temporary named result set that can be referenced within the main query.",
+    "hint": "It appears before the SELECT statement.",
+    "difficulty": 2,
+    "tags": [
+      "7e452dfe-f921-41d4-b5a5-d51bad9e4a27"
+    ],
+    "createdAt": "2026-05-21T07:09:48.517Z"
+  },
+  {
+    "id": "c6e8734a-4a21-4833-bfc8-bf50a03ef683",
+    "kind": "mcq",
+    "question": "What clause is required when using a window function in PostgreSQL?",
+    "answer": "OVER",
+    "distractors": [
+      "PARTITION",
+      "GROUP BY",
+      "WITHIN"
+    ],
+    "explanation": "Window functions require the OVER clause to define the window of rows they operate on. PARTITION and ORDER BY can optionally appear inside OVER.",
+    "hint": "It directly follows the window function name.",
+    "difficulty": 3,
+    "tags": [
+      "7e452dfe-f921-41d4-b5a5-d51bad9e4a27"
+    ],
+    "createdAt": "2026-05-21T07:09:48.517Z"
+  },
+  {
+    "id": "1137ed79-2e31-46d8-8fc8-84dd1a51a62c",
+    "kind": "mcq",
+    "question": "Which PostgreSQL JSON data type is more efficient for indexing?",
+    "answer": "jsonb",
+    "distractors": [
+      "json",
+      "jsontext",
+      "jsondoc"
+    ],
+    "explanation": "jsonb stores JSON data in a binary format, making it more efficient for indexing and querying compared to the plain json type.",
+    "hint": "The 'b' stands for binary.",
+    "difficulty": 2,
+    "tags": [
+      "7e452dfe-f921-41d4-b5a5-d51bad9e4a27"
+    ],
+    "createdAt": "2026-05-21T07:09:48.517Z"
+  },
+  {
+    "id": "ec79a27f-44f9-46d4-bbbe-f163d5e62460",
+    "kind": "mcq",
+    "question": "Which clause is used when creating a partitioned table in PostgreSQL?",
+    "answer": "PARTITION BY",
+    "distractors": [
+      "SPLIT BY",
+      "DIVIDE BY",
+      "SEGMENT BY"
+    ],
+    "explanation": "PARTITION BY is used in the CREATE TABLE statement to define how a table is partitioned, supporting strategies like RANGE and LIST.",
+    "hint": "It appears at the end of the CREATE TABLE definition.",
+    "difficulty": 3,
+    "tags": [
+      "7e452dfe-f921-41d4-b5a5-d51bad9e4a27"
+    ],
+    "createdAt": "2026-05-21T07:09:48.517Z"
+  },
+  {
+    "id": "9ab7538d-9a2e-45ef-bb1d-edbb14d2c556",
+    "kind": "mcq",
+    "question": "What is the purpose of the pg_hba.conf file in PostgreSQL?",
+    "answer": "To control client authentication and connection access",
+    "distractors": [
+      "To define default values for database columns",
+      "To configure memory and performance settings",
+      "To store encrypted user passwords"
+    ],
+    "explanation": "pg_hba.conf specifies which clients can connect, which databases they can access, and what authentication methods are required.",
+    "hint": "HBA stands for host-based authentication.",
+    "difficulty": 3,
+    "tags": [
+      "7e452dfe-f921-41d4-b5a5-d51bad9e4a27"
+    ],
+    "createdAt": "2026-05-21T07:09:48.517Z"
+  },
+  {
+    "id": "cbe6ffbf-86e6-4098-a1bf-6e35fd37e071",
+    "kind": "mcq",
+    "question": "Which PostgreSQL command helps you understand how a query will be executed?",
+    "answer": "EXPLAIN",
+    "distractors": [
+      "DESCRIBE",
+      "ANALYZE QUERY",
+      "INSPECT"
+    ],
+    "explanation": "EXPLAIN shows the query execution plan chosen by the PostgreSQL planner, helping identify bottlenecks and optimize performance.",
+    "hint": "It is placed before the SELECT statement.",
+    "difficulty": 2,
+    "tags": [
+      "7e452dfe-f921-41d4-b5a5-d51bad9e4a27"
+    ],
+    "createdAt": "2026-05-21T07:09:48.517Z"
+  },
+  {
+    "id": "f62e5f48-f91c-4f3a-8f10-921f474e160d",
+    "kind": "mcq",
+    "question": "What PostgreSQL feature allows a table to inherit columns from a parent table?",
+    "answer": "Table inheritance",
+    "distractors": [
+      "Table partitioning",
+      "Table replication",
+      "Table cloning"
+    ],
+    "explanation": "Table inheritance allows a child table to inherit all columns from a parent table using the INHERITS keyword, enabling hierarchical data organization.",
+    "hint": "It uses the INHERITS keyword in the CREATE TABLE statement.",
+    "difficulty": 3,
+    "tags": [
+      "7e452dfe-f921-41d4-b5a5-d51bad9e4a27"
+    ],
+    "createdAt": "2026-05-21T07:09:48.517Z"
+  },
+  {
+    "id": "56da166c-439f-4fd7-9d56-ae4272d1ed30",
+    "kind": "mcq",
+    "question": "Which PostgreSQL data types are used together to perform full-text search?",
+    "answer": "tsvector and tsquery",
+    "distractors": [
+      "TEXT and VARCHAR",
+      "JSONB and GIN",
+      "BYTEA and REGEXP"
+    ],
+    "explanation": "tsvector stores a processed document for searching, while tsquery represents the search query. The @@ operator matches them to perform full-text search.",
+    "hint": "Both types start with 'ts', short for text search.",
+    "difficulty": 3,
+    "tags": [
+      "7e452dfe-f921-41d4-b5a5-d51bad9e4a27"
+    ],
+    "createdAt": "2026-05-21T07:09:48.517Z"
+  },
+  {
+    "id": "7bf33c6a-2bcd-4f16-9fba-76bd3a0577f5",
+    "kind": "mcq",
+    "question": "What is the primary purpose of Write-Ahead Logging (WAL) in PostgreSQL?",
+    "answer": "To ensure data integrity by recording changes before applying them to the database",
+    "distractors": [
+      "To replicate data across multiple servers in real time",
+      "To compress database files for faster disk access",
+      "To cache frequently accessed queries in memory"
+    ],
+    "explanation": "WAL writes changes to a log file before they are applied to the database, allowing recovery to a consistent state in case of a crash.",
+    "hint": "Think about what happens to data safety during a crash.",
+    "difficulty": 3,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:10:57.509Z"
+  },
+  {
+    "id": "9c0c1d5f-a2f1-4eac-b2f1-04fb5c70b148",
+    "kind": "mcq",
+    "question": "Which PostgreSQL index type is optimized for full-text search and JSONB data?",
+    "answer": "GIN",
+    "distractors": [
+      "B-Tree",
+      "BRIN",
+      "Hash"
+    ],
+    "explanation": "GIN (Generalized Inverted Index) is optimized for indexing composite values like full-text search documents and JSONB fields.",
+    "hint": "Its name stands for Generalized Inverted Index.",
+    "difficulty": 3,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:10:57.509Z"
+  },
+  {
+    "id": "e85064e2-707e-4bfa-81b2-66911fbc3389",
+    "kind": "mcq",
+    "question": "What does MVCC stand for in PostgreSQL?",
+    "answer": "Multi-Version Concurrency Control",
+    "distractors": [
+      "Multi-Value Cache Control",
+      "Managed Version Conflict Control",
+      "Multiple Virtual Connection Cache"
+    ],
+    "explanation": "MVCC allows multiple transactions to access the database simultaneously by maintaining multiple versions of data, ensuring isolation without locking.",
+    "hint": "It involves maintaining multiple versions of the same data.",
+    "difficulty": 2,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:10:57.509Z"
+  },
+  {
+    "id": "19a4287c-be18-48bf-bfc8-1493306520e5",
+    "kind": "mcq",
+    "question": "Which PostgreSQL system view is used to monitor active connections and currently running queries?",
+    "answer": "pg_stat_activity",
+    "distractors": [
+      "pg_stat_user_tables",
+      "pg_locks",
+      "pg_stat_bgwriter"
+    ],
+    "explanation": "pg_stat_activity provides details about current database activity including process IDs, user info, query state, and query start times.",
+    "hint": "Its name suggests it tracks what is currently happening in the database.",
+    "difficulty": 3,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:10:57.509Z"
+  },
+  {
+    "id": "5c4460e1-d1c5-4cd1-bb0a-7cdd21f9db50",
+    "kind": "mcq",
+    "question": "Which PostgreSQL isolation level ensures transactions behave as if executed one at a time?",
+    "answer": "Serializable",
+    "distractors": [
+      "Repeatable Read",
+      "Read Committed",
+      "Read Uncommitted"
+    ],
+    "explanation": "Serializable is the highest isolation level in PostgreSQL, ensuring complete isolation by making concurrent transactions behave as if they ran sequentially.",
+    "hint": "It is the strictest of the four isolation levels.",
+    "difficulty": 3,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:10:57.509Z"
+  },
+  {
+    "id": "68738a88-7c11-447a-a1e9-5f32dedaa12f",
+    "kind": "mcq",
+    "question": "How does PostgreSQL resolve a deadlock when detected?",
+    "answer": "It automatically terminates one of the blocked transactions",
+    "distractors": [
+      "It pauses all transactions and waits for manual intervention",
+      "It rolls back all active transactions in the database",
+      "It queues the transactions and retries them in order"
+    ],
+    "explanation": "PostgreSQL automatically detects deadlocks and terminates one of the involved transactions to break the cycle, allowing the others to proceed.",
+    "hint": "It resolves it without requiring manual intervention.",
+    "difficulty": 3,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:10:57.509Z"
+  },
+  {
+    "id": "2ad06b41-eab1-4f6c-8b75-ea7aa2669714",
+    "kind": "mcq",
+    "question": "What does the PostgreSQL query planner use to estimate the cost of different execution strategies?",
+    "answer": "Statistics about tables and indexes",
+    "distractors": [
+      "The number of active database connections",
+      "The size of the WAL log files",
+      "The current server memory usage"
+    ],
+    "explanation": "The query planner uses table and index statistics to estimate the cost of various execution plans and selects the one with the lowest estimated cost.",
+    "hint": "It relies on information collected about the data distribution.",
+    "difficulty": 3,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:10:57.509Z"
+  },
+  {
+    "id": "217ea8a6-71bf-42eb-89a5-0af839dc176c",
+    "kind": "mcq",
+    "question": "Which third-party tool is commonly used to add sharding capabilities to PostgreSQL?",
+    "answer": "Citus",
+    "distractors": [
+      "pgBouncer",
+      "Patroni",
+      "pgAdmin"
+    ],
+    "explanation": "Citus extends PostgreSQL with sharding support, distributing data and queries across multiple nodes to improve scalability and performance.",
+    "hint": "It is an extension specifically designed for distributed PostgreSQL.",
+    "difficulty": 4,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:10:57.509Z"
+  },
+  {
+    "id": "bda9923c-68b1-4f7b-9483-7ace89e22211",
+    "kind": "mcq",
+    "question": "Which PostgreSQL backup method uses WAL archiving combined with pg_basebackup?",
+    "answer": "Continuous archiving",
+    "distractors": [
+      "SQL dump",
+      "File system level backup",
+      "Logical replication"
+    ],
+    "explanation": "Continuous archiving combines a base backup taken with pg_basebackup and ongoing WAL archiving to allow point-in-time recovery.",
+    "hint": "It provides ongoing, near-real-time backups rather than one-time snapshots.",
+    "difficulty": 4,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:10:57.509Z"
+  },
+  {
+    "id": "b3348c14-b528-4b3f-842c-ab12e3b315dc",
+    "kind": "mcq",
+    "question": "Which PostgreSQL index type is most efficient for very large tables with naturally ordered data?",
+    "answer": "BRIN",
+    "distractors": [
+      "GiST",
+      "Hash",
+      "GIN"
+    ],
+    "explanation": "BRIN (Block Range Index) stores summary information about ranges of pages, making it very efficient for large tables where data is naturally ordered, such as time-series data.",
+    "hint": "Its name stands for Block Range Index.",
+    "difficulty": 4,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:10:57.509Z"
+  },
+  {
+    "id": "77b946c6-07c3-4ff3-86b8-24b4bed772d1",
+    "kind": "mcq",
+    "question": "Which clause is used to filter results after a GROUP BY aggregation in PostgreSQL?",
+    "answer": "HAVING",
+    "distractors": [
+      "WHERE",
+      "FILTER",
+      "AND"
+    ],
+    "explanation": "HAVING filters grouped results after aggregation, while WHERE filters individual rows before grouping. For example, HAVING AVG(Salary) > 75000 filters department groups.",
+    "hint": "It works like WHERE but applies after aggregation.",
+    "difficulty": 2,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:12:06.343Z"
+  },
+  {
+    "id": "d1f938ff-82a6-4f04-97ac-15f8a9bfb326",
+    "kind": "mcq",
+    "question": "Which type of JOIN is used to find employees who have not been assigned to any tasks?",
+    "answer": "LEFT JOIN",
+    "distractors": [
+      "INNER JOIN",
+      "RIGHT JOIN",
+      "CROSS JOIN"
+    ],
+    "explanation": "A LEFT JOIN returns all rows from the left table including those with no match in the right table. Filtering WHERE right_table.column IS NULL then isolates unmatched rows.",
+    "hint": "It returns all rows from one side even if there is no match.",
+    "difficulty": 2,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:12:06.343Z"
+  },
+  {
+    "id": "410aa9c1-856d-4629-b1ac-476fbe7716b8",
+    "kind": "mcq",
+    "question": "Which PostgreSQL keyword prevents duplicate rows from appearing in a SELECT result?",
+    "answer": "DISTINCT",
+    "distractors": [
+      "UNIQUE",
+      "FILTER",
+      "GROUP BY"
+    ],
+    "explanation": "DISTINCT eliminates duplicate rows from the result set. It is used when joining multiple tables may produce repeated values for the same entity.",
+    "hint": "It appears right after SELECT.",
+    "difficulty": 1,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:12:06.343Z"
+  },
+  {
+    "id": "a4d40eb7-2e23-4268-a6f6-875d2aa101da",
+    "kind": "mcq",
+    "question": "Which combination of clauses retrieves only the project with the highest budget in PostgreSQL?",
+    "answer": "ORDER BY Budget DESC and LIMIT 1",
+    "distractors": [
+      "GROUP BY Budget and HAVING MAX(Budget)",
+      "WHERE Budget = MAX(Budget)",
+      "ORDER BY Budget ASC and FETCH FIRST"
+    ],
+    "explanation": "ORDER BY Budget DESC sorts projects from highest to lowest budget, and LIMIT 1 restricts the result to just the top row.",
+    "hint": "One clause sorts, the other restricts the number of rows.",
+    "difficulty": 2,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:12:06.343Z"
+  },
+  {
+    "id": "100cbe3b-5ad4-4099-885d-c1bf4e663137",
+    "kind": "mcq",
+    "question": "Which aggregate function is used to calculate the total hours worked by each employee?",
+    "answer": "SUM()",
+    "distractors": [
+      "COUNT()",
+      "AVG()",
+      "MAX()"
+    ],
+    "explanation": "SUM() adds up all values in a column for each group. Combined with GROUP BY employee name, it gives the total hours each employee has logged.",
+    "hint": "It adds up all values in a column.",
+    "difficulty": 1,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:12:06.343Z"
+  },
+  {
+    "id": "80712a13-7286-4294-a6b2-c3a474533680",
+    "kind": "mcq",
+    "question": "Which PostgreSQL function is used to get the current date for date comparison in queries?",
+    "answer": "CURRENT_DATE",
+    "distractors": [
+      "NOW()",
+      "TODAY()",
+      "GETDATE()"
+    ],
+    "explanation": "CURRENT_DATE returns today's date without a time component. NOW() returns a timestamp with time. GETDATE() is SQL Server syntax, not valid in PostgreSQL.",
+    "hint": "Its name directly describes what it returns.",
+    "difficulty": 2,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:12:06.343Z"
+  },
+  {
+    "id": "8d4567f2-3e50-4743-b257-728adaaa94e9",
+    "kind": "mcq",
+    "question": "Which PostgreSQL keyword is used to subtract a time period from a date, such as subtracting two years?",
+    "answer": "INTERVAL",
+    "distractors": [
+      "PERIOD",
+      "DATEADD",
+      "OFFSET"
+    ],
+    "explanation": "INTERVAL is used to define a time duration in PostgreSQL. For example, CURRENT_DATE - INTERVAL '2 years' subtracts two years from today's date.",
+    "hint": "It defines a span of time like '2 years' or '30 days'.",
+    "difficulty": 2,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:12:06.343Z"
+  },
+  {
+    "id": "c20eee56-0ceb-454f-b982-0af89b9e062b",
+    "kind": "mcq",
+    "question": "Which aggregate function counts the number of employees in each department?",
+    "answer": "COUNT()",
+    "distractors": [
+      "SUM()",
+      "TOTAL()",
+      "NUM()"
+    ],
+    "explanation": "COUNT() returns the number of rows matching the group. COUNT(EmployeeID) counts non-null employee IDs per department when used with GROUP BY.",
+    "hint": "It counts the number of rows in a group.",
+    "difficulty": 1,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:12:06.343Z"
+  },
+  {
+    "id": "b5e98ea2-914b-4852-8742-3fc79d01a659",
+    "kind": "mcq",
+    "question": "How many table joins are needed to retrieve employee names who worked on a specific project?",
+    "answer": "Two joins — Employees to Tasks, Tasks to Projects",
+    "distractors": [
+      "One join — Employees to Projects",
+      "Three joins — Employees, Tasks, Projects, Departments",
+      "No joins — the data is in a single table"
+    ],
+    "explanation": "Employees link to Projects through the Tasks table. You need to join Employees to Tasks on EmployeeID, then Tasks to Projects on ProjectID.",
+    "hint": "Employees and Projects are not directly linked.",
+    "difficulty": 3,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:12:06.343Z"
+  },
+  {
+    "id": "8a99bfee-6528-40f6-b344-b31b299d00b1",
+    "kind": "mcq",
+    "question": "Which clause groups query results by department name when calculating total budget per department?",
+    "answer": "GROUP BY",
+    "distractors": [
+      "ORDER BY",
+      "PARTITION BY",
+      "CLUSTER BY"
+    ],
+    "explanation": "GROUP BY groups rows sharing the same value in a column so aggregate functions like SUM() can be applied to each group independently.",
+    "hint": "It organizes rows into groups for aggregation.",
+    "difficulty": 1,
+    "tags": [
+      "79859ac8-21af-4f4f-ab50-a20532b124d3"
+    ],
+    "createdAt": "2026-05-21T07:12:06.343Z"
   }
 ]

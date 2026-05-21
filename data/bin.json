@@ -10037,5 +10037,51 @@
       "parents": []
     },
     "deletedAt": "2026-05-20T08:00:23.214Z"
+  },
+  {
+    "id": "6f8caf7a-fbde-4fd4-b66f-707b262d1b64",
+    "kind": "tag",
+    "name": "modules",
+    "data": {
+      "id": "6f8caf7a-fbde-4fd4-b66f-707b262d1b64",
+      "name": "modules",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T12:08:15.168Z"
+  },
+  {
+    "id": "64cf83f9-56cf-4caa-a928-f47488cb25b2",
+    "kind": "tag",
+    "name": "tooling",
+    "data": {
+      "id": "64cf83f9-56cf-4caa-a928-f47488cb25b2",
+      "name": "tooling",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T12:08:15.201Z"
+  },
+  {
+    "id": "194c0401-4494-40ef-9985-c112e2ec6bd8",
+    "kind": "tag",
+    "name": "go-basics",
+    "data": {
+      "id": "194c0401-4494-40ef-9985-c112e2ec6bd8",
+      "name": "go-basics",
+      "parents": [
+        "0da6a24a-5846-42c2-9e90-07a2eb3e746d"
+      ]
+    },
+    "deletedAt": "2026-05-20T12:20:05.749Z"
+  },
+  {
+    "id": "e4224491-1c39-4f8d-a5b4-d3cad14e882b",
+    "kind": "tag",
+    "name": "go-basics",
+    "data": {
+      "id": "e4224491-1c39-4f8d-a5b4-d3cad14e882b",
+      "name": "go-basics",
+      "parents": []
+    },
+    "deletedAt": "2026-05-20T12:21:03.350Z"
   }
 ]

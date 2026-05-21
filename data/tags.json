@@ -1,7 +1,82 @@
 [
   {
     "id": "0da6a24a-5846-42c2-9e90-07a2eb3e746d",
-    "name": "go-basics",
+    "name": "go",
+    "parents": []
+  },
+  {
+    "id": "ee588f96-1ff5-4664-80b2-cc6ea0951e89",
+    "name": "go-mod",
+    "parents": []
+  },
+  {
+    "id": "7eafb332-bf80-4399-916c-3bd633e8e07e",
+    "name": "error-handling",
+    "parents": []
+  },
+  {
+    "id": "ed3b5622-2ee5-46e9-8181-059ec8dabe20",
+    "name": "context",
+    "parents": []
+  },
+  {
+    "id": "d0927470-4911-44dd-8b44-2bdcc36231b5",
+    "name": "timeout",
+    "parents": []
+  },
+  {
+    "id": "971db3ff-b1f1-4422-a29b-fd96a093712f",
+    "name": "concurrency",
+    "parents": []
+  },
+  {
+    "id": "2c61b5ad-64ef-4536-90ea-8dd2b6ee85a0",
+    "name": "backend",
+    "parents": []
+  },
+  {
+    "id": "4bfdac65-0d8d-432c-babd-931fa6fa0942",
+    "name": "slices",
+    "parents": []
+  },
+  {
+    "id": "c3634b48-2527-42c1-a3a8-e11787fd1dcc",
+    "name": "arrays",
+    "parents": []
+  },
+  {
+    "id": "752c9af6-de69-4ced-855d-9ca4e555099e",
+    "name": "data-structures",
+    "parents": []
+  },
+  {
+    "id": "a11d82f9-9e96-48bc-a90e-d734c83b8576",
+    "name": "methods",
+    "parents": []
+  },
+  {
+    "id": "8778644a-3dad-43f0-9a67-ed8b2139dce9",
+    "name": "structs",
+    "parents": []
+  },
+  {
+    "id": "641bea64-263f-4d07-bdab-7629d05700ea",
+    "name": "receivers",
+    "parents": []
+  },
+  {
+    "id": "4d4b5c00-265a-48a8-afa4-3b25a88fc58f",
+    "name": "postgres-basics",
+    "parents": []
+  },
+  {
+    "id": "7e452dfe-f921-41d4-b5a5-d51bad9e4a27",
+    "name": "postgres-intermediate",
+    "parents": []
+  },
+  {
+    "id": "79859ac8-21af-4f4f-ab50-a20532b124d3",
+    "name": "postgres-advanced",
     "parents": []
   }
 ]
