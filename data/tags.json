@@ -78,5 +78,10 @@
     "id": "79859ac8-21af-4f4f-ab50-a20532b124d3",
     "name": "postgres-advanced",
     "parents": []
+  },
+  {
+    "id": "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c",
+    "name": "js-basics",
+    "parents": []
   }
 ]

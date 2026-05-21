@@ -1237,5 +1237,1085 @@
       "79859ac8-21af-4f4f-ab50-a20532b124d3"
     ],
     "createdAt": "2026-05-21T07:12:06.343Z"
+  },
+  {
+    "id": "2e92aae9-c75b-404f-9e97-df6382251562",
+    "kind": "mcq",
+    "question": "What is the difference between == and === in JavaScript?",
+    "answer": "== compares values with type coercion, === compares values and types without coercion",
+    "distractors": [
+      "== compares types only, === compares values only",
+      "== is used for numbers only, === is used for strings only",
+      "== and === behave identically in all cases"
+    ],
+    "explanation": "== performs type coercion before comparing, so '5' == 5 is true. === checks both value and type strictly, so '5' === 5 is false.",
+    "hint": "One of them converts types before comparing.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:04:59.073Z"
+  },
+  {
+    "id": "57ce411b-4f83-47e4-a002-174cd71612e6",
+    "kind": "mcq",
+    "question": "What is the output of 3 + 2 + '7' in JavaScript?",
+    "answer": "'57'",
+    "distractors": [
+      "'327'",
+      "12",
+      "'37'"
+    ],
+    "explanation": "3 + 2 evaluates to 5 first since both are numbers. Then 5 + '7' triggers string concatenation because one operand is a string, resulting in '57'.",
+    "hint": "JavaScript evaluates left to right and concatenates when a string is encountered.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:04:59.073Z"
+  },
+  {
+    "id": "47f65f2a-f2d1-4f81-937b-44033059d3a9",
+    "kind": "mcq",
+    "question": "How does modern JavaScript execution work in browsers like Chrome?",
+    "answer": "It is interpreted and also JIT-compiled at runtime for performance",
+    "distractors": [
+      "It is fully compiled to machine code before execution",
+      "It is purely interpreted line by line with no compilation",
+      "It is transpiled to Java bytecode and run on the JVM"
+    ],
+    "explanation": "Modern browsers use Just-In-Time (JIT) compilation. The engine interprets code but also compiles hot paths to machine code during execution for better performance.",
+    "hint": "Think about what 'just-in-time' means.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:04:59.073Z"
+  },
+  {
+    "id": "c143810d-9cb2-4ef9-886a-d7e13f3cb1be",
+    "kind": "mcq",
+    "question": "What does the x++ operator return compared to ++x?",
+    "answer": "x++ returns the original value before incrementing; ++x returns the incremented value",
+    "distractors": [
+      "x++ increments first then returns; ++x returns first then increments",
+      "x++ and ++x always return the same value",
+      "x++ decrements the value; ++x increments it"
+    ],
+    "explanation": "x++ is post-increment — it returns the old value and then increments. ++x is pre-increment — it increments first and then returns the new value.",
+    "hint": "The position of ++ relative to the variable tells you the order of operations.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:04:59.074Z"
+  },
+  {
+    "id": "6bef1703-6e0b-4ac7-9379-ef0795679704",
+    "kind": "mcq",
+    "question": "Which JavaScript variable declaration is block-scoped and cannot be reassigned?",
+    "answer": "const",
+    "distractors": [
+      "var",
+      "let",
+      "static"
+    ],
+    "explanation": "const declares a block-scoped variable that cannot be reassigned after its initial assignment. let is block-scoped but allows reassignment. var is function or globally scoped.",
+    "hint": "Its name hints at something that does not change.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:04:59.074Z"
+  },
+  {
+    "id": "835a9033-fffa-4a60-aac5-0d08c53c54c4",
+    "kind": "mcq",
+    "question": "What is the Temporal Dead Zone (TDZ) in JavaScript?",
+    "answer": "The period between entering a scope and the initialization of a let or const variable",
+    "distractors": [
+      "The time between a function being defined and being called",
+      "The delay caused by asynchronous code execution",
+      "The period where var variables are undefined before declaration"
+    ],
+    "explanation": "The TDZ is the time between when a scope is entered and when a let or const variable is initialized. Accessing the variable during this period throws a ReferenceError.",
+    "hint": "It only applies to let and const, not var.",
+    "difficulty": 3,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:04:59.074Z"
+  },
+  {
+    "id": "ea8f26c2-daa2-4cd9-962a-eea1acbfed10",
+    "kind": "mcq",
+    "question": "Which JavaScript method returns the first element matching a CSS-style selector?",
+    "answer": "querySelector()",
+    "distractors": [
+      "getElementById()",
+      "getElementsByTagName()",
+      "getElementsByClass()"
+    ],
+    "explanation": "querySelector() accepts a CSS selector string and returns the first matching element. getElementById() only targets IDs, and the other methods target tags or class names.",
+    "hint": "It accepts the same syntax as CSS selectors.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:04:59.074Z"
+  },
+  {
+    "id": "41dfd817-5a6c-4506-9e3c-a40e681a4bff",
+    "kind": "mcq",
+    "question": "Which scoping model does JavaScript use?",
+    "answer": "Lexical scoping",
+    "distractors": [
+      "Dynamic scoping",
+      "Block scoping only",
+      "Global scoping only"
+    ],
+    "explanation": "JavaScript uses lexical scoping, meaning a function's scope is determined by where it is written in the source code, not where it is called from at runtime.",
+    "hint": "It is also called static scoping.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:04:59.074Z"
+  },
+  {
+    "id": "3468950c-1886-4f88-a8ad-71dff77d6eb8",
+    "kind": "mcq",
+    "question": "Which variable declaration in JavaScript allows re-declaration within the same scope?",
+    "answer": "var",
+    "distractors": [
+      "let",
+      "const",
+      "static"
+    ],
+    "explanation": "var allows both re-declaration and reassignment within the same scope. let allows reassignment but not re-declaration. const allows neither.",
+    "hint": "It is the oldest of the three declaration keywords.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:04:59.074Z"
+  },
+  {
+    "id": "3c4d19af-cf31-4fa3-8391-7fb8696fb1d0",
+    "kind": "mcq",
+    "question": "Which ES2025 feature returns a promise along with its resolve and reject functions directly?",
+    "answer": "Promise.withResolvers()",
+    "distractors": [
+      "Promise.allSettled()",
+      "Promise.race()",
+      "Promise.any()"
+    ],
+    "explanation": "Promise.withResolvers() is an ES2025 addition that returns an object containing a promise along with its resolve and reject functions, simplifying async control flow.",
+    "hint": "Its name suggests it provides the resolving functions alongside the promise.",
+    "difficulty": 3,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:04:59.074Z"
+  },
+  {
+    "id": "baaf91ea-1322-4206-b3bd-78d888f7b5dd",
+    "kind": "mcq",
+    "question": "What is the key difference between isNaN() and Number.isNaN() in JavaScript?",
+    "answer": "isNaN() coerces the value to a number first; Number.isNaN() only returns true if the value is exactly NaN",
+    "distractors": [
+      "Number.isNaN() coerces the value first; isNaN() does not",
+      "isNaN() only works on integers; Number.isNaN() works on all numbers",
+      "They behave identically in all cases"
+    ],
+    "explanation": "isNaN('foo') returns true because 'foo' is coerced to NaN. Number.isNaN('foo') returns false because 'foo' is a string, not the NaN value itself.",
+    "hint": "One of them performs type conversion before checking.",
+    "difficulty": 3,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:05:18.524Z"
+  },
+  {
+    "id": "0c5b0af9-b1fc-4aa6-805a-a58430d970ed",
+    "kind": "mcq",
+    "question": "What is the length of an array after executing: const arr = [1, 2, 3]; arr[10] = 99;?",
+    "answer": "11",
+    "distractors": [
+      "4",
+      "10",
+      "3"
+    ],
+    "explanation": "Assigning to index 10 creates empty slots from index 3 to 9. Array length is always the highest index plus one, so 10 + 1 = 11.",
+    "hint": "Length is always one more than the highest assigned index.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:05:18.524Z"
+  },
+  {
+    "id": "2371d729-8eaf-4a6f-8745-38376b530635",
+    "kind": "mcq",
+    "question": "Why does typeof null return 'object' in JavaScript?",
+    "answer": "It is a historical bug in the original type encoding that was never fixed to avoid breaking existing code",
+    "distractors": [
+      "null is actually an object in JavaScript",
+      "null inherits from the Object prototype",
+      "typeof was designed to return 'object' for all falsy values"
+    ],
+    "explanation": "typeof null returning 'object' is a well-known bug from JavaScript's original implementation. null is a primitive, but fixing it would break too much existing code.",
+    "hint": "Think about backward compatibility.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:05:18.524Z"
+  },
+  {
+    "id": "e2408a71-053b-4398-a5f5-b14e303b0955",
+    "kind": "mcq",
+    "question": "Which of the following is a falsy value in JavaScript?",
+    "answer": "0",
+    "distractors": [
+      "[]",
+      "{}",
+      "'false'"
+    ],
+    "explanation": "0 is falsy. Empty arrays [] and empty objects {} are truthy because they are objects. The string 'false' is truthy because it is a non-empty string.",
+    "hint": "Objects, even empty ones, are always truthy.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:05:18.524Z"
+  },
+  {
+    "id": "dbbf6906-3065-42a3-af29-e73360b5b5a6",
+    "kind": "mcq",
+    "question": "What is the difference between an undefined and an undeclared variable in JavaScript?",
+    "answer": "Undefined means declared but not assigned a value; undeclared means the variable was never declared at all",
+    "distractors": [
+      "Undefined means the variable is null; undeclared means it is zero",
+      "Undefined and undeclared are two terms for the same concept",
+      "Undeclared means declared but not assigned; undefined means never declared"
+    ],
+    "explanation": "An undefined variable has been declared with var, let, or const but has no assigned value. An undeclared variable has never been declared and accessing it causes a runtime error.",
+    "hint": "Declaration and assignment are two separate steps.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:05:18.524Z"
+  },
+  {
+    "id": "ffefea25-326e-46ee-88de-5d0d5b1bee3c",
+    "kind": "mcq",
+    "question": "What does the nullish coalescing operator ?? return when the left-hand side is false?",
+    "answer": "false",
+    "distractors": [
+      "'default'",
+      "null",
+      "undefined"
+    ],
+    "explanation": "The ?? operator only returns the right-hand side when the left is null or undefined. false is neither, so false ?? 'default' returns false.",
+    "hint": "It only triggers on null or undefined, not all falsy values.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:05:18.524Z"
+  },
+  {
+    "id": "2cca7416-0c6a-4ec1-aca3-a3694c7b84dd",
+    "kind": "mcq",
+    "question": "Which JavaScript method is used to add a newly created element to the end of a parent element?",
+    "answer": "appendChild()",
+    "distractors": [
+      "addElement()",
+      "insertElement()",
+      "attachChild()"
+    ],
+    "explanation": "appendChild() appends a node as the last child of a specified parent element. createElement() creates the element, but appendChild() is needed to add it to the DOM.",
+    "hint": "Its name combines the action and where the element is placed.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:05:18.525Z"
+  },
+  {
+    "id": "88682e05-2d5a-4d3d-a403-088d549aaf89",
+    "kind": "mcq",
+    "question": "What is a global variable in JavaScript?",
+    "answer": "A variable declared outside any function, accessible from anywhere in the code",
+    "distractors": [
+      "A variable declared with the global keyword inside a function",
+      "A variable that is shared between multiple JavaScript files automatically",
+      "A variable declared with var inside a block"
+    ],
+    "explanation": "Global variables are declared outside functions and have global scope, meaning any function can read or modify them without receiving them as parameters.",
+    "hint": "Its scope is not limited to any function or block.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:05:18.525Z"
+  },
+  {
+    "id": "e56f3c3f-a33f-46f9-b7e0-fa731c04c938",
+    "kind": "mcq",
+    "question": "What does JavaScript's -Infinity represent?",
+    "answer": "The lowest possible numeric value, less than any other number",
+    "distractors": [
+      "A variable that has not been assigned a number",
+      "The result of dividing a positive number by zero",
+      "An error thrown when a number exceeds the maximum safe integer"
+    ],
+    "explanation": "-Infinity is a constant representing negative infinity — no number is less than it. It can result from operations like -1 / 0 or Math.log(0).",
+    "hint": "No number can be smaller than it.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:05:18.525Z"
+  },
+  {
+    "id": "dd7b25ec-6842-4b87-a7d9-096877b51188",
+    "kind": "mcq",
+    "question": "Which character sequence is used to break a string into a new line in JavaScript?",
+    "answer": "\\n",
+    "distractors": [
+      "\\b",
+      "\\t",
+      "\\r"
+    ],
+    "explanation": "\\n is the newline escape character in JavaScript strings. \\t is a tab, \\b is a backspace, and \\r is a carriage return.",
+    "hint": "The 'n' stands for newline.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:05:18.525Z"
+  },
+  {
+    "id": "c419a13e-8a55-4da6-9f5d-f8ce8071e684",
+    "kind": "mcq",
+    "question": "What does null represent in JavaScript?",
+    "answer": "An intentionally empty or non-existent value",
+    "distractors": [
+      "A variable that has been declared but not assigned",
+      "A variable that has not been declared at all",
+      "A numeric value of zero"
+    ],
+    "explanation": "null is a primitive value explicitly assigned to represent 'no value' or 'empty'. It is different from undefined, which is automatically assigned to uninitialized variables.",
+    "hint": "It is assigned intentionally by the developer.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:06:51.758Z"
+  },
+  {
+    "id": "50322e22-a466-421c-afb1-82d70edc4fa6",
+    "kind": "mcq",
+    "question": "What is the output of: let x = 0; console.log(x++); console.log(++x);?",
+    "answer": "0 then 2",
+    "distractors": [
+      "1 then 2",
+      "0 then 1",
+      "1 then 3"
+    ],
+    "explanation": "x++ returns 0 (current value) then increments x to 1. ++x increments x to 2 first, then returns 2.",
+    "hint": "Post-increment returns before incrementing; pre-increment increments before returning.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:06:51.758Z"
+  },
+  {
+    "id": "874c1243-4926-47d1-9236-b498c58b6da1",
+    "kind": "mcq",
+    "question": "What is the difference between null and undefined in JavaScript?",
+    "answer": "undefined is automatically assigned to uninitialized variables; null is explicitly assigned to represent emptiness",
+    "distractors": [
+      "null is automatically assigned; undefined is explicitly assigned",
+      "null and undefined are identical in all comparisons",
+      "undefined means no value exists; null means the variable is undeclared"
+    ],
+    "explanation": "undefined is the default value for variables that have been declared but not assigned. null is a deliberate assignment meaning 'no value' or 'empty'.",
+    "hint": "One is automatic, the other is intentional.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:06:51.758Z"
+  },
+  {
+    "id": "daa288a0-c737-4324-a079-689f990ce42e",
+    "kind": "mcq",
+    "question": "Which syntax is used for expression interpolation inside a JavaScript template literal?",
+    "answer": "${expr}",
+    "distractors": [
+      "#{expr}",
+      "{{expr}}",
+      "%(expr)"
+    ],
+    "explanation": "Template literals use backticks and ${expr} to embed expressions directly in strings, avoiding manual concatenation with the + operator.",
+    "hint": "Template literals use backticks instead of quotes.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:06:51.758Z"
+  },
+  {
+    "id": "3bb69d4a-f319-41b2-99b6-b9d37a54de88",
+    "kind": "mcq",
+    "question": "What is the output of: const a = [1,2,3]; const b = [1,2,3]; console.log(a === b);?",
+    "answer": "false",
+    "distractors": [
+      "true",
+      "undefined",
+      "TypeError"
+    ],
+    "explanation": "Arrays are objects and compared by reference, not value. a and b are two distinct objects in memory, so === returns false even though their contents are identical.",
+    "hint": "Objects are compared by reference, not by content.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:06:51.758Z"
+  },
+  {
+    "id": "30046d8f-137e-4820-9c02-e51ad905cc41",
+    "kind": "mcq",
+    "question": "How does JavaScript achieve behavior similar to multiple inheritance?",
+    "answer": "Through mixins that copy properties and methods into a class or object",
+    "distractors": [
+      "Through the extends keyword with multiple parent classes",
+      "Through prototype chaining across multiple prototypes simultaneously",
+      "Through the implements keyword borrowed from Java"
+    ],
+    "explanation": "JavaScript classes only support single inheritance via extends. Mixins are used to simulate multiple inheritance by copying methods from multiple sources into a single class.",
+    "hint": "It involves copying behavior from multiple sources into one object.",
+    "difficulty": 3,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:06:51.758Z"
+  },
+  {
+    "id": "235ebda2-7aa5-499c-8877-5950ee65f416",
+    "kind": "mcq",
+    "question": "Is JavaScript statically or dynamically typed?",
+    "answer": "Dynamically typed",
+    "distractors": [
+      "Statically typed",
+      "Strongly typed",
+      "Strictly typed"
+    ],
+    "explanation": "JavaScript is dynamically typed, meaning variable types are determined at runtime, not at declaration time. You do not need to specify a type when creating a variable.",
+    "hint": "Types are decided when the program runs, not when it is written.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:06:51.758Z"
+  },
+  {
+    "id": "44843b81-0bcd-4c62-b9e2-1e5626e5f946",
+    "kind": "mcq",
+    "question": "What does the 'this' keyword refer to inside an arrow function?",
+    "answer": "The value of 'this' from the surrounding lexical scope",
+    "distractors": [
+      "The arrow function itself",
+      "The global window object always",
+      "The object that called the arrow function"
+    ],
+    "explanation": "Arrow functions do not have their own 'this'. They inherit 'this' from the enclosing lexical scope at the time they are defined, unlike regular functions.",
+    "hint": "Arrow functions do not bind their own 'this'.",
+    "difficulty": 3,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:06:51.758Z"
+  },
+  {
+    "id": "0fd01b7d-25be-4a77-a2c5-c6fce5540d87",
+    "kind": "mcq",
+    "question": "Which JavaScript keyword is used to remove a property from an object?",
+    "answer": "delete",
+    "distractors": [
+      "remove",
+      "unset",
+      "clear"
+    ],
+    "explanation": "The delete keyword removes a property and its value from an object entirely. For example, delete obj.Course removes the Course property from obj.",
+    "hint": "It is a built-in JavaScript operator, not a method.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:06:51.758Z"
+  },
+  {
+    "id": "2677f7eb-9903-455a-a893-d3fb34909582",
+    "kind": "mcq",
+    "question": "What can cause a memory leak when using closures in JavaScript?",
+    "answer": "Closures unintentionally holding references to variables that are no longer needed",
+    "distractors": [
+      "Closures always leak memory regardless of usage",
+      "Using too many closures in a single function",
+      "Closures preventing the use of the garbage collector entirely"
+    ],
+    "explanation": "Closures capture variables from their outer scope. If a closure keeps a reference to a large object or variable that is no longer needed, the garbage collector cannot free that memory, causing a leak.",
+    "hint": "Think about what happens when a reference is kept alive longer than needed.",
+    "difficulty": 3,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:06:51.758Z"
+  },
+  {
+    "id": "246cc97c-dd7b-4236-8183-00a611296960",
+    "kind": "mcq",
+    "question": "Which JavaScript timer function executes a callback repeatedly at a fixed interval?",
+    "answer": "setInterval()",
+    "distractors": [
+      "setTimeout()",
+      "clearTimeout()",
+      "requestAnimationFrame()"
+    ],
+    "explanation": "setInterval() repeatedly executes a function at a specified interval until clearInterval() is called. setTimeout() runs a function only once after a delay.",
+    "hint": "Its name suggests something that repeats at an interval.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:07:41.997Z"
+  },
+  {
+    "id": "5dff3eca-3030-4e6d-86df-12346ab3396d",
+    "kind": "mcq",
+    "question": "What is the output of a for loop using let with setTimeout logging i at each iteration?",
+    "answer": "0 1 2",
+    "distractors": [
+      "3 3 3",
+      "undefined undefined undefined",
+      "0 0 0"
+    ],
+    "explanation": "Using let in a for loop creates a new binding of i for each iteration. Each setTimeout callback captures its own i, so they log 0, 1, and 2 respectively.",
+    "hint": "Think about how let scoping differs from var in loops.",
+    "difficulty": 3,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:07:41.997Z"
+  },
+  {
+    "id": "55ef8024-d1d3-47c2-9976-06598b2e0b9a",
+    "kind": "mcq",
+    "question": "What is a higher-order function in JavaScript?",
+    "answer": "A function that takes another function as an argument or returns a function",
+    "distractors": [
+      "A function defined at the top of a file",
+      "A function that runs with higher priority in the event loop",
+      "A function that contains more than 10 lines of code"
+    ],
+    "explanation": "Higher-order functions either accept functions as arguments or return functions as results. Examples include map(), filter(), and reduce().",
+    "hint": "Think about functions that operate on other functions.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:07:41.997Z"
+  },
+  {
+    "id": "99dfb9de-43a1-4123-9563-c786a6512a4a",
+    "kind": "mcq",
+    "question": "What is the key difference between call() and apply() in JavaScript?",
+    "answer": "call() accepts arguments individually; apply() accepts arguments as an array",
+    "distractors": [
+      "call() binds this permanently; apply() binds it temporarily",
+      "apply() accepts arguments individually; call() accepts them as an array",
+      "call() is used for classes only; apply() is used for regular functions"
+    ],
+    "explanation": "Both call() and apply() invoke a function with a specified this value. The difference is that call() passes arguments one by one while apply() passes them as a single array.",
+    "hint": "The 'a' in apply() can remind you of array.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:07:41.997Z"
+  },
+  {
+    "id": "64ac3e5d-60f5-4c85-9725-a95db16a7673",
+    "kind": "mcq",
+    "question": "Why is JavaScript single-threaded?",
+    "answer": "To simplify browser programming and avoid race conditions when accessing the DOM",
+    "distractors": [
+      "Because modern hardware only supports one thread per process",
+      "To make JavaScript faster than multi-threaded languages",
+      "Because asynchronous code requires a single thread to function"
+    ],
+    "explanation": "JavaScript was designed as single-threaded to keep browser programming simple and avoid complex concurrency issues like race conditions when multiple threads access the DOM simultaneously.",
+    "hint": "Think about what problems multiple threads would cause in a browser.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:07:41.997Z"
+  },
+  {
+    "id": "627804a3-c124-49aa-9981-7c7f6b5f5f8c",
+    "kind": "mcq",
+    "question": "What is a major drawback of using timers like setInterval() in JavaScript?",
+    "answer": "They are not precise due to event loop delays and can waste resources if not cleared",
+    "distractors": [
+      "They block the main thread while waiting",
+      "They only work in Node.js and not in browsers",
+      "They cannot be cancelled once started"
+    ],
+    "explanation": "Timers rely on the event loop and execute only when the call stack is empty, making them imprecise. Uncleaned timers also continue running and waste resources, potentially causing memory leaks.",
+    "hint": "Timers are affected by what else is happening in the event loop.",
+    "difficulty": 3,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:07:41.997Z"
+  },
+  {
+    "id": "7cf70c8d-eea8-4ee0-8e09-33a3cc8aacad",
+    "kind": "mcq",
+    "question": "Which syntax is used to embed a variable inside a JavaScript template literal?",
+    "answer": "${variableName}",
+    "distractors": [
+      "#{variableName}",
+      "{{variableName}}",
+      "%{variableName}"
+    ],
+    "explanation": "Template literals use backticks and ${} to embed variables or expressions directly in a string without manual concatenation using the + operator.",
+    "hint": "Template literals use backticks instead of single or double quotes.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:07:41.997Z"
+  },
+  {
+    "id": "db19a4b1-5326-4222-87af-67f334f1f627",
+    "kind": "mcq",
+    "question": "What does lexical scope mean in JavaScript?",
+    "answer": "A variable's scope is determined by where it is defined in the source code",
+    "distractors": [
+      "A variable's scope is determined by where the function is called at runtime",
+      "All variables are accessible from anywhere in the program",
+      "Scope is determined by the order functions are executed"
+    ],
+    "explanation": "Lexical scope means scope is resolved based on the physical location of code at write time. Inner functions can access variables from their outer scopes because of this static structure.",
+    "hint": "It is also called static scoping.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:07:41.997Z"
+  },
+  {
+    "id": "6015dac3-e585-4e60-8b35-162f2bbd2858",
+    "kind": "mcq",
+    "question": "Does JavaScript support automatic type conversion?",
+    "answer": "Yes, JavaScript automatically converts types when needed during operations",
+    "distractors": [
+      "No, JavaScript requires explicit type casting at all times",
+      "Only when using the strict equality operator ===",
+      "Only in strict mode"
+    ],
+    "explanation": "JavaScript performs automatic type coercion, for example converting a number to a string when concatenated with one, or converting a string to a number in arithmetic operations.",
+    "hint": "This is why 3 + '2' gives '32' instead of an error.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:07:41.997Z"
+  },
+  {
+    "id": "4c06e92f-780b-4e1b-b7c4-a36d7276fe98",
+    "kind": "mcq",
+    "question": "Which method is used to programmatically submit a form using JavaScript?",
+    "answer": "document.forms[0].submit()",
+    "distractors": [
+      "document.forms[0].send()",
+      "document.submit()",
+      "document.forms[0].post()"
+    ],
+    "explanation": "The submit() method on a form element triggers form submission programmatically, the same way clicking a submit button would.",
+    "hint": "You access the form through the document.forms collection.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:07:41.997Z"
+  },
+  {
+    "id": "94ad0e3c-b827-4442-aea0-472cbf74985d",
+    "kind": "mcq",
+    "question": "What does the 'this' keyword refer to inside a regular function called in non-strict mode globally?",
+    "answer": "The global object (window in browsers)",
+    "distractors": [
+      "undefined",
+      "The function itself",
+      "An empty object"
+    ],
+    "explanation": "In non-strict mode, 'this' inside a regular function called in the global context refers to the global object (window in browsers). In strict mode, it would be undefined.",
+    "hint": "Think about what the default execution context is in a browser.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:08:33.711Z"
+  },
+  {
+    "id": "62b969f4-5220-484b-a489-693d5cbc8262",
+    "kind": "mcq",
+    "question": "What is hoisting in JavaScript?",
+    "answer": "Variable and function declarations are moved to the top of their scope before code executes",
+    "distractors": [
+      "Variable values are moved to the top of their scope before code executes",
+      "Functions are automatically called at the start of a script",
+      "Variables declared with let and const are moved to global scope"
+    ],
+    "explanation": "Hoisting moves declarations (not initializations) to the top of their scope during compilation. So var a = 5 logs undefined before the line because the declaration is hoisted but the value is not.",
+    "hint": "Only declarations are hoisted, not assignments.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:08:33.711Z"
+  },
+  {
+    "id": "f45324f4-fb67-4600-a759-719a1956e5d8",
+    "kind": "mcq",
+    "question": "Which of the three methods — call(), apply(), and bind() — returns a new function instead of invoking immediately?",
+    "answer": "bind()",
+    "distractors": [
+      "call()",
+      "apply()",
+      "attach()"
+    ],
+    "explanation": "bind() returns a new function with 'this' permanently set to the provided value, without calling it immediately. call() and apply() both invoke the function right away.",
+    "hint": "It binds the context for later use rather than executing now.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:08:33.711Z"
+  },
+  {
+    "id": "4890cc8a-ee75-4719-b77c-11d96ae653c1",
+    "kind": "mcq",
+    "question": "What is variable typing in JavaScript?",
+    "answer": "Using the same variable to store values of different types at different times",
+    "distractors": [
+      "Declaring a variable with an explicit type annotation",
+      "Converting a variable type using parseInt or parseFloat",
+      "Restricting a variable to a single data type throughout its lifetime"
+    ],
+    "explanation": "JavaScript allows the same variable to hold different types at different points, for example assigning a number then reassigning a string to the same variable.",
+    "hint": "It is possible because JavaScript is dynamically typed.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:08:33.711Z"
+  },
+  {
+    "id": "227681d5-d6d8-4df2-8a16-16a4ab271ab5",
+    "kind": "mcq",
+    "question": "Which JavaScript property is used to detect the operating system on a client machine?",
+    "answer": "navigator.userAgent",
+    "distractors": [
+      "window.platform",
+      "document.os",
+      "screen.system"
+    ],
+    "explanation": "navigator.userAgent and navigator.appVersion return browser and environment information including operating system details, allowing client-side OS detection.",
+    "hint": "It is a property of the navigator object.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:08:33.711Z"
+  },
+  {
+    "id": "c6e5b783-aad1-46ad-94d8-4a2ed6fbc0e6",
+    "kind": "mcq",
+    "question": "How many types of pop-up boxes are available in JavaScript?",
+    "answer": "3 — Alert, Confirm, and Prompt",
+    "distractors": [
+      "2 — Alert and Confirm",
+      "4 — Alert, Confirm, Prompt, and Dialog",
+      "1 — Alert only"
+    ],
+    "explanation": "JavaScript provides three built-in pop-up boxes: Alert (displays a message), Confirm (asks for OK/Cancel confirmation), and Prompt (asks for user input).",
+    "hint": "One shows a message, one asks yes or no, one asks for input.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:08:33.711Z"
+  },
+  {
+    "id": "48dec201-8428-4f03-a0f1-bce23ec5e5c9",
+    "kind": "mcq",
+    "question": "Which keyword is used to export a function from a JavaScript module?",
+    "answer": "export",
+    "distractors": [
+      "module",
+      "expose",
+      "share"
+    ],
+    "explanation": "The export keyword makes variables, functions, or objects available for import in other files. It can be used as named exports or a default export.",
+    "hint": "It is paired with the import keyword.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:08:33.711Z"
+  },
+  {
+    "id": "b04c1e7b-b1d6-4484-96b9-51141c6b850e",
+    "kind": "mcq",
+    "question": "What is memoization in JavaScript?",
+    "answer": "Caching the results of function calls to avoid recomputing them for the same inputs",
+    "distractors": [
+      "Storing function definitions in memory for faster parsing",
+      "Automatically clearing unused variables from memory",
+      "Preloading all functions before the script runs"
+    ],
+    "explanation": "Memoization stores the output of a function for given inputs in a cache (usually an object or map). When the same inputs are passed again, the cached result is returned instead of recomputing.",
+    "hint": "Think of it as a lookup table for function results.",
+    "difficulty": 3,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:08:33.711Z"
+  },
+  {
+    "id": "823e89dc-6006-442f-bcb4-9b4d27073f04",
+    "kind": "mcq",
+    "question": "What is the main benefit of using JavaScript modules?",
+    "answer": "They split code into reusable pieces and avoid global namespace pollution",
+    "distractors": [
+      "They make JavaScript execute faster by running in parallel",
+      "They allow JavaScript to run on the server without Node.js",
+      "They automatically minify code for production"
+    ],
+    "explanation": "Modules allow code to be organized into separate files with explicit imports and exports, preventing variables and functions from leaking into the global scope.",
+    "hint": "Think about code organization and scope isolation.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:08:33.711Z"
+  },
+  {
+    "id": "e584586f-a2ac-47e2-a2c0-42f9830b5b77",
+    "kind": "mcq",
+    "question": "What is the difference between how call() and apply() pass arguments to a function?",
+    "answer": "call() passes arguments one by one; apply() passes them as a single array",
+    "distractors": [
+      "apply() passes arguments one by one; call() passes them as a single array",
+      "call() and apply() both pass arguments as an array",
+      "call() passes arguments as an object; apply() passes them one by one"
+    ],
+    "explanation": "Both call() and apply() invoke a function immediately with a specified 'this'. The only difference is that call() takes individual arguments while apply() takes an array of arguments.",
+    "hint": "The 'a' in apply() can remind you of array.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:08:33.711Z"
+  },
+  {
+    "id": "71a40b37-2730-4e1d-82dc-117d47fc9f31",
+    "kind": "mcq",
+    "question": "How do you enable strict mode for an entire JavaScript file?",
+    "answer": "Place 'use strict'; at the top of the file",
+    "distractors": [
+      "Set strict: true in the script tag attributes",
+      "Call JavaScript.strictMode() at the start of the file",
+      "Import strict from the ECMAScript module"
+    ],
+    "explanation": "Adding the string 'use strict'; at the top of a file or function enables strict mode, which prevents certain unsafe actions and throws more exceptions.",
+    "hint": "It is a simple string statement placed at the very beginning.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:09:09.434Z"
+  },
+  {
+    "id": "124a9d0f-75f1-4f89-acf8-d444f8500532",
+    "kind": "mcq",
+    "question": "Which ECMAScript version introduced strict mode in JavaScript?",
+    "answer": "ECMAScript 5",
+    "distractors": [
+      "ECMAScript 3",
+      "ECMAScript 6",
+      "ECMAScript 2015"
+    ],
+    "explanation": "Strict mode was introduced in ECMAScript 5 (ES5) as a way to opt into a safer, more restricted subset of JavaScript that catches common coding mistakes.",
+    "hint": "It predates the major ES6 update.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:09:09.434Z"
+  },
+  {
+    "id": "f585d9a6-3a86-4559-a833-c4ec439a7515",
+    "kind": "mcq",
+    "question": "What are the three possible states of a JavaScript Promise?",
+    "answer": "Pending, fulfilled, and rejected",
+    "distractors": [
+      "Waiting, resolved, and failed",
+      "Idle, completed, and errored",
+      "Pending, completed, and cancelled"
+    ],
+    "explanation": "A Promise starts in the pending state. It moves to fulfilled when resolve() is called, or to rejected when reject() is called. These state transitions are permanent.",
+    "hint": "One state means it is still waiting, the other two are final outcomes.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:09:09.434Z"
+  },
+  {
+    "id": "31cf77ec-2207-4c67-b759-aba6aba972e4",
+    "kind": "mcq",
+    "question": "Which Promise method is used to handle a successful resolution?",
+    "answer": ".then()",
+    "distractors": [
+      ".catch()",
+      ".resolve()",
+      ".finally()"
+    ],
+    "explanation": ".then() is called when a Promise is fulfilled. .catch() handles rejections. .finally() runs regardless of the outcome but is not specific to success.",
+    "hint": "It chains the next step after a successful operation.",
+    "difficulty": 1,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:09:09.434Z"
+  },
+  {
+    "id": "34d90c35-4b92-48ce-8672-b98dc04bfaf5",
+    "kind": "mcq",
+    "question": "What is a closure in JavaScript?",
+    "answer": "A function that retains access to its parent scope's variables even after the parent function has finished executing",
+    "distractors": [
+      "A function that prevents other functions from accessing its variables",
+      "A method that closes and destroys a function's local variables after execution",
+      "A design pattern used to prevent global variable creation"
+    ],
+    "explanation": "A closure is formed when an inner function captures variables from its outer function's scope. Even after the outer function returns, the inner function still has access to those variables.",
+    "hint": "The inner function 'closes over' the variables of its parent.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:09:09.434Z"
+  },
+  {
+    "id": "d39cf452-2d1f-48c9-bc74-f726aea500cb",
+    "kind": "mcq",
+    "question": "What is the output of calling get_func_inner() three times after it is returned from foo() which has let b = 1 inside?",
+    "answer": "1, 1, 1",
+    "distractors": [
+      "1, undefined, undefined",
+      "1, 2, 3",
+      "ReferenceError on the second call"
+    ],
+    "explanation": "The inner function closes over b from foo's scope. Even after foo() returns, b remains accessible via the closure and its value stays 1 across all three calls.",
+    "hint": "Closures preserve the value of captured variables across multiple calls.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:09:09.434Z"
+  },
+  {
+    "id": "c26d48f3-6864-49fd-8024-bddf35510ab0",
+    "kind": "mcq",
+    "question": "How is a Promise created in JavaScript?",
+    "answer": "Using new Promise() with an executor function containing resolve and reject callbacks",
+    "distractors": [
+      "Using Promise.create() with a callback function",
+      "Using async() with a then() callback attached",
+      "Using new Async() with resolve and reject parameters"
+    ],
+    "explanation": "A Promise is created with new Promise((resolve, reject) => {}). The executor function runs immediately and calls resolve() on success or reject() on failure.",
+    "hint": "It takes a function with two specific callback parameters.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:09:09.434Z"
+  },
+  {
+    "id": "ebaefef7-ca06-4912-9f3b-4bb51bfebf29",
+    "kind": "mcq",
+    "question": "What is the main advantage of chaining Promises in JavaScript?",
+    "answer": "It allows sequences of asynchronous tasks to be written in a more readable way",
+    "distractors": [
+      "It makes all asynchronous operations run in parallel automatically",
+      "It eliminates the need for error handling in async code",
+      "It converts asynchronous code into synchronous execution"
+    ],
+    "explanation": "Promise chaining with .then() allows multiple asynchronous steps to be expressed sequentially, avoiding deeply nested callbacks and improving readability.",
+    "hint": "Think about the problem it solves compared to nested callbacks.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:09:09.434Z"
+  },
+  {
+    "id": "0b7d35a1-e9a7-437b-86bf-5ce038559f38",
+    "kind": "mcq",
+    "question": "Which of the following is a valid use case for closures in JavaScript?",
+    "answer": "Maintaining private state inside a function that persists across multiple calls",
+    "distractors": [
+      "Running multiple threads simultaneously in the browser",
+      "Preventing a function from being called more than once",
+      "Automatically freeing memory after a function executes"
+    ],
+    "explanation": "Closures are commonly used to create private variables or maintain state between function calls, since the enclosed variables are not accessible from outside the function.",
+    "hint": "Think about data that needs to persist but remain hidden from the outside.",
+    "difficulty": 3,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:09:09.434Z"
+  },
+  {
+    "id": "21d42a77-7e2b-486b-b68b-ae0bb946ab82",
+    "kind": "mcq",
+    "question": "What happens when strict mode is enabled and you use an undeclared variable?",
+    "answer": "A ReferenceError is thrown",
+    "distractors": [
+      "The variable is automatically declared as a global",
+      "The variable is silently ignored",
+      "The variable is assigned the value undefined"
+    ],
+    "explanation": "In strict mode, using an undeclared variable throws a ReferenceError. In non-strict mode, it would silently create a global variable, which is a common source of bugs.",
+    "hint": "Strict mode makes previously silent errors throw exceptions.",
+    "difficulty": 2,
+    "tags": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T09:09:09.434Z"
   }
 ]

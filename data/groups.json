@@ -22,5 +22,13 @@
       "7e452dfe-f921-41d4-b5a5-d51bad9e4a27"
     ],
     "createdAt": "2026-05-21T07:12:36.133Z"
+  },
+  {
+    "id": "7a3c9d2f-08eb-4755-97ff-67630b2a3d6e",
+    "name": "javaScript basics",
+    "tagIds": [
+      "666808fe-25f3-4fbb-8c87-e8dd8af5fd5c"
+    ],
+    "createdAt": "2026-05-21T10:05:00.798Z"
   }
 ]
