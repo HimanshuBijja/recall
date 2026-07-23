@@ -3,8 +3,49 @@
   <head>
     <meta charset="utf-8" />
     <title>Recall Capture</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        width: 260px;
+        font-family: Roboto, Arial, sans-serif;
+        background: #0f0f0f;
+        color: #f1f1f1;
+      }
+      main { padding: 14px 16px; }
+      h1 { font-size: 14px; margin: 0 0 10px; }
+      .kind-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid #262626;
+      }
+      .kind-row:last-child { border-bottom: none; }
+      .kind-name { font-size: 13px; text-transform: capitalize; }
+      .actions { display: flex; gap: 8px; margin-top: 14px; }
+      button {
+        flex: 1;
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .open-recall { background: #3ea6ff; color: #000; }
+      .settings { background: #2b2b2b; color: #f1f1f1; border: 1px solid #3f3f3f; }
+    </style>
   </head>
   <body>
+    <main>
+      <h1>Show markers by kind</h1>
+      <div id="kinds"></div>
+      <div class="actions">
+        <button id="openRecall" class="open-recall" type="button">Open Recall</button>
+        <button id="openSettings" class="settings" type="button">Settings</button>
+      </div>
+    </main>
     <script type="module" src="./popup.ts"></script>
   </body>
 </html>
