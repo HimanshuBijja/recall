@@ -7,8 +7,9 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
+        // NOTE: content script is built separately as a self-contained IIFE
+        // (vite.content.config.ts) — it can't be an ES module. See that file.
         background: resolve(__dirname, 'src/background.ts'),
-        content: resolve(__dirname, 'src/content/index.ts'),
         options: resolve(__dirname, 'src/options/options.html'),
         popup: resolve(__dirname, 'src/popup/popup.html'),
       },
