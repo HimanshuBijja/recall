@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
 import type { Session } from "@/types";
+import { updateReviewsForResults } from "@/lib/reviews";
 
 export async function GET() {
   return Response.json(await readDb<Session>("sessions.json"));
@@ -23,5 +24,6 @@ export async function POST(req: NextRequest) {
   };
   sessions.push(session);
   await writeDb("sessions.json", sessions);
+  await updateReviewsForResults(session.results, new Date());
   return Response.json(session, { status: 201 });
 }
