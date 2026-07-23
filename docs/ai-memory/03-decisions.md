@@ -51,3 +51,15 @@ rollback net and the seed source.
 **Why:** Standard match-making can be trivialized if options align directly. Independent column shuffling challenges understanding of the paired items.
 **How:** Track selected elements on left and right, highlight errors with brief shake animation, and freeze correct matches.
 
+## 2026-07-23 — Suppress pre-existing react-hooks lint rather than rewrite working code
+**Decision:** The React-Compiler advisory rules (`react-hooks/set-state-in-effect`,
+`react-hooks/purity`, `react-hooks/refs`) fire on 8 pre-existing, known-safe
+patterns. Suppressed each with a documented `eslint-disable` line instead of
+refactoring, and excluded `.gemini/` (Antigravity IDE tooling) from lint + git.
+**Why:** These are advisory, non-breaking flags on intentional patterns (theme
+sync, sessionStorage load, per-card reset, `Date.now()` display math, the
+ref-advance focus helper). Rewriting working interaction code to satisfy the
+linter carries regression risk with no functional benefit. The rules stay
+active as errors for new code.
+**Trade-off:** If those patterns are ever genuinely reworked, drop the disables.
+

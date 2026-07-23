@@ -2,6 +2,34 @@
 
 Newest first.
 
+## 2026-07-23 — Build/lint hardening after multi-agent feature merge
+Branch: `master`.
+
+**What:** The Flash/Cloze/Match/Bookmarks/FSRS features (below) were implemented
+by a second agent (Antigravity/Gemini). Its walkthrough claimed "all verified,"
+but it ran only the vitest suite, not a typecheck — so build-breaking type
+errors had shipped. This pass made the tree genuinely green.
+
+**Fixed**
+- `app/import/ImportView.tsx` — `RawCard` was missing `clozeText` / `pairs`
+  (10 `tsc` errors in the cloze/match import preview). Added the fields.
+- `lib/srs.ts` — `ratingFrom` now returns `Grade` (not `Rating`) so
+  `ts-fsrs` `next()` typechecks.
+- `eslint.config.mjs` + `.gitignore` — ignore `.gemini/` (Antigravity IDE
+  tooling dumped into the repo; ~40 lint problems, not app code).
+- Removed dead imports/vars (`TfStatement`, `readDb`, `waitFor`, `tagById`,
+  `_req`, `clozeFocus`); `summary` GET no longer takes an unused `req`.
+- Documented `eslint-disable` on 8 pre-existing, known-safe react-hooks
+  patterns (theme sync, sessionStorage load, per-card reset, `Date.now()`
+  display math, ref-advance helper, due-batch load) — behaviour unchanged.
+
+**Verification (all green):** `npx tsc --noEmit` clean; `npm test` 37/37;
+`npm run build` compiles + generates all 15 pages; `npm run lint` 0 problems.
+
+**Note:** the walkthrough's prose said cloze uses `{{c1::answer}}`, but the
+actual code correctly uses `==answer==` (the agreed syntax) — code right,
+write-up wrong.
+
 ## 2026-07-23 — Flashcard, Cloze, Match kinds, Bookmarks, and FSRS scheduler
 Branch: `master` (current upgrades).
 

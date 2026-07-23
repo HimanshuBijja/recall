@@ -3,22 +3,30 @@
 _Last updated: 2026-07-23_
 
 ## Branch
-`feat/mongodb-atlas-storage` — MongoDB migration + Atlas→local mirror.
-Complete, reviewed, tests green. Not yet merged to `master`.
+`master`. Everything below is merged and committed (local; **not yet pushed**).
+Includes: MongoDB migration + Atlas→local mirror, the Flash/Cloze/Match/
+Bookmarks/FSRS feature set (built by the Antigravity/Gemini agent), and the
+build/lint hardening pass.
 
 ## Storage
 - **Atlas** = source of truth (`MONGODB_URI`), replica set (transactions +
-  change streams available). Seeded: tags 1, sessions 75, groups 3, bin 492,
-  cards 0.
-- **Local mongod** = live one-way mirror of Atlas (standalone, on
-  `127.0.0.1:27017`).
+  change streams available).
+- **Local mongod** = live one-way mirror of Atlas (standalone, `127.0.0.1:27017`).
 - `data/*.json` retained as a backup snapshot.
 
-## What works
-- Full app CRUD against Atlas (verified via API smoke test).
-- `npm test` → 5/5. `npx tsc --noEmit` → clean.
-- Mirror verified end-to-end: insert/update/delete on Atlas propagate to local
-  in ~2s. `sync:local` and `mirror:watch` and `dev:synced` all functional.
+## Feature surface
+- Card kinds: **mcq, tf-sort, flash, cloze (`==answer==`), match**.
+- **Bookmarks**: `bookmarked` flag, star toggles, `/bookmarks` page + nav,
+  PATCH toggle on `/api/cards/[id]`.
+- **FSRS scheduler** (`ts-fsrs`): reviews updated on session save, `due=1`
+  review mode with batch continue, `/api/reviews/due` + `/summary`, dashboard
+  "Review due" card, analytics retention + 14-day forecast.
+
+## Verification (all green as of this update)
+- `npx tsc --noEmit` → clean.
+- `npm test` → **37/37** (21 files, incl. jsdom component tests).
+- `npm run build` → compiles + generates all 15 pages.
+- `npm run lint` → **0 problems**.
 
 ## How to run locally
 ```bash
@@ -29,11 +37,18 @@ npm run dev:synced   # pull Atlas->local, live mirror, + next dev
 
 ## Env vars
 `MONGODB_URI` (Atlas), `MONGODB_DB` (=recall), `LOCAL_MONGODB_URI` (local
-mirror target). `.env.local` is git-ignored; `.env.local.example` is tracked.
+mirror target). `.env.local` git-ignored; `.env.local.example` tracked.
 
 ## Open items / TODO
 - **Rotate the Atlas DB password** (exposed in a setup transcript).
+- **Push `master`** to origin (currently local-only, several commits ahead).
 - Set `MONGODB_URI`/`MONGODB_DB` in Vercel env before/at deploy.
+- Consider a review of the Gemini implementation against the agreed spec
+  (`docs/superpowers/plans/2026-07-23-all-features.md`) — logic depth of
+  cloze/match/FSRS beyond "tests pass" not yet independently audited.
+- Whole-collection replace on every write is O(n); move hot paths to
+  per-document ops later.
 
 ## Next suggested step
-Deploy the updated application to production and monitor the MongoDB database logs during live spaced-repetition sessions.
+Push `master`, then deploy to Vercel (with Atlas env vars set) and smoke-test a
+live due-review session.
