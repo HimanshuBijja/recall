@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { Card, Tag } from "@/types";
 import { api } from "@/lib/api";
@@ -10,6 +11,7 @@ import { ExportDialog } from "@/components/ExportDialog";
 import { exportCard, exportCards } from "@/lib/export";
 
 export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tags: Tag[] }) {
+  const router = useRouter();
   const toast = useToast();
   const [cards, setCards] = useState<Card[]>(initialCards);
   const [query, setQuery] = useState("");
@@ -152,6 +154,15 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
               <span className="text-xs font-medium text-indigo-700 dark:text-indigo-300 pl-1.5">
                 {selectedIds.size} selected
               </span>
+              <button
+                onClick={() => {
+                  const ids = [...selectedIds];
+                  if (ids.length) router.push(`/test/session?ids=${ids.join(",")}&shuffle=true`);
+                }}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-950"
+              >
+                ▶ Test
+              </button>
               <button
                 onClick={() => {
                   const picked = cards.filter((c) => selectedIds.has(c.id));

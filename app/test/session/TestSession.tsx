@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { Card, Confidence, SessionResult, Tag } from "@/types";
 import { descendantTagIds } from "@/lib/tags";
 import { api } from "@/lib/api";
+import { selectPool } from "@/lib/session-pool";
 
 function shuffleArr<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -31,6 +32,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const router = useRouter();
   const params = useSearchParams();
   const tagsParam = params.get("tags") ?? "";
+  const idsParam = params.get("ids") ?? "";
   const shuffle = params.get("shuffle") !== "false";
   const minDiff = Number(params.get("min") ?? 1);
   const maxDiff = Number(params.get("max") ?? 5);
@@ -39,6 +41,11 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const selectedTagIds = useMemo(
     () => tagsParam.split(",").map((s) => s.trim()).filter(Boolean),
     [tagsParam]
+  );
+
+  const idList = useMemo(
+    () => idsParam.split(",").map((s) => s.trim()).filter(Boolean),
+    [idsParam]
   );
 
   const prepared: PreparedCard[] = useMemo(() => {
@@ -52,11 +59,13 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
       }
     } else {
       const expanded = descendantTagIds(tags, selectedTagIds);
-      pool =
-        selectedTagIds.length === 0
-          ? cards
-          : cards.filter((c) => c.tags.some((t) => expanded.has(t)));
-      pool = pool.filter((c) => c.difficulty >= minDiff && c.difficulty <= maxDiff);
+      pool = selectPool(cards, {
+        ids: idList.length ? idList : undefined,
+        tagIds: selectedTagIds,
+        expanded,
+        minDiff,
+        maxDiff,
+      });
     }
     const ordered = shuffle ? shuffleArr(pool) : pool;
     return ordered.map((card) => {
