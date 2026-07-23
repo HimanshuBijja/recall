@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
+import type { CardKind } from "@/types";
+import { parseCloze } from "@/lib/cloze";
 
 interface RawCard {
   kind?: unknown;
@@ -40,16 +42,40 @@ interface ParsedBundle {
 }
 
 function validateCard(row: unknown): ValidatedCard {
-  const r = (row ?? {}) as RawCard;
+  const r = (row ?? {}) as RawCard & { clozeText?: unknown; pairs?: unknown };
   const errors: string[] = [];
-  const kind = r.kind === "tf-sort" ? "tf-sort" : "mcq";
-  if (typeof r.question !== "string" || !r.question.trim())
+  const kind = (typeof r.kind === "string" ? r.kind : "mcq") as CardKind;
+
+  if (kind !== "cloze" && (typeof r.question !== "string" || !r.question.trim())) {
     errors.push("question missing");
+  }
+
   if (kind === "mcq") {
     if (typeof r.answer !== "string" || !r.answer.trim()) errors.push("answer missing");
     if (!Array.isArray(r.distractors) || r.distractors.length !== 3)
       errors.push("distractors must be exactly 3");
-  } else {
+  } else if (kind === "flash") {
+    if (typeof r.answer !== "string" || !r.answer.trim()) errors.push("answer missing");
+  } else if (kind === "cloze") {
+    if (typeof r.clozeText !== "string" || !r.clozeText.trim()) {
+      errors.push("clozeText missing");
+    } else {
+      const { answers } = parseCloze(r.clozeText);
+      if (answers.length < 1) {
+        errors.push("clozeText needs at least one blank using ==answer== syntax");
+      }
+    }
+  } else if (kind === "match") {
+    if (!Array.isArray(r.pairs) || r.pairs.length < 2) {
+      errors.push("pairs must be an array of at least 2");
+    } else {
+      const bad = r.pairs.some((p) => {
+        const o = (p ?? {}) as { left?: unknown; right?: unknown };
+        return typeof o.left !== "string" || !o.left.trim() || typeof o.right !== "string" || !o.right.trim();
+      });
+      if (bad) errors.push("each pair needs left and right text");
+    }
+  } else if (kind === "tf-sort") {
     if (!Array.isArray(r.statements) || r.statements.length < 2) {
       errors.push("statements must be an array of at least 2");
     } else {
@@ -59,7 +85,10 @@ function validateCard(row: unknown): ValidatedCard {
       });
       if (bad) errors.push("each statement needs text (string) and isTrue (bool)");
     }
+  } else {
+    errors.push(`unknown card kind: ${kind}`);
   }
+
   const d = Number(r.difficulty);
   if (r.difficulty !== undefined && (!Number.isInteger(d) || d < 1 || d > 5))
     errors.push("difficulty must be 1-5");
@@ -468,11 +497,11 @@ export function ImportView() {
     try {
       const payload = {
         cards: validCards.map((r) => {
-          const kind = r.raw.kind === "tf-sort" ? "tf-sort" : "mcq";
+          const kind = (r.raw.kind || "mcq") as CardKind;
           return {
             kind,
-            question: String(r.raw.question),
-            answer: kind === "mcq" ? String(r.raw.answer) : "",
+            question: kind === "cloze" ? String(r.raw.question || r.raw.clozeText || "") : String(r.raw.question || ""),
+            answer: (kind === "mcq" || kind === "flash") ? String(r.raw.answer || "") : "",
             distractors:
               kind === "mcq" && Array.isArray(r.raw.distractors)
                 ? (r.raw.distractors as unknown[]).map(String)
@@ -482,6 +511,14 @@ export function ImportView() {
                 ? (r.raw.statements as Array<{ text: string; isTrue: boolean }>).map((s) => ({
                     text: String(s.text),
                     isTrue: Boolean(s.isTrue),
+                  }))
+                : undefined,
+            clozeText: kind === "cloze" ? String(r.raw.clozeText || "") : undefined,
+            pairs:
+              kind === "match" && Array.isArray(r.raw.pairs)
+                ? (r.raw.pairs as Array<{ left: string; right: string }>).map((p) => ({
+                    left: String(p.left),
+                    right: String(p.right),
                   }))
                 : undefined,
             explanation: r.raw.explanation ? String(r.raw.explanation) : "",
@@ -774,21 +811,25 @@ export function ImportView() {
                         <span
                           className={[
                             "text-[10px] font-semibold px-1.5 py-0.5 rounded",
-                            isTf
-                              ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300"
-                              : "bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300",
-                          ].join(" ")}
+                            r.raw.kind === "tf-sort" && "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300",
+                            r.raw.kind === "flash" && "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300",
+                            r.raw.kind === "cloze" && "bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300",
+                            r.raw.kind === "match" && "bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300",
+                            (!r.raw.kind || r.raw.kind === "mcq") && "bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300",
+                          ].filter(Boolean).join(" ")}
                         >
-                          {isTf ? "T/F" : "MCQ"}
+                          {String(r.raw.kind || "mcq").toUpperCase()}
                         </span>
                         <div className="text-sm font-medium truncate">
-                          {String(r.raw.question ?? "—")}
+                          {String(r.raw.question || r.raw.clozeText || "—")}
                         </div>
                       </div>
                       <div className="text-xs text-zinc-500 mt-0.5 truncate">
-                        {isTf
-                          ? `${statements.length} statement${statements.length === 1 ? "" : "s"}`
-                          : `→ ${String(r.raw.answer ?? "—")}`}
+                        {r.raw.kind === "tf-sort" && `${statements.length} statement${statements.length === 1 ? "" : "s"}`}
+                        {r.raw.kind === "flash" && `→ ${String(r.raw.answer || "—")}`}
+                        {r.raw.kind === "cloze" && `→ ${String(r.raw.clozeText || "—")}`}
+                        {r.raw.kind === "match" && `${Array.isArray(r.raw.pairs) ? r.raw.pairs.length : 0} pair${(Array.isArray(r.raw.pairs) ? r.raw.pairs.length : 0) === 1 ? "" : "s"}`}
+                        {(!r.raw.kind || r.raw.kind === "mcq") && `→ ${String(r.raw.answer || "—")}`}
                       </div>
                       {tagList.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">

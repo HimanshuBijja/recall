@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Card, Session, Tag } from "@/types";
+import { parseCloze } from "@/lib/cloze";
 
 interface Snap {
   session: Session;
@@ -169,10 +170,36 @@ export function ResultView() {
                         </li>
                       ))}
                     </ul>
+                  ) : card.kind === "cloze" && card.clozeText ? (
+                    <div className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed bg-zinc-50 dark:bg-zinc-950/40 p-2 rounded border border-zinc-200 dark:border-zinc-800">
+                      {(() => {
+                        const { segments, answers } = parseCloze(card.clozeText!);
+                        return segments.map((seg, j) => (
+                          <span key={j}>
+                            {seg}
+                            {j < answers.length && (
+                              <span className="inline-block px-1 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-semibold mx-0.5 border border-emerald-200 dark:border-emerald-900">
+                                {answers[j]}
+                              </span>
+                            )}
+                          </span>
+                        ));
+                      })()}
+                    </div>
+                  ) : card.kind === "match" && card.pairs ? (
+                    <ul className="text-xs space-y-1 mt-1 bg-zinc-50 dark:bg-zinc-950/40 p-2 rounded border border-zinc-200 dark:border-zinc-800">
+                      {card.pairs.map((p, j) => (
+                        <li key={j} className="flex gap-2 items-center">
+                          <span className="font-medium text-zinc-700 dark:text-zinc-300">{p.left}</span>
+                          <span className="text-zinc-400">→</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">{p.right}</span>
+                        </li>
+                      ))}
+                    </ul>
                   ) : (
                     <div className="text-xs">
                       <span className="text-emerald-600 dark:text-emerald-400">
-                        Correct: {card.answer}
+                        {card.kind === "flash" ? "Answer: " : "Correct: "} {card.answer}
                       </span>
                     </div>
                   )}

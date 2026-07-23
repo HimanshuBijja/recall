@@ -6,6 +6,8 @@ export interface ExportedCard {
   answer: string;
   distractors: string[];
   statements?: TfStatement[];
+  clozeText?: string;
+  pairs?: Array<{ left: string; right: string }>;
   explanation: string;
   hint: string;
   difficulty: number;
@@ -30,12 +32,19 @@ export interface ExportedBundle {
 
 export function exportCard(card: Card, tagById: Map<string, Tag>): ExportedCard {
   const isTf = card.kind === "tf-sort";
+  const isCloze = card.kind === "cloze";
+  const isMatch = card.kind === "match";
+  const isMcq = !card.kind || card.kind === "mcq";
+  const isFlash = card.kind === "flash";
+
   return {
     kind: card.kind ?? "mcq",
     question: card.question,
-    answer: isTf ? "" : card.answer,
-    distractors: isTf ? [] : [...card.distractors],
+    answer: (isMcq || isFlash) ? card.answer : "",
+    distractors: isMcq ? [...card.distractors] : [],
     statements: isTf && card.statements ? card.statements.map((s) => ({ ...s })) : undefined,
+    clozeText: isCloze ? card.clozeText : undefined,
+    pairs: isMatch && card.pairs ? card.pairs.map((p) => ({ ...p })) : undefined,
     explanation: card.explanation ?? "",
     hint: card.hint ?? "",
     difficulty: card.difficulty,

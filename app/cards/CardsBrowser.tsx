@@ -273,6 +273,30 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                         T/F
                       </span>
                     )}
+                    {c.kind === "flash" && (
+                      <span
+                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300"
+                        title="Flashcard"
+                      >
+                        Flash
+                      </span>
+                    )}
+                    {c.kind === "cloze" && (
+                      <span
+                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300"
+                        title="Cloze deletion"
+                      >
+                        Cloze
+                      </span>
+                    )}
+                    {c.kind === "match" && (
+                      <span
+                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300"
+                        title="Match pairs"
+                      >
+                        Match
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-wrap justify-end gap-1">
                     {c.tags.slice(0, 3).map((tid) => (
@@ -287,9 +311,11 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                 </div>
                 <div className="font-medium text-sm flex-1 line-clamp-3">{c.question}</div>
                 <div className="text-xs text-zinc-500 line-clamp-2">
-                  {c.kind === "tf-sort"
-                    ? `→ ${(c.statements?.length ?? 0)} statement${(c.statements?.length ?? 0) === 1 ? "" : "s"}`
-                    : `→ ${c.answer}`}
+                  {c.kind === "tf-sort" && `→ ${(c.statements?.length ?? 0)} statement${(c.statements?.length ?? 0) === 1 ? "" : "s"}`}
+                  {c.kind === "flash" && `→ ${c.answer}`}
+                  {c.kind === "cloze" && `→ ${(c.clozeText?.match(/==(.+?)==/g)?.length ?? 0)} blank${(c.clozeText?.match(/==(.+?)==/g)?.length ?? 0) === 1 ? "" : "s"}`}
+                  {c.kind === "match" && `→ ${(c.pairs?.length ?? 0)} pair${(c.pairs?.length ?? 0) === 1 ? "" : "s"}`}
+                  {(!c.kind || c.kind === "mcq") && `→ ${c.answer}`}
                 </div>
                 <div className="flex justify-end gap-2 pt-1">
                   <button

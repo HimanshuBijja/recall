@@ -9,10 +9,12 @@ interface BundleStatement {
 
 interface BundleCard {
   kind?: CardKind;
-  question: string;
+  question?: string;
   answer?: string;
   distractors?: string[];
   statements?: BundleStatement[];
+  clozeText?: string;
+  pairs?: Array<{ left?: unknown; right?: unknown }>;
   explanation?: string;
   hint?: string;
   difficulty?: number;
@@ -77,37 +79,87 @@ export async function POST(req: NextRequest) {
 
   let cardsInserted = 0;
   for (const item of bundle.cards ?? []) {
-    if (typeof item?.question !== "string") continue;
-    const kind: CardKind = item.kind === "tf-sort" ? "tf-sort" : "mcq";
-    const statements: TfStatement[] = Array.isArray(item.statements)
-      ? item.statements
-          .map((s) => ({
-            text: typeof s?.text === "string" ? s.text.trim() : "",
-            isTrue: Boolean(s?.isTrue),
-          }))
-          .filter((s) => s.text.length > 0)
-      : [];
-    if (kind === "mcq" && typeof item.answer !== "string") continue;
-    if (kind === "tf-sort" && statements.length < 2) continue;
+    const kind: CardKind = item.kind || "mcq";
+    if (kind !== "cloze" && typeof item.question !== "string") continue;
+    if (kind === "cloze" && typeof item.clozeText !== "string") continue;
+
     const tagIds = (item.tags ?? [])
       .filter((n): n is string => typeof n === "string" && !!n.trim())
       .map((n) => ensureTag(n.trim()).id);
-    const card: Card = {
+
+    const baseCard = {
       id: crypto.randomUUID(),
       kind,
-      question: item.question,
-      answer: kind === "mcq" ? (item.answer ?? "") : "",
-      distractors:
-        kind === "mcq" && Array.isArray(item.distractors)
-          ? item.distractors.map(String)
-          : [],
-      statements: kind === "tf-sort" ? statements : undefined,
       explanation: item.explanation ?? "",
       hint: item.hint ?? "",
       difficulty: ((item.difficulty ?? 3) as Card["difficulty"]),
       tags: tagIds,
       createdAt: new Date().toISOString(),
     };
+
+    let card: Card;
+    if (kind === "mcq") {
+      if (typeof item.answer !== "string") continue;
+      card = {
+        ...baseCard,
+        question: item.question || "",
+        answer: item.answer,
+        distractors: Array.isArray(item.distractors) ? item.distractors.map(String) : [],
+      };
+    } else if (kind === "tf-sort") {
+      const statements: TfStatement[] = Array.isArray(item.statements)
+        ? item.statements
+            .map((s) => ({
+              text: typeof s?.text === "string" ? s.text.trim() : "",
+              isTrue: Boolean(s?.isTrue),
+            }))
+            .filter((s) => s.text.length > 0)
+        : [];
+      if (statements.length < 2) continue;
+      card = {
+        ...baseCard,
+        question: item.question || "",
+        answer: "",
+        distractors: [],
+        statements,
+      };
+    } else if (kind === "flash") {
+      if (typeof item.answer !== "string") continue;
+      card = {
+        ...baseCard,
+        question: item.question || "",
+        answer: item.answer,
+        distractors: [],
+      };
+    } else if (kind === "cloze") {
+      card = {
+        ...baseCard,
+        question: item.question || item.clozeText || "",
+        answer: "",
+        distractors: [],
+        clozeText: item.clozeText || "",
+      };
+    } else if (kind === "match") {
+      const pairs = Array.isArray(item.pairs)
+        ? item.pairs
+            .map((p) => {
+              const o = (p ?? {}) as { left?: unknown; right?: unknown };
+              return { left: String(o.left ?? "").trim(), right: String(o.right ?? "").trim() };
+            })
+            .filter((p) => p.left.length > 0 && p.right.length > 0)
+        : [];
+      if (pairs.length < 2) continue;
+      card = {
+        ...baseCard,
+        question: item.question || "",
+        answer: "",
+        distractors: [],
+        pairs,
+      };
+    } else {
+      continue;
+    }
+
     cards.push(card);
     cardsInserted += 1;
   }
