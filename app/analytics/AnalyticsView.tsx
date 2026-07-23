@@ -15,12 +15,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { Card, Session, Tag } from "@/types";
+import type { Card, Session, Tag, Review } from "@/types";
+import { getReviewsSummary } from "@/lib/due";
 
 interface Props {
   sessions: Session[];
   cards: Card[];
   tags: Tag[];
+  reviews: Review[];
 }
 
 interface TagPerf {
@@ -55,7 +57,7 @@ function fmtMs(ms: number) {
   return `${Math.floor(ms / 60_000)}m ${Math.round((ms % 60_000) / 1000)}s`;
 }
 
-export function AnalyticsView({ sessions, cards, tags }: Props) {
+export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
   const router = useRouter();
   const [range, setRange] = useState<"7d" | "30d" | "all">("all");
   const [query, setQuery] = useState("");
@@ -64,6 +66,10 @@ export function AnalyticsView({ sessions, cards, tags }: Props) {
 
   const cardById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
+
+  const summary = useMemo(() => {
+    return getReviewsSummary(cards, reviews, new Date());
+  }, [cards, reviews]);
 
   const filteredSessions = useMemo(() => {
     if (range === "all") return sessions;
@@ -121,6 +127,19 @@ export function AnalyticsView({ sessions, cards, tags }: Props) {
   const bestScore = filteredSessions.length
     ? Math.max(...filteredSessions.map((s) => s.score))
     : 0;
+
+  const srsReviewed = useMemo(() => reviews.filter((r) => r.lastReviewedAt !== null), [reviews]);
+  const srsCorrect = useMemo(() => {
+    return srsReviewed.filter((r) => {
+      const hist = cardHistory.get(r.cardId);
+      if (!hist || hist.length === 0) return false;
+      const latest = hist[hist.length - 1].result;
+      return latest.correct && latest.confidence >= 2;
+    }).length;
+  }, [srsReviewed, cardHistory]);
+  const srsRetention = useMemo(() => {
+    return srsReviewed.length ? Math.round((srsCorrect / srsReviewed.length) * 100) : 100;
+  }, [srsReviewed, srsCorrect]);
 
   // ── Charts data
   const trend = useMemo(
@@ -368,7 +387,7 @@ export function AnalyticsView({ sessions, cards, tags }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
         <Stat label="Sessions" value={filteredSessions.length} />
         <Stat
           label="Cards seen"
@@ -380,6 +399,12 @@ export function AnalyticsView({ sessions, cards, tags }: Props) {
           value={`${overallAccuracy}%`}
           accent={overallAccuracy >= 75 ? "emerald" : overallAccuracy >= 50 ? "amber" : "rose"}
           hint="latest per card"
+        />
+        <Stat
+          label="SRS Retention"
+          value={`${srsRetention}%`}
+          accent={srsRetention >= 85 ? "emerald" : srsRetention >= 70 ? "amber" : "rose"}
+          hint={`${srsReviewed.length} card reviews`}
         />
         <Stat label="Best score" value={`${bestScore}%`} accent="indigo" />
         <Stat label="Avg time" value={fmtMs(avgTime)} />
@@ -448,6 +473,28 @@ export function AnalyticsView({ sessions, cards, tags }: Props) {
           <div className="h-56 flex flex-col items-center justify-center">
             <div className="text-5xl font-bold">{fmtMs(totalTime)}</div>
             <div className="text-sm text-zinc-500 mt-2">across {filteredSessions.length} sessions</div>
+          </div>
+        </ChartCard>
+
+        <ChartCard title="SRS review forecast" subtitle="Upcoming reviews for the next 14 days">
+          <div className="h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={summary.forecast} margin={{ top: 5, right: 8, bottom: 0, left: -20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.12} />
+                <XAxis
+                  dataKey="date"
+                  stroke="currentColor"
+                  fontSize={11}
+                  tickFormatter={(val) => {
+                    const parts = val.split("-");
+                    return `${parts[1]}/${parts[2]}`;
+                  }}
+                />
+                <YAxis stroke="currentColor" fontSize={11} allowDecimals={false} />
+                <Tooltip content={<ChartTip />} />
+                <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </ChartCard>
       </div>

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { readDb } from "@/lib/db";
-import type { Card, Group, Session, Tag } from "@/types";
+import type { Card, Group, Session, Tag, Review } from "@/types";
 import { TagTree } from "@/components/TagTree";
 import { GroupQuickLaunch } from "@/components/GroupQuickLaunch";
 import { ExportAllButton } from "@/components/ExportAllButton";
 import { exportBundle } from "@/lib/export";
+import { getReviewsSummary } from "@/lib/due";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,9 @@ export default async function Home() {
   const tags = await readDb<Tag>("tags.json");
   const sessions = await readDb<Session>("sessions.json");
   const groups = await readDb<Group>("groups.json");
+  const reviews = await readDb<Review>("reviews.json");
+
+  const summary = getReviewsSummary(cards, reviews, new Date());
 
   // Tag accuracy — uses the LATEST attempt per card so retries reflect improvement.
   const cardById = new Map(cards.map((c) => [c.id, c]));
@@ -86,6 +90,31 @@ export default async function Home() {
           <Stat label="Groups" value={groups.length} />
           <Stat label="Weak tags (&lt;50%)" value={weakTags.length} accent="amber" />
           <Stat label="Day streak" value={streak} accent="emerald" />
+        </div>
+
+        {/* FSRS spaced repetition card */}
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-5 bg-white dark:bg-zinc-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-1.5">
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <span>Spaced Repetition Review</span>
+              {summary.due > 0 && (
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+              )}
+            </h3>
+            <div className="flex items-center gap-4 text-xs text-zinc-500 font-medium">
+              <span>★ {summary.due} due</span>
+              <span>·</span>
+              <span>⚠ {summary.overdue} overdue</span>
+              <span>·</span>
+              <span>☆ {summary.new} new</span>
+            </div>
+          </div>
+          <Link
+            href="/test/session?due=1"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium text-sm transition-colors shadow-sm whitespace-nowrap"
+          >
+            Review due ({summary.due}) →
+          </Link>
         </div>
 
         <div className="flex flex-wrap gap-2 sm:gap-3">
