@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Card, Session, Tag } from "@/types";
 import { parseCloze } from "@/lib/cloze";
+import { CardFrame } from "@/components/CardFrame";
 
 interface Snap {
   session: Session;
@@ -207,6 +208,7 @@ export function ResultView() {
                   {card.explanation && (
                     <div className="text-xs text-zinc-500">{card.explanation}</div>
                   )}
+                  <CardFrame url={card.source?.screenshotUrl} />
                   <div className="flex flex-wrap gap-1 pt-1">
                     {card.tags.slice(0, 4).map((tid) => (
                       <span
