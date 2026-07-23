@@ -24,6 +24,15 @@
 .DS_Store
 *.pem
 
+# secrets / credentials — NEVER commit
+service-account.json
+*service-account*.json
+*-credentials.json
+*.credentials.json
+gcp-*.json
+*.key
+*.p12
+
 # debug
 npm-debug.log*
 yarn-debug.log*
