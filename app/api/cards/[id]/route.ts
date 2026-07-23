@@ -111,3 +111,21 @@ export async function DELETE(
   await writeDb("bin.json", bin);
   return Response.json({ ok: true, orphanedTags: orphanTagIds.length });
 }
+
+export async function PATCH(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  const { id } = await ctx.params;
+  const body = await req.json();
+  const cards = await readDb<Card>("cards.json");
+  const idx = cards.findIndex((c) => c.id === id);
+  if (idx === -1) return Response.json({ error: "not found" }, { status: 404 });
+
+  if (typeof body.bookmarked === "boolean") {
+    cards[idx].bookmarked = body.bookmarked;
+    await writeDb("cards.json", cards);
+  }
+
+  return Response.json(cards[idx]);
+}
