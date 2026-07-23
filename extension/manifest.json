@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Recall Capture",
+  "version": "0.1.0",
+  "description": "Capture YouTube frames into Recall cards (quiz/flash/cloze/tf-sort/match).",
+  "icons": { "128": "icons/icon128.png" },
+  "action": { "default_title": "Recall Capture", "default_popup": "popup.html" },
+  "options_ui": { "page": "options.html", "open_in_tab": true },
+  "background": { "service_worker": "background.js", "type": "module" },
+  "content_scripts": [
+    { "matches": ["https://www.youtube.com/*"], "js": ["content.js"], "run_at": "document_idle" }
+  ],
+  "host_permissions": ["http://localhost:3000/*", "https://*/*"],
+  "permissions": ["storage", "alarms", "tabs", "scripting"]
+}
