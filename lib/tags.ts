@@ -17,7 +17,7 @@ export function flattenDag(tags: Tag[]): TagTreeNode[] {
   const byId = new Map(tags.map((t) => [t.id, t]));
   const parentCount = new Map<string, number>();
   for (const t of tags) {
-    for (const p of t.parents) {
+    for (const p of t.parents ?? []) {
       if (byId.has(p)) parentCount.set(t.id, (parentCount.get(t.id) ?? 0) + 1);
     }
   }
@@ -25,7 +25,7 @@ export function flattenDag(tags: Tag[]): TagTreeNode[] {
   // Children index
   const childrenOf = new Map<string, string[]>();
   for (const t of tags) {
-    const parents = t.parents.filter((p) => byId.has(p));
+    const parents = (t.parents ?? []).filter((p) => byId.has(p));
     if (parents.length === 0) continue;
     for (const p of parents) {
       const list = childrenOf.get(p) ?? [];
@@ -35,7 +35,7 @@ export function flattenDag(tags: Tag[]): TagTreeNode[] {
   }
 
   const roots = tags.filter(
-    (t) => t.parents.filter((p) => byId.has(p)).length === 0
+    (t) => (t.parents ?? []).filter((p) => byId.has(p)).length === 0
   );
 
   const build = (tag: Tag, ancestors: Set<string>): TagTreeNode => {
@@ -59,7 +59,7 @@ export function descendantTagIds(tags: Tag[], rootIds: string[]): Set<string> {
   const byId = new Map(tags.map((t) => [t.id, t]));
   const childrenOf = new Map<string, string[]>();
   for (const t of tags) {
-    for (const p of t.parents) {
+    for (const p of t.parents ?? []) {
       if (!byId.has(p)) continue;
       const list = childrenOf.get(p) ?? [];
       list.push(t.id);

@@ -1,3 +1,5 @@
+import Script from "next/script";
+
 /**
  * Inline script that sets the initial theme class before React hydrates.
  * Reads from localStorage, falls back to prefers-color-scheme.
@@ -11,5 +13,11 @@ export function ThemeScript() {
       document.documentElement.classList.toggle('dark', dark);
     } catch {}
   })();`;
-  return <script dangerouslySetInnerHTML={{ __html: code }} />;
+  return (
+    <Script
+      id="theme-script"
+      strategy="beforeInteractive"
+      dangerouslySetInnerHTML={{ __html: code }}
+    />
+  );
 }

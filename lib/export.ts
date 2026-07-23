@@ -41,14 +41,14 @@ export function exportCard(card: Card, tagById: Map<string, Tag>): ExportedCard 
     kind: card.kind ?? "mcq",
     question: card.question,
     answer: (isMcq || isFlash) ? card.answer : "",
-    distractors: isMcq ? [...card.distractors] : [],
+    distractors: isMcq ? [...(card.distractors ?? [])] : [],
     statements: isTf && card.statements ? card.statements.map((s) => ({ ...s })) : undefined,
     clozeText: isCloze ? card.clozeText : undefined,
     pairs: isMatch && card.pairs ? card.pairs.map((p) => ({ ...p })) : undefined,
     explanation: card.explanation ?? "",
     hint: card.hint ?? "",
     difficulty: card.difficulty,
-    tags: card.tags.map((id) => tagById.get(id)?.name).filter(Boolean) as string[],
+    tags: (card.tags ?? []).map((id) => tagById.get(id)?.name).filter(Boolean) as string[],
   };
 }
 
@@ -60,7 +60,7 @@ export function exportCards(cards: Card[], tags: Tag[]): ExportedCard[] {
 export function exportTag(tag: Tag, tagById: Map<string, Tag>): ExportedTag {
   return {
     name: tag.name,
-    parents: tag.parents.map((id) => tagById.get(id)?.name).filter(Boolean) as string[],
+    parents: (tag.parents ?? []).map((id) => tagById.get(id)?.name).filter(Boolean) as string[],
   };
 }
 
@@ -72,7 +72,7 @@ export function exportTags(tags: Tag[]): ExportedTag[] {
 export function exportGroup(group: Group, tagById: Map<string, Tag>): ExportedGroup {
   return {
     name: group.name,
-    tags: group.tagIds.map((id) => tagById.get(id)?.name).filter(Boolean) as string[],
+    tags: (group.tagIds ?? []).map((id) => tagById.get(id)?.name).filter(Boolean) as string[],
   };
 }
 
