@@ -100,46 +100,20 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const [clozeInputs, setClozeInputs] = useState<Record<number, string>>({});
   const [clozeSubmitted, setClozeSubmitted] = useState(false);
   const [clozeFocus, setClozeFocus] = useState(0);
-
-  // Reset per-card state on advance.
-  useEffect(() => {
-    startRef.current = Date.now();
-    setPicked(null);
-    setTfAssignments({});
-    setTfSubmitted(false);
-    setTfFocus(0);
-    setHintShown(false);
-    setElapsed(0);
-    setFlipped(false);
-    setClozeInputs({});
-    setClozeSubmitted(false);
-    setClozeFocus(0);
-  }, [idx]);
-
-  // Live timer (stops once answered)
-  useEffect(() => {
-    if (picked || tfSubmitted || clozeSubmitted) return;
-    const t = setInterval(() => setElapsed(Date.now() - startRef.current), 100);
-    return () => clearInterval(t);
-  }, [picked, tfSubmitted, clozeSubmitted, idx]);
-
-  // beforeunload guard
-  useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (idx > 0 && idx < prepared.length) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [idx, prepared.length]);
+  const [selectedLeft, setSelectedLeft] = useState<number | null>(null);
+  const [selectedRight, setSelectedRight] = useState<number | null>(null);
+  const [matchedPairs, setMatchedPairs] = useState<Set<number>>(new Set());
+  const [matchMistakes, setMatchMistakes] = useState(0);
+  const [wrongPair, setWrongPair] = useState<[number, number] | null>(null);
+  const [leftOrder, setLeftOrder] = useState<number[]>([]);
+  const [rightOrder, setRightOrder] = useState<number[]>([]);
 
   const current = prepared[idx];
   const total = prepared.length;
   const isTfSort = current?.card.kind === "tf-sort" && !!current.card.statements;
   const isFlash = current?.card.kind === "flash";
   const isCloze = current?.card.kind === "cloze";
+  const isMatch = current?.card.kind === "match";
   const tfStatements = isTfSort ? current.card.statements! : [];
   const tfAllAssigned =
     isTfSort && tfStatements.every((_, i) => tfAssignments[i] === true || tfAssignments[i] === false);
@@ -157,7 +131,55 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     return gradeCloze(clozeData.answers, filled);
   }, [isCloze, clozeData, clozeInputs]);
 
-  const answered = isTfSort ? tfSubmitted : isFlash ? flipped : isCloze ? clozeSubmitted : picked !== null;
+  const matchAllMatched = isMatch && current?.card.pairs && matchedPairs.size === current.card.pairs.length;
+  const matchAllCorrect = isMatch && matchMistakes === 0;
+
+  const answered = isTfSort ? tfSubmitted : isFlash ? flipped : isCloze ? clozeSubmitted : isMatch ? !!matchAllMatched : picked !== null;
+
+  // Reset per-card state on advance.
+  useEffect(() => {
+    startRef.current = Date.now();
+    setPicked(null);
+    setTfAssignments({});
+    setTfSubmitted(false);
+    setTfFocus(0);
+    setHintShown(false);
+    setElapsed(0);
+    setFlipped(false);
+    setClozeInputs({});
+    setClozeSubmitted(false);
+    setClozeFocus(0);
+    setSelectedLeft(null);
+    setSelectedRight(null);
+    setMatchedPairs(new Set());
+    setMatchMistakes(0);
+    setWrongPair(null);
+
+    if (current?.card.kind === "match" && current.card.pairs) {
+      const n = current.card.pairs.length;
+      setLeftOrder(shuffleArr(Array.from({ length: n }, (_, i) => i)));
+      setRightOrder(shuffleArr(Array.from({ length: n }, (_, i) => i)));
+    }
+  }, [idx, current]);
+
+  // Live timer (stops once answered)
+  useEffect(() => {
+    if (picked || tfSubmitted || clozeSubmitted || matchAllMatched) return;
+    const t = setInterval(() => setElapsed(Date.now() - startRef.current), 100);
+    return () => clearInterval(t);
+  }, [picked, tfSubmitted, clozeSubmitted, matchAllMatched, idx]);
+
+  // beforeunload guard
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (idx > 0 && idx < prepared.length) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [idx, prepared.length]);
 
   const recordAndAdvance = useCallback(
     (conf: Confidence, currentPicked: string, overrideCorrect?: boolean) => {
@@ -296,6 +318,16 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             if (allFilled) setClozeSubmitted(true);
             else recordAndAdvance(1, "__skipped__");
           }
+        } else if (isMatch) {
+          if (e.key.toLowerCase() === "h") {
+            if (current.card.hint) {
+              e.preventDefault();
+              setHintShown((s) => !s);
+            }
+          } else if (e.key.toLowerCase() === "s") {
+            e.preventDefault();
+            recordAndAdvance(1, "__skipped__");
+          }
         } else if (e.key >= "1" && e.key <= "4") {
           const i = Number(e.key) - 1;
           if (i < current.options.length) {
@@ -327,6 +359,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             recordAndAdvance(Number(e.key) as Confidence, "", tfAllCorrect);
           } else if (isCloze) {
             recordAndAdvance(Number(e.key) as Confidence, "", clozeAllCorrect);
+          } else if (isMatch) {
+            recordAndAdvance(Number(e.key) as Confidence, "", matchAllCorrect);
           } else if (picked) {
             recordAndAdvance(Number(e.key) as Confidence, picked);
           }
@@ -335,7 +369,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current, picked, answered, isTfSort, tfAllCorrect, tfAssignments, tfFocus, recordAndAdvance, isFlash, flipped, isCloze, clozeData, clozeInputs, clozeAllCorrect]);
+  }, [current, picked, answered, isTfSort, tfAllCorrect, tfAssignments, tfFocus, recordAndAdvance, isFlash, flipped, isCloze, clozeData, clozeInputs, clozeAllCorrect, isMatch, matchAllCorrect]);
 
   if (prepared.length === 0) {
     return (
@@ -391,7 +425,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         key={idx}
         className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 bg-white dark:bg-zinc-900 space-y-5 animate-in fade-in duration-200"
       >
-        {!isFlash && !isCloze && (
+        {!isFlash && !isCloze && !isMatch && (
           <h2 className="text-base sm:text-xl font-medium leading-relaxed">
             {current.card.question}
           </h2>
@@ -470,6 +504,123 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                 </div>
               </div>
             )}
+          </div>
+        ) : isMatch ? (
+          <div className="space-y-4">
+            <style>{`
+              @keyframes match-shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-4px); }
+                75% { transform: translateX(4px); }
+              }
+              .animate-match-shake {
+                animation: match-shake 0.2s ease-in-out 2;
+              }
+            `}</style>
+            <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">
+              Tap a left element, then a right element to pair them:
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Left Column */}
+              <div className="space-y-2">
+                {leftOrder.map((pairIdx) => {
+                  const p = current.card.pairs![pairIdx];
+                  const isMatched = matchedPairs.has(pairIdx);
+                  const isSelected = selectedLeft === pairIdx;
+                  const isWrong = wrongPair && wrongPair[0] === pairIdx;
+
+                  return (
+                    <button
+                      key={pairIdx}
+                      type="button"
+                      disabled={isMatched || !!wrongPair}
+                      onClick={() => {
+                        if (selectedLeft === pairIdx) {
+                          setSelectedLeft(null);
+                          return;
+                        }
+                        setSelectedLeft(pairIdx);
+                        if (selectedRight !== null) {
+                          const rIdx = selectedRight;
+                          if (pairIdx === rIdx) {
+                            setMatchedPairs((s) => {
+                              const n = new Set(s);
+                              n.add(pairIdx);
+                              return n;
+                            });
+                          } else {
+                            setMatchMistakes((m) => m + 1);
+                            setWrongPair([pairIdx, rIdx]);
+                            setTimeout(() => setWrongPair(null), 800);
+                          }
+                          setSelectedLeft(null);
+                          setSelectedRight(null);
+                        }
+                      }}
+                      className={[
+                        "w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 select-none",
+                        isMatched && "border-emerald-500 bg-emerald-50/40 text-emerald-800 dark:text-emerald-300 dark:border-emerald-950 font-medium opacity-60 cursor-default",
+                        isWrong && "border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 animate-match-shake",
+                        isSelected && !isMatched && !isWrong && "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 ring-2 ring-indigo-200 dark:ring-indigo-900 text-indigo-900 dark:text-indigo-100",
+                        !isMatched && !isSelected && !isWrong && "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200",
+                      ].filter(Boolean).join(" ")}
+                    >
+                      {p.left}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-2">
+                {rightOrder.map((pairIdx) => {
+                  const p = current.card.pairs![pairIdx];
+                  const isMatched = matchedPairs.has(pairIdx);
+                  const isSelected = selectedRight === pairIdx;
+                  const isWrong = wrongPair && wrongPair[1] === pairIdx;
+
+                  return (
+                    <button
+                      key={pairIdx}
+                      type="button"
+                      disabled={isMatched || !!wrongPair}
+                      onClick={() => {
+                        if (selectedRight === pairIdx) {
+                          setSelectedRight(null);
+                          return;
+                        }
+                        setSelectedRight(pairIdx);
+                        if (selectedLeft !== null) {
+                          const lIdx = selectedLeft;
+                          if (lIdx === pairIdx) {
+                            setMatchedPairs((s) => {
+                              const n = new Set(s);
+                              n.add(pairIdx);
+                              return n;
+                            });
+                          } else {
+                            setMatchMistakes((m) => m + 1);
+                            setWrongPair([lIdx, pairIdx]);
+                            setTimeout(() => setWrongPair(null), 800);
+                          }
+                          setSelectedLeft(null);
+                          setSelectedRight(null);
+                        }
+                      }}
+                      className={[
+                        "w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 select-none",
+                        isMatched && "border-emerald-500 bg-emerald-50/40 text-emerald-800 dark:text-emerald-300 dark:border-emerald-950 font-medium opacity-60 cursor-default",
+                        isWrong && "border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 animate-match-shake",
+                        isSelected && !isMatched && !isWrong && "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 ring-2 ring-indigo-200 dark:ring-indigo-900 text-indigo-900 dark:text-indigo-100",
+                        !isMatched && !isSelected && !isWrong && "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200",
+                      ].filter(Boolean).join(" ")}
+                    >
+                      {p.right}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         ) : isCloze ? (
           <div className="space-y-5">
@@ -665,6 +816,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             ? tfAllCorrect
             : isCloze
             ? clozeAllCorrect
+            : isMatch
+            ? matchAllCorrect
             : picked === current.card.answer;
           const tfCorrectCount = isTfSort
             ? tfStatements.filter((s, i) => tfAssignments[i] === s.isTrue).length
@@ -696,6 +849,11 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                   · {clozeCorrectCount}/{clozeData.answers.length} blanks correct
                 </span>
               )}
+              {isMatch && (
+                <span className="text-zinc-500">
+                  · completed with {matchMistakes} mistake{matchMistakes === 1 ? "" : "s"}
+                </span>
+              )}
               <span className="text-zinc-500">· answered in {fmtMs(Date.now() - startRef.current)}</span>
             </div>
 
@@ -725,6 +883,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                         ? recordAndAdvance(c, "", tfAllCorrect)
                         : isCloze
                         ? recordAndAdvance(c, "", clozeAllCorrect)
+                        : isMatch
+                        ? recordAndAdvance(c, "", matchAllCorrect)
                         : recordAndAdvance(c, picked!)
                     }
                     disabled={submitting}
@@ -771,6 +931,10 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             ) : isCloze ? (
               <span>
                 <Kbd>Tab</Kbd> move · <Kbd>Enter</Kbd> submit
+              </span>
+            ) : isMatch ? (
+              <span>
+                Tap pairs to match
               </span>
             ) : (
               <span>
