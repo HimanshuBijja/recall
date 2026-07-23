@@ -2,6 +2,29 @@
 
 Significant architectural/technical decisions. Newest first.
 
+## 2026-07-23 — FSRS settings: practical knobs, going-forward-only, hand-rolled UI
+**Decision 1 — expose a practical subset, not raw weights.** `/settings` edits
+`request_retention`, `maximum_interval`, learning/relearning steps, fuzz, and
+short-term only. **Why:** the 19 `w[]` weights are machine-optimized from review
+history; hand-editing them is a foot-gun with no good UX. Left as future work
+(needs an optimizer over `reviews`).
+
+**Decision 2 — settings apply going-forward only.** Saving does not recompute
+stored due dates; each card picks up new params on its next review. **Why:**
+matches Anki/FSRS norms, avoids a flood of suddenly-due cards, and history can't
+be perfectly replayed anyway.
+
+**Decision 3 — scheduler takes settings via dependency injection.**
+`applyReview(..., scheduler?)` defaults to a default-params FSRS instance;
+`updateReviewsForResults` builds one instance from saved settings per session
+save and passes it in. **Why:** keeps the pure `srs.ts` functions testable and
+all existing callers/tests unchanged, while making the live path configurable.
+
+**Decision 4 — settings UI matches existing hand-rolled Tailwind, not the
+shadcn/RHF/Zod stack in `instructions.md`.** **Why:** the whole app is
+hand-rolled Tailwind with plain React state + `useToast`; introducing shadcn on
+one page would be inconsistent. Noted as a deliberate deviation.
+
 ## 2026-07-23 — MongoDB as the data store (was flat JSON)
 **Decision:** Store data in MongoDB instead of flat JSON files.
 **Why:** Enables writes in production (Vercel FS is read-only), so sessions,

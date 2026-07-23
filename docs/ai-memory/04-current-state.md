@@ -20,13 +20,22 @@ build/lint hardening pass.
   PATCH toggle on `/api/cards/[id]`.
 - **FSRS scheduler** (`ts-fsrs`): reviews updated on session save, `due=1`
   review mode with batch continue, `/api/reviews/due` + `/summary`, dashboard
-  "Review due" card, analytics retention + 14-day forecast.
+  "Review due" card, analytics retention + 14-day forecast. **Now configurable**
+  via `/settings` (see below). Persistence bug fixed — `learning_steps`/`lapses`
+  now round-trip, so Good/Hard answers graduate instead of looping (was broken).
+- **Settings** (`/settings`): edit practical FSRS params (retention, max
+  interval, learning/relearning steps, fuzz, short-term) in a new `settings`
+  collection; `GET`/`PUT /api/settings`. Live interval visualizer (Recharts)
+  projects intervals for a rating path + shows first-review branches, recomputed
+  from unsaved form values. Scheduler reads settings on session save
+  (going-forward only). `lib/settings.ts`, `lib/fsrs-preview.ts`.
 
 ## Verification (all green as of this update)
 - `npx tsc --noEmit` → clean.
-- `npm test` → **37/37** (21 files, incl. jsdom component tests).
-- `npm run build` → compiles + generates all 15 pages.
+- `npm test` → **48/48** (23 files, incl. jsdom component tests).
 - `npm run lint` → **0 problems**.
+- `npm run build` not re-run this pass (project rule: no prod build unless asked);
+  last known-good build generated all pages before the settings page was added.
 
 ## How to run locally
 ```bash

@@ -20,14 +20,14 @@ test("selectDue returns correct due and new cards", () => {
       dueAt: new Date(now.getTime() - 1000).toISOString(),
       lastReviewedAt: null,
       firstSeenAt: "",
-      fsrs: { stability: 1, difficulty: 1, elapsed_days: 0, scheduled_days: 0, reps: 1, state: 1, last_review: null, due: "" },
+      fsrs: { stability: 1, difficulty: 1, elapsed_days: 0, scheduled_days: 0, learning_steps: 0, lapses: 0, reps: 1, state: 1, last_review: null, due: "" },
     },
     {
       cardId: "c2",
       dueAt: new Date(now.getTime() + 10_000).toISOString(),
       lastReviewedAt: null,
       firstSeenAt: "",
-      fsrs: { stability: 1, difficulty: 1, elapsed_days: 0, scheduled_days: 0, reps: 1, state: 1, last_review: null, due: "" },
+      fsrs: { stability: 1, difficulty: 1, elapsed_days: 0, scheduled_days: 0, learning_steps: 0, lapses: 0, reps: 1, state: 1, last_review: null, due: "" },
     },
   ];
 
@@ -48,7 +48,7 @@ test("getReviewsSummary reports correct counts and forecast shape", () => {
       dueAt: new Date(now.getTime() - 1000).toISOString(),
       lastReviewedAt: new Date().toISOString(),
       firstSeenAt: "",
-      fsrs: { stability: 1, difficulty: 1, elapsed_days: 0, scheduled_days: 0, reps: 1, state: 1, last_review: null, due: "" },
+      fsrs: { stability: 1, difficulty: 1, elapsed_days: 0, scheduled_days: 0, learning_steps: 0, lapses: 0, reps: 1, state: 1, last_review: null, due: "" },
     },
   ];
 

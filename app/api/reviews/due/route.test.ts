@@ -57,7 +57,7 @@ test("GET /api/reviews/due returns lists of due and new cards", async () => {
     dueAt: new Date(Date.now() - 60_000).toISOString(),
     lastReviewedAt: null,
     firstSeenAt: new Date().toISOString(),
-    fsrs: { stability: 1, difficulty: 1, elapsed_days: 0, scheduled_days: 0, reps: 1, state: 1, last_review: null, due: "" },
+    fsrs: { stability: 1, difficulty: 1, elapsed_days: 0, scheduled_days: 0, learning_steps: 0, lapses: 0, reps: 1, state: 1, last_review: null, due: "" },
   };
   await writeDb("reviews.json", [review]);
 

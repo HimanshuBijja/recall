@@ -39,7 +39,7 @@ const mockReviews: Review[] = [
     dueAt: new Date().toISOString(),
     lastReviewedAt: new Date().toISOString(),
     firstSeenAt: new Date().toISOString(),
-    fsrs: { stability: 1.5, difficulty: 2.0, elapsed_days: 1, scheduled_days: 2, reps: 2, state: 2, last_review: new Date().toISOString(), due: new Date().toISOString() },
+    fsrs: { stability: 1.5, difficulty: 2.0, elapsed_days: 1, scheduled_days: 2, learning_steps: 0, lapses: 0, reps: 2, state: 2, last_review: new Date().toISOString(), due: new Date().toISOString() },
   }
 ];
 

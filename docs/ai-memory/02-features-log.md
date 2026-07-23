@@ -2,6 +2,52 @@
 
 Newest first.
 
+## 2026-07-23 — FSRS scheduling fix + Settings page with interval visualizer
+Branch: `master`.
+
+**Critical bug fixed:** `lib/srs.ts` `serialize`/`deserialize` dropped two
+fields the ts-fsrs 5.4 `Card` needs — `learning_steps` and `lapses`. Since every
+review round-trips through Mongo, `learning_steps` reset to 0 each review, so a
+card answered **Good** (confidence 2) or **Hard** (confidence 1) never left the
+learning steps — it was pinned in a sub-10-minute loop instead of graduating to
+day/week/month intervals. Only **Easy** (confidence 3) escaped, which is why the
+old tests (all confidence 3) missed it. Added both fields to `FsrsState`,
+`serialize`, `deserialize`. Old stored reviews self-heal on next review
+(deserialize defaults missing fields to 0).
+
+**Also fixed:** `lib/due.ts` forecast helper was misnamed `getLocalDateString`
+but returns a UTC date — renamed `getUtcDateString` (bucketing stays UTC).
+
+**New feature — `/settings`:**
+- Configurable practical FSRS params stored in a new `settings` collection:
+  `request_retention` (0.70–0.97), `maximum_interval`, `learning_steps`,
+  `relearning_steps`, `enable_fuzz`, `enable_short_term`. Raw 19 weights are
+  intentionally not exposed.
+- `lib/settings.ts` — `DEFAULT_FSRS_SETTINGS`, `readSettings` (merge over
+  defaults), `writeSettings`, `validateSettings`, `parseSteps`/`formatSteps`,
+  `toGeneratorParameters`.
+- `GET`/`PUT /api/settings` (validated, 400 on bad input).
+- Scheduler now reads settings: `updateReviewsForResults` builds one FSRS
+  instance from saved settings and passes it to `applyReview` (which gained an
+  optional `scheduler` arg, defaulting to default params for back-compat).
+  **Going-forward only** — saving does not recompute existing due dates.
+- `lib/fsrs-preview.ts` — pure `projectPath()` (interval sequence for a rating
+  path) + `branchFromNew()` (four-rating next-step), reused client-side.
+- `app/settings/SettingsView.tsx` — form + **live visualizer** (Recharts line
+  chart + tables) recomputed from *unsaved* form values via `useMemo`. Presets:
+  All Good / All Easy / All Hard / Good-with-a-lapse. Nav gains a Settings item
+  (mobile grid `grid-cols-9` → `grid-cols-10`).
+
+**Files added:** `lib/settings.ts`, `lib/fsrs-preview.ts`,
+`app/api/settings/route.ts`, `app/settings/page.tsx`,
+`app/settings/SettingsView.tsx`, `lib/settings.test.ts`,
+`lib/fsrs-preview.test.ts`.
+**Files modified:** `types/index.ts`, `lib/srs.ts`, `lib/reviews.ts`,
+`lib/due.ts`, `components/Nav.tsx`, `lib/srs.test.ts` (+ fixtures in
+`lib/due.test.ts`, `app/api/reviews/due/route.test.ts`,
+`components/__tests__/analytics.test.tsx`).
+**Verification:** `tsc` clean, lint 0 problems, **48/48** tests (was 37).
+
 ## 2026-07-23 — Build/lint hardening after multi-agent feature merge
 Branch: `master`.
 

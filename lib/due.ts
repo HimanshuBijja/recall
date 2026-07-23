@@ -48,13 +48,13 @@ export function getReviewsSummary(cards: Card[], reviews: Review[], now: Date) {
 
   const forecast: { date: string; count: number }[] = [];
 
-  const getLocalDateString = (d: Date) => {
+  const getUtcDateString = (d: Date) => {
     return d.toISOString().split("T")[0];
   };
 
   for (let i = 0; i < 14; i++) {
     const targetDay = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayStr = getLocalDateString(targetDay);
+    const dayStr = getUtcDateString(targetDay);
 
     let count = 0;
     if (i === 0) {

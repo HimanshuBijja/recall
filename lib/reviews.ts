@@ -1,17 +1,21 @@
+import { fsrs } from "ts-fsrs";
 import { readDb, writeDb } from "@/lib/db";
 import type { Review, SessionResult } from "@/types";
 import { newReview, applyReview } from "./srs";
+import { readSettings, toGeneratorParameters } from "./settings";
 
 export async function updateReviewsForResults(results: SessionResult[], now: Date): Promise<void> {
   const reviews = await readDb<Review>("reviews.json");
   const reviewMap = new Map(reviews.map((r) => [r.cardId, r]));
+
+  const scheduler = fsrs(toGeneratorParameters(await readSettings()));
 
   for (const res of results) {
     let rev = reviewMap.get(res.cardId);
     if (!rev) {
       rev = newReview(res.cardId, now);
     }
-    const updated = applyReview(rev, res.correct, res.confidence, now);
+    const updated = applyReview(rev, res.correct, res.confidence, now, scheduler);
     reviewMap.set(res.cardId, updated);
   }
 

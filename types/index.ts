@@ -99,10 +99,21 @@ export interface FsrsState {
   difficulty: number;
   elapsed_days: number;
   scheduled_days: number;
+  learning_steps: number;
   reps: number;
+  lapses: number;
   state: number;
   last_review: string | null;
   due: string;
+}
+
+export interface FsrsSettings {
+  request_retention: number;
+  maximum_interval: number;
+  learning_steps: string[];
+  relearning_steps: string[];
+  enable_fuzz: boolean;
+  enable_short_term: boolean;
 }
 
 export interface Review {
