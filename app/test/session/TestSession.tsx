@@ -7,6 +7,7 @@ import { descendantTagIds } from "@/lib/tags";
 import { api } from "@/lib/api";
 import { selectPool } from "@/lib/session-pool";
 import { useSwipe } from "@/hooks/useSwipe";
+import { parseCloze, gradeCloze } from "@/lib/cloze";
 
 function shuffleArr<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -96,6 +97,9 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const [elapsed, setElapsed] = useState(0);
   const startRef = useRef<number>(Date.now());
   const [flipped, setFlipped] = useState(false);
+  const [clozeInputs, setClozeInputs] = useState<Record<number, string>>({});
+  const [clozeSubmitted, setClozeSubmitted] = useState(false);
+  const [clozeFocus, setClozeFocus] = useState(0);
 
   // Reset per-card state on advance.
   useEffect(() => {
@@ -107,14 +111,17 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     setHintShown(false);
     setElapsed(0);
     setFlipped(false);
+    setClozeInputs({});
+    setClozeSubmitted(false);
+    setClozeFocus(0);
   }, [idx]);
 
   // Live timer (stops once answered)
   useEffect(() => {
-    if (picked || tfSubmitted) return;
+    if (picked || tfSubmitted || clozeSubmitted) return;
     const t = setInterval(() => setElapsed(Date.now() - startRef.current), 100);
     return () => clearInterval(t);
-  }, [picked, tfSubmitted, idx]);
+  }, [picked, tfSubmitted, clozeSubmitted, idx]);
 
   // beforeunload guard
   useEffect(() => {
@@ -132,12 +139,25 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const total = prepared.length;
   const isTfSort = current?.card.kind === "tf-sort" && !!current.card.statements;
   const isFlash = current?.card.kind === "flash";
+  const isCloze = current?.card.kind === "cloze";
   const tfStatements = isTfSort ? current.card.statements! : [];
   const tfAllAssigned =
     isTfSort && tfStatements.every((_, i) => tfAssignments[i] === true || tfAssignments[i] === false);
   const tfAllCorrect =
     isTfSort && tfStatements.every((s, i) => tfAssignments[i] === s.isTrue);
-  const answered = isTfSort ? tfSubmitted : isFlash ? flipped : picked !== null;
+
+  const clozeData = useMemo(() => {
+    if (!isCloze || !current?.card.clozeText) return { segments: [], answers: [] };
+    return parseCloze(current.card.clozeText);
+  }, [isCloze, current]);
+
+  const clozeAllCorrect = useMemo(() => {
+    if (!isCloze) return false;
+    const filled = clozeData.answers.map((_, i) => clozeInputs[i] ?? "");
+    return gradeCloze(clozeData.answers, filled);
+  }, [isCloze, clozeData, clozeInputs]);
+
+  const answered = isTfSort ? tfSubmitted : isFlash ? flipped : isCloze ? clozeSubmitted : picked !== null;
 
   const recordAndAdvance = useCallback(
     (conf: Confidence, currentPicked: string, overrideCorrect?: boolean) => {
@@ -199,7 +219,16 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   useEffect(() => {
     if (!current) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.target && (e.target as HTMLElement).tagName === "INPUT") return;
+      if (e.target && (e.target as HTMLElement).tagName === "INPUT") {
+        if (isCloze && !answered && e.key === "Enter") {
+          const allFilled = clozeData.answers.every((_, i) => (clozeInputs[i] ?? "").trim() !== "");
+          if (allFilled) {
+            e.preventDefault();
+            setClozeSubmitted(true);
+          }
+        }
+        return;
+      }
       if (!answered) {
         if (isTfSort) {
           const order = current.statementOrder;
@@ -239,6 +268,34 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             e.preventDefault();
             setTfSubmitted(true);
           }
+        } else if (isFlash) {
+          if (e.key === " " || e.key === "Enter") {
+            e.preventDefault();
+            setFlipped(true);
+          } else if (e.key.toLowerCase() === "h") {
+            if (current.card.hint) {
+              e.preventDefault();
+              setHintShown((s) => !s);
+            }
+          }
+        } else if (isCloze) {
+          if (e.key === "Enter") {
+            const allFilled = clozeData.answers.every((_, i) => (clozeInputs[i] ?? "").trim() !== "");
+            if (allFilled) {
+              e.preventDefault();
+              setClozeSubmitted(true);
+            }
+          } else if (e.key.toLowerCase() === "h") {
+            if (current.card.hint) {
+              e.preventDefault();
+              setHintShown((s) => !s);
+            }
+          } else if (e.key.toLowerCase() === "s") {
+            e.preventDefault();
+            const allFilled = clozeData.answers.every((_, i) => (clozeInputs[i] ?? "").trim() !== "");
+            if (allFilled) setClozeSubmitted(true);
+            else recordAndAdvance(1, "__skipped__");
+          }
         } else if (e.key >= "1" && e.key <= "4") {
           const i = Number(e.key) - 1;
           if (i < current.options.length) {
@@ -268,6 +325,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
           e.preventDefault();
           if (isTfSort) {
             recordAndAdvance(Number(e.key) as Confidence, "", tfAllCorrect);
+          } else if (isCloze) {
+            recordAndAdvance(Number(e.key) as Confidence, "", clozeAllCorrect);
           } else if (picked) {
             recordAndAdvance(Number(e.key) as Confidence, picked);
           }
@@ -276,7 +335,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current, picked, answered, isTfSort, tfAllCorrect, tfAssignments, tfFocus, recordAndAdvance, isFlash, flipped]);
+  }, [current, picked, answered, isTfSort, tfAllCorrect, tfAssignments, tfFocus, recordAndAdvance, isFlash, flipped, isCloze, clozeData, clozeInputs, clozeAllCorrect]);
 
   if (prepared.length === 0) {
     return (
@@ -332,7 +391,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         key={idx}
         className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 bg-white dark:bg-zinc-900 space-y-5 animate-in fade-in duration-200"
       >
-        {!isFlash && (
+        {!isFlash && !isCloze && (
           <h2 className="text-base sm:text-xl font-medium leading-relaxed">
             {current.card.question}
           </h2>
@@ -410,6 +469,56 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+        ) : isCloze ? (
+          <div className="space-y-5">
+            <div className="leading-relaxed text-base sm:text-lg">
+              {clozeData.segments.map((seg, j) => {
+                const hasInput = j < clozeData.answers.length;
+                if (!hasInput) {
+                  return <span key={j}>{seg}</span>;
+                }
+                const correctVal = clozeData.answers[j];
+                const userVal = clozeInputs[j] ?? "";
+                const isCorrect = userVal.trim().toLowerCase() === correctVal.toLowerCase();
+                return (
+                  <span key={j} className="inline-flex items-baseline gap-1 flex-wrap">
+                    <span>{seg}</span>
+                    <input
+                      type="text"
+                      disabled={clozeSubmitted}
+                      value={userVal}
+                      onChange={(e) =>
+                        setClozeInputs((m) => ({ ...m, [j]: e.target.value }))
+                      }
+                      className={[
+                        "px-2 py-0.5 mx-1 rounded border text-sm font-medium transition-colors w-28 sm:w-36 focus:outline-none focus:ring-2",
+                        !clozeSubmitted && "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 focus:border-indigo-500 focus:ring-indigo-200 dark:focus:ring-indigo-900",
+                        clozeSubmitted && isCorrect && "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-semibold",
+                        clozeSubmitted && !isCorrect && "border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 font-semibold line-through",
+                      ].filter(Boolean).join(" ")}
+                      placeholder="???"
+                    />
+                    {clozeSubmitted && !isCorrect && (
+                      <span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-semibold border border-emerald-200 dark:border-emerald-900 animate-in fade-in duration-200">
+                        {correctVal}
+                      </span>
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+
+            {!clozeSubmitted && (
+              <button
+                type="button"
+                onClick={() => setClozeSubmitted(true)}
+                disabled={clozeData.answers.length === 0}
+                className="w-full px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium transition-colors"
+              >
+                Submit
+              </button>
             )}
           </div>
         ) : isTfSort ? (
@@ -552,9 +661,18 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
 
         {/* Post-answer */}
         {answered && !isFlash && (() => {
-          const cardCorrect = isTfSort ? tfAllCorrect : picked === current.card.answer;
+          const cardCorrect = isTfSort
+            ? tfAllCorrect
+            : isCloze
+            ? clozeAllCorrect
+            : picked === current.card.answer;
           const tfCorrectCount = isTfSort
             ? tfStatements.filter((s, i) => tfAssignments[i] === s.isTrue).length
+            : 0;
+          const clozeCorrectCount = isCloze
+            ? clozeData.answers.filter(
+                (a, i) => (clozeInputs[i] ?? "").trim().toLowerCase() === a.toLowerCase()
+              ).length
             : 0;
           return (
           <div className="space-y-4 pt-2 border-t border-zinc-200 dark:border-zinc-800 animate-in fade-in duration-200">
@@ -571,6 +689,11 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
               {isTfSort && (
                 <span className="text-zinc-500">
                   · {tfCorrectCount}/{tfStatements.length} statements sorted right
+                </span>
+              )}
+              {isCloze && (
+                <span className="text-zinc-500">
+                  · {clozeCorrectCount}/{clozeData.answers.length} blanks correct
                 </span>
               )}
               <span className="text-zinc-500">· answered in {fmtMs(Date.now() - startRef.current)}</span>
@@ -600,6 +723,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                     onClick={() =>
                       isTfSort
                         ? recordAndAdvance(c, "", tfAllCorrect)
+                        : isCloze
+                        ? recordAndAdvance(c, "", clozeAllCorrect)
                         : recordAndAdvance(c, picked!)
                     }
                     disabled={submitting}
@@ -643,6 +768,10 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
               <span>
                 <Kbd>Space</Kbd>/<Kbd>Enter</Kbd> flip
               </span>
+            ) : isCloze ? (
+              <span>
+                <Kbd>Tab</Kbd> move · <Kbd>Enter</Kbd> submit
+              </span>
             ) : (
               <span>
                 <Kbd>1</Kbd>–<Kbd>4</Kbd> answer
@@ -654,7 +783,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
               </span>
             )}
             <span>
-              <Kbd>S</Kbd> {isTfSort ? "submit" : "skip"}
+              <Kbd>S</Kbd> {isTfSort || isCloze ? "submit" : "skip"}
             </span>
           </>
         ) : (
