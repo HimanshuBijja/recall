@@ -1,9 +1,9 @@
-import { fsrs, generatorParameters, createEmptyCard, Rating, type Card as FsrsCard } from "ts-fsrs";
+import { fsrs, generatorParameters, createEmptyCard, Rating, type Grade, type Card as FsrsCard } from "ts-fsrs";
 import type { Review } from "@/types";
 
 const f = fsrs(generatorParameters());
 
-export function ratingFrom(correct: boolean, confidence: 1 | 2 | 3): Rating {
+export function ratingFrom(correct: boolean, confidence: 1 | 2 | 3): Grade {
   if (!correct) return Rating.Again;
   return confidence === 1 ? Rating.Hard : confidence === 2 ? Rating.Good : Rating.Easy;
 }

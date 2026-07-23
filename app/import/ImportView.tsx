@@ -13,6 +13,8 @@ interface RawCard {
   answer?: unknown;
   distractors?: unknown;
   statements?: unknown;
+  clozeText?: unknown;
+  pairs?: unknown;
   explanation?: unknown;
   hint?: unknown;
   difficulty?: unknown;
