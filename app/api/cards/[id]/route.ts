@@ -2,47 +2,34 @@ import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
 import type { BinItem, Card, Group, Tag, TfStatement } from "@/types";
 
-function normalizeStatements(raw: unknown): TfStatement[] {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .map((s) => {
-      if (s && typeof s === "object") {
-        const o = s as { text?: unknown; isTrue?: unknown };
-        return { text: String(o.text ?? "").trim(), isTrue: Boolean(o.isTrue) };
-      }
-      return { text: "", isTrue: false };
-    })
-    .filter((s) => s.text.length > 0);
-}
+import { buildCardFromInput } from "../validate";
 
 export async function PUT(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
   const { id } = await ctx.params;
-  const body = (await req.json()) as Partial<Card>;
+  const body = await req.json();
   const cards = await readDb<Card>("cards.json");
   const idx = cards.findIndex((c) => c.id === id);
   if (idx === -1) return Response.json({ error: "not found" }, { status: 404 });
-  const merged: Card = {
+
+  const mergedPayload = {
     ...cards[idx],
     ...body,
+  };
+
+  const { card: parsedCard, error } = buildCardFromInput(mergedPayload);
+  if (error) {
+    return Response.json({ error }, { status: 400 });
+  }
+
+  const merged: Card = {
+    ...parsedCard!,
     id: cards[idx].id,
     createdAt: cards[idx].createdAt,
   };
-  if (body.statements !== undefined) {
-    merged.statements = normalizeStatements(body.statements);
-  }
-  if (merged.kind === "tf-sort") {
-    if (!merged.statements || merged.statements.length < 2) {
-      return Response.json(
-        { error: "tf-sort cards need at least 2 statements" },
-        { status: 400 }
-      );
-    }
-  } else {
-    merged.statements = undefined;
-  }
+
   cards[idx] = merged;
   await writeDb("cards.json", cards);
   return Response.json(cards[idx]);
