@@ -1,4 +1,4 @@
-import type { Session, SessionResult } from "@/types";
+import type { Card, Session, SessionResult } from "@/types";
 
 export type HistEntry = { result: SessionResult; t: string };
 export type CardHistory = Map<string, HistEntry[]>;
@@ -43,4 +43,42 @@ export function tagTrend(cardIds: string[], h: CardHistory): number | null {
   }
   if (!trends.length) return null;
   return Math.round((trends.reduce((a, b) => a + b, 0) / trends.length) * 100);
+}
+
+export interface VideoStat {
+  videoId: string;
+  title: string;
+  total: number;
+  correct: number;
+  accuracy: number;
+}
+
+/**
+ * Accuracy grouped by the source video a card was captured from. Uses
+ * latest-per-card (same invariant as every other accuracy metric); skips
+ * cards with no `source`. Sorted weakest-first so the videos needing
+ * revision surface at the top.
+ */
+export function perVideoStats(cards: Card[], h: CardHistory): VideoStat[] {
+  const latest = latestPerCard(h);
+  const byVideo = new Map<string, { title: string; total: number; correct: number }>();
+  for (const c of cards) {
+    const vid = c.source?.videoId;
+    if (!vid) continue;
+    const res = latest.get(c.id);
+    if (!res) continue;
+    const row = byVideo.get(vid) ?? { title: c.source!.title ?? vid, total: 0, correct: 0 };
+    row.total += 1;
+    if (res.correct) row.correct += 1;
+    byVideo.set(vid, row);
+  }
+  return [...byVideo.entries()]
+    .map(([videoId, r]) => ({
+      videoId,
+      title: r.title,
+      total: r.total,
+      correct: r.correct,
+      accuracy: r.total ? Math.round((r.correct / r.total) * 100) : 0,
+    }))
+    .sort((a, b) => a.accuracy - b.accuracy);
 }
