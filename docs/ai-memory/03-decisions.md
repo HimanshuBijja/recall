@@ -2,6 +2,15 @@
 
 Significant architectural/technical decisions. Newest first.
 
+## 2026-07-24 — Capture extension lives in the Recall repo; Gemini drafts; R2 frames
+- **Extension built inside Recall** (`extension/`), not the separate `clipper` project (clipper is reference only). The extension posts to Recall's own API so captured cards flow straight into the FSRS/test/analytics engine. Kept as an isolated pnpm workspace; root tsc/eslint/vitest exclude it.
+- **Gemini (Vertex/`@google/genai`) drafts the full card** from a frame (not just OCR), per the user's choice. **Money guardrail: never call live Gemini/R2 without asking — the user smoke-tests manually.** All automated tests mock `lib/gemini` + `lib/storage`.
+- **Two-step capture**: `POST /api/capture` returns an unsaved draft (OCR+draft+R2); the extension overlay lets the user edit; then `POST /api/cards` persists with `source`. Keeps drafting side-effect-light and review explicit.
+- **Frames stored in Cloudflare R2** (`@aws-sdk/client-s3`); card stores only `source.screenshotUrl`. Revealed lazily in the app (image fetched only on button press) in Test/Result/Cards.
+- **`Card.source` is the single provenance field** (video + timestamp + marker). Markers on the YouTube timeline are derived from `GET /api/cards?videoId=`. The `MarkerShape` enum + per-kind shape/color map must stay byte-identical between Recall and the extension (no shared build root — the plan's constraint table is the source of truth).
+- **Parallel subagent execution**: 4 worktree-isolated agents on disjoint file sets, merged with `--no-ff`. Exposed that in-repo worktrees under `.claude/` pollute root tsc/eslint/vitest — fixed by excluding `.claude/` and `extension/`.
+- **Analytics metrics lifted into `lib/analytics.ts`** (pure, unit-tested) instead of inlined in the view, so the invariant (latest-per-card) is testable and shared with the dashboard. Forecast now buckets by **local** calendar day, not UTC.
+
 ## 2026-07-23 — FSRS settings: practical knobs, going-forward-only, hand-rolled UI
 **Decision 1 — expose a practical subset, not raw weights.** `/settings` edits
 `request_retention`, `maximum_interval`, learning/relearning steps, fuzz, and

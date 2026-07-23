@@ -2,6 +2,34 @@
 
 Newest first.
 
+## 2026-07-24 — YouTube capture extension + capture backend, analytics fixes, import upgrades
+Branch: `master` (built by 4 parallel worktree subagents, reviewed + merged).
+
+**Capture backend (Recall):**
+- `Card.source?: CardSource` ({videoId, url, timestamp, channel?, title?, screenshotUrl?, marker?{shape,color}}); `MarkerShape` enum. `types/capture.ts` (CardDraft/CaptureRequest/CaptureResponse).
+- `lib/storage.ts` — Cloudflare R2 frame upload (`@aws-sdk/client-s3`). `lib/gemini.ts` — `draftCardFromFrame` (Gemini 2.5 Flash-Lite via `@google/genai`) drafts a full card of any kind from a frame; `parseDraft` defensive.
+- `POST /api/capture` — OCR + draft + R2 upload, returns an UNSAVED draft (no persist). `GET /api/cards?videoId=` — marker rows. `validate.ts` threads `source`. `lib/export.ts` round-trips `source`.
+- `components/CardFrame.tsx` — lazy "Show frame" reveal (image requested only on click), mounted in TestSession, ResultView, CardsBrowser.
+- New env: `GEMINI_API_KEY`/`GEMINI_OCR_MODEL` (or Vertex ADC), `R2_*`. New deps: `@google/genai`, `@aws-sdk/client-s3`.
+
+**Chrome extension (`extension/`, MV3, Vite+TS, pnpm workspace):**
+- Per-kind hotkeys (default Alt+Shift+Q/F/C/T/M, all user-configurable), capture frame → `/api/capture` → in-page shadow-DOM overlay to review/edit the AI draft (per-kind editors, editable AI-suggested tags, Undo, AI-rephrase) → save to `/api/cards`. Offline queue.
+- Per-kind timeline markers (circle/square/triangle/diamond/star, colored) with show/hide-by-kind filter. Options page opens **full-page in a new tab** (`options_ui.open_in_tab` + `openOptionsPage()`); popup toggles marker visibility. Base URL configurable (default localhost:3000, Atlas-backed).
+- **Not smoke-tested**: no live Gemini/R2/YouTube capture was run by agents (money guardrail) — that's the user's manual test.
+
+**Analytics fixes (Plan 2):**
+- Lifted pure metrics into `lib/analytics.ts` (buildCardHistory, latestPerCard, overallAccuracy, cardTrend, tagTrend, perVideoStats) with tests; AnalyticsView + dashboard weak-tags consume them (deduped).
+- Fixed forecast day-bucketing to **local calendar days** (`lib/due.ts`) — a due-later-today review was vanishing from the chart; added empty-state guards on difficulty/confidence charts. Findings in `docs/superpowers/notes/2026-07-24-analytics-findings.md`.
+- New **"By video"** analytics section (per-source accuracy, weakest first) via `perVideoStats`.
+
+**Import upgrades (Plan 2):**
+- Accept alias paste formats: cloze `{text}`, tf-sort `{statement,truth}`, match tuple `pairs:[["a","b"]]` — normalized in both `ImportView.validateCard` and `app/api/import/route.ts`. New schema menu entry.
+- `lib/import-dedupe.ts` (cardFingerprint/findDuplicates/applyBulkTags); ImportView shows Duplicate badges + skip-duplicates checkbox + bulk-tags input + "N new, M duplicates" summary.
+
+**Integration/config:** root `vitest.config.ts`, `tsconfig.json`, `eslint.config.mjs` now exclude `extension/` (separate workspace) and `.claude/` (in-repo agent worktrees) so the root toolchain doesn't scan them.
+
+**Verification:** Recall `tsc` clean, lint 0 errors (3 pre-existing warnings), `vitest` 77 pass. Extension `tsc` clean, `vitest` 20 pass, build OK.
+
 ## 2026-07-23 — FSRS scheduling fix + Settings page with interval visualizer
 Branch: `master`.
 
