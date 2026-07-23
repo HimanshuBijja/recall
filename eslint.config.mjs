@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Antigravity/Gemini IDE tooling dropped into the repo — not app code.
+    ".gemini/**",
   ]),
 ]);
 

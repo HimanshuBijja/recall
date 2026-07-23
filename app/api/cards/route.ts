@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
-import type { Card, TfStatement } from "@/types";
+import type { Card } from "@/types";
 
 import { buildCardFromInput } from "./validate";
 

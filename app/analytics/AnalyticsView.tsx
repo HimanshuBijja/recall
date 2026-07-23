@@ -65,7 +65,6 @@ export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
 
   const cardById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
-  const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
   const summary = useMemo(() => {
     return getReviewsSummary(cards, reviews, new Date());
@@ -74,6 +73,7 @@ export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
   const filteredSessions = useMemo(() => {
     if (range === "all") return sessions;
     const days = range === "7d" ? 7 : 30;
+    // eslint-disable-next-line react-hooks/purity -- time-range cutoff computed when the memo recomputes
     const cutoff = Date.now() - days * 86_400_000;
     return sessions.filter((s) => new Date(s.completedAt).getTime() >= cutoff);
   }, [sessions, range]);

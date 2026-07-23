@@ -21,6 +21,7 @@ export function Nav() {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs theme state from the pre-hydration DOM class once on mount
     setDark(document.documentElement.classList.contains("dark"));
   }, []);
 

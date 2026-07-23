@@ -96,6 +96,7 @@ export function BinManager({ initialItems }: { initialItems: BinItem[] }) {
   }
 
   function daysLeft(deletedAt: string) {
+    // eslint-disable-next-line react-hooks/purity -- live "days left" countdown; recomputing per render is intended
     const elapsed = Date.now() - new Date(deletedAt).getTime();
     return Math.max(0, 30 - Math.floor(elapsed / (24 * 60 * 60 * 1000)));
   }

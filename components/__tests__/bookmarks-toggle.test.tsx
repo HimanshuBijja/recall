@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 import { CardsBrowser } from "@/app/cards/CardsBrowser";
 import type { Card, Tag } from "@/types";

@@ -27,6 +27,7 @@ export function ResultView() {
       router.replace("/");
       return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loads the session snapshot from sessionStorage on mount (client-only external store)
     setSnap(JSON.parse(raw));
   }, [router]);
 

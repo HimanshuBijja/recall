@@ -85,6 +85,7 @@ export function CardForm({ initial, tags }: Props) {
     focus: () => tagSelRef.current?.focus(),
   } as unknown as HTMLElement);
 
+  // eslint-disable-next-line react-hooks/refs -- refs are only read inside the returned onKeyDown handlers, never during render
   const advance = makeAdvanceOnEnter([
     qRef, clozeRef, aRef, d0Ref, d1Ref, d2Ref, hRef, eRef, tagFocusProxy,
   ]);

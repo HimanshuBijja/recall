@@ -107,7 +107,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const [flipped, setFlipped] = useState(false);
   const [clozeInputs, setClozeInputs] = useState<Record<number, string>>({});
   const [clozeSubmitted, setClozeSubmitted] = useState(false);
-  const [clozeFocus, setClozeFocus] = useState(0);
+  const [, setClozeFocus] = useState(0);
   const [selectedLeft, setSelectedLeft] = useState<number | null>(null);
   const [selectedRight, setSelectedRight] = useState<number | null>(null);
   const [matchedPairs, setMatchedPairs] = useState<Set<number>>(new Set());
@@ -158,6 +158,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
 
   useEffect(() => {
     if (!dueMode) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loads the first due-review batch asynchronously on mount
     loadDueBatch(new Set()).then((batch) => {
       setPrepared(batch);
       setSeenIds(new Set(batch.map((b) => b.card.id)));
@@ -213,6 +214,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   // Reset per-card state on advance.
   useEffect(() => {
     startRef.current = Date.now();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets per-card UI state when the card index changes
     setPicked(null);
     setTfAssignments({});
     setTfSubmitted(false);

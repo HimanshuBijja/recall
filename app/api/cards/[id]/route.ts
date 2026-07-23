@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
-import type { BinItem, Card, Group, Tag, TfStatement } from "@/types";
+import type { BinItem, Card, Group, Tag } from "@/types";
 
 import { buildCardFromInput } from "../validate";
 

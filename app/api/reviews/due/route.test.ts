@@ -1,6 +1,6 @@
 import { beforeAll, afterAll, beforeEach, expect, test } from "vitest";
 import { MongoMemoryReplSet } from "mongodb-memory-server";
-import { readDb, writeDb, resetDbForTests } from "@/lib/db";
+import { writeDb, resetDbForTests } from "@/lib/db";
 import { GET as getDue } from "./route";
 import { GET as getSummary } from "../summary/route";
 import { NextRequest } from "next/server";
@@ -71,8 +71,7 @@ test("GET /api/reviews/due returns lists of due and new cards", async () => {
 });
 
 test("GET /api/reviews/summary returns forecast array", async () => {
-  const req = new NextRequest("http://localhost/api/reviews/summary");
-  const res = await getSummary(req);
+  const res = await getSummary();
   expect(res.status).toBe(200);
 
   const data = await res.json();
