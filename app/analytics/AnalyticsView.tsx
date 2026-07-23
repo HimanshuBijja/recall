@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import type { Card, Session, Tag, Review } from "@/types";
 import { getReviewsSummary } from "@/lib/due";
+import { buildCardHistory, latestPerCard as latestPerCardMap, overallAccuracy as computeOverallAccuracy, tagTrend } from "@/lib/analytics";
 
 interface Props {
   sessions: Session[];
@@ -83,27 +84,10 @@ export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
    *   - latest-attempt deduping (accuracy metrics)
    *   - per-card latest-vs-prior trend
    */
-  const cardHistory = useMemo(() => {
-    const m = new Map<string, { result: Session["results"][number]; t: string }[]>();
-    for (const s of filteredSessions) {
-      for (const r of s.results ?? []) {
-        const arr = m.get(r.cardId) ?? [];
-        arr.push({ result: r, t: s.completedAt });
-        m.set(r.cardId, arr);
-      }
-    }
-    for (const h of m.values()) h.sort((a, b) => a.t.localeCompare(b.t));
-    return m;
-  }, [filteredSessions]);
+  const cardHistory = useMemo(() => buildCardHistory(filteredSessions), [filteredSessions]);
 
   /** Most-recent attempt per card. This is what "current understanding" means. */
-  const latestPerCard = useMemo(() => {
-    const m = new Map<string, Session["results"][number]>();
-    for (const [cid, hist] of cardHistory) {
-      if (hist.length > 0) m.set(cid, hist[hist.length - 1].result);
-    }
-    return m;
-  }, [cardHistory]);
+  const latestPerCard = useMemo(() => latestPerCardMap(cardHistory), [cardHistory]);
 
   const latestResults = useMemo(() => [...latestPerCard.values()], [latestPerCard]);
   const allResults = useMemo(
@@ -115,10 +99,7 @@ export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
   // improvement. Time stats use lifetime attempts because the time really was
   // spent. Best score is per-session as usual.
   const cardsAttempted = latestResults.length;
-  const cardsCorrectNow = latestResults.filter((r) => r.correct).length;
-  const overallAccuracy = cardsAttempted
-    ? Math.round((cardsCorrectNow / cardsAttempted) * 100)
-    : 0;
+  const overallAccuracy = computeOverallAccuracy(cardHistory);
   const totalAttempts = allResults.length;
   const avgTime = cardsAttempted
     ? Math.round(latestResults.reduce((a, r) => a + r.timeTaken, 0) / cardsAttempted)
@@ -205,8 +186,7 @@ export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
       let correct = 0;
       let timeSum = 0;
       let attempts = 0;
-      let retriedCards = 0;
-      let trendSum = 0;
+      const tagCardIds: string[] = [];
 
       for (const [cardId, hist] of cardHistory) {
         const card = cardById.get(cardId);
@@ -217,20 +197,12 @@ export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
         total += 1;
         timeSum += latest.timeTaken;
         if (latest.correct) correct += 1;
-
-        // Per-card trend: latest correctness vs the attempt immediately before it.
-        // Values: +1 (improved), 0 (same), -1 (regressed). Averaged at the end.
-        if (hist.length >= 2) {
-          const prior = hist[hist.length - 2].result;
-          retriedCards += 1;
-          trendSum += (latest.correct ? 1 : 0) - (prior.correct ? 1 : 0);
-        }
+        tagCardIds.push(cardId);
       }
 
       const accuracy = total ? Math.round((correct / total) * 100) : 0;
       const avgTime = total ? Math.round(timeSum / total) : 0;
-      const trend =
-        retriedCards > 0 ? Math.round((trendSum / retriedCards) * 100) : null;
+      const trend = tagTrend(tagCardIds, cardHistory);
 
       let band: TagPerf["band"];
       if (total === 0) band = "untested";
