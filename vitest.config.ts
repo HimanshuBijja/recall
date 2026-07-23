@@ -2,6 +2,29 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 export default defineConfig({
-  test: { environment: "node", testTimeout: 20000 },
   resolve: { alias: { "@": path.resolve(__dirname, ".") } },
+  test: {
+    testTimeout: 20000,
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "node",
+          environment: "node",
+          include: ["**/*.test.ts"],
+          exclude: ["**/*.test.tsx", "**/node_modules/**"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "dom",
+          environment: "jsdom",
+          include: ["**/*.test.tsx"],
+          exclude: ["**/node_modules/**"],
+          setupFiles: ["./vitest.setup.ts"],
+        },
+      },
+    ],
+  },
 });
