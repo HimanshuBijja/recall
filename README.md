@@ -3,8 +3,7 @@
 A local-first, single-user flashcard app for spaced revision. Built on Next.js 16
 (App Router) + React 19 + Tailwind v4, with **MongoDB** as the data store.
 
-Two card kinds today — classic **MCQ** and **tf-sort** (sort statements into
-True/False, scored all-or-nothing). Most of the app is kind-agnostic.
+Five card kinds are supported: classic **MCQ** (multiple choice), **tf-sort** (True/False statement sorting), **flash** (classic front/back cards), **cloze** (cloze deletion fill-in-the-blank), and **match** (pair matching game). The app features a complete spaced-repetition review system powered by the **FSRS** (Free Spaced Repetition Scheduler) algorithm.
 
 ## Stack
 
