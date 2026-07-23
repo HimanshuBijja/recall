@@ -6,6 +6,7 @@ import type { Card, Confidence, SessionResult, Tag } from "@/types";
 import { descendantTagIds } from "@/lib/tags";
 import { api } from "@/lib/api";
 import { selectPool } from "@/lib/session-pool";
+import { useSwipe } from "@/hooks/useSwipe";
 
 function shuffleArr<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -74,7 +75,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         : [];
       return {
         card,
-        options: card.kind === "tf-sort"
+        options: (card.kind === "tf-sort" || card.kind === "flash" || card.kind === "cloze" || card.kind === "match")
           ? []
           : shuffleArr([card.answer, ...card.distractors]),
         statementOrder,
@@ -94,6 +95,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const [submitting, setSubmitting] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const startRef = useRef<number>(Date.now());
+  const [flipped, setFlipped] = useState(false);
 
   // Reset per-card state on advance.
   useEffect(() => {
@@ -104,6 +106,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     setTfFocus(0);
     setHintShown(false);
     setElapsed(0);
+    setFlipped(false);
   }, [idx]);
 
   // Live timer (stops once answered)
@@ -128,12 +131,13 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const current = prepared[idx];
   const total = prepared.length;
   const isTfSort = current?.card.kind === "tf-sort" && !!current.card.statements;
+  const isFlash = current?.card.kind === "flash";
   const tfStatements = isTfSort ? current.card.statements! : [];
   const tfAllAssigned =
     isTfSort && tfStatements.every((_, i) => tfAssignments[i] === true || tfAssignments[i] === false);
   const tfAllCorrect =
     isTfSort && tfStatements.every((s, i) => tfAssignments[i] === s.isTrue);
-  const answered = isTfSort ? tfSubmitted : picked !== null;
+  const answered = isTfSort ? tfSubmitted : isFlash ? flipped : picked !== null;
 
   const recordAndAdvance = useCallback(
     (conf: Confidence, currentPicked: string, overrideCorrect?: boolean) => {
@@ -158,6 +162,16 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [idx, total, results, current]
   );
+
+  const { handlers: swipeHandlers, dx: swipeDx } = useSwipe({
+    onLeft: () => {
+      if (isFlash && flipped) recordAndAdvance(1, "", false);
+    },
+    onRight: () => {
+      if (isFlash && flipped) recordAndAdvance(3, "", true);
+    },
+    threshold: 80,
+  });
 
   async function finish(finalResults: SessionResult[]) {
     setSubmitting(true);
@@ -241,7 +255,16 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
           recordAndAdvance(1, "__skipped__");
         }
       } else {
-        if (e.key >= "1" && e.key <= "3") {
+        if (isFlash) {
+          const key = e.key.toLowerCase();
+          if (e.key === "ArrowLeft" || key === "j" || e.key === "1") {
+            e.preventDefault();
+            recordAndAdvance(1, "", false);
+          } else if (e.key === "ArrowRight" || key === "k" || e.key === "2" || e.key === "3") {
+            e.preventDefault();
+            recordAndAdvance(3, "", true);
+          }
+        } else if (e.key >= "1" && e.key <= "3") {
           e.preventDefault();
           if (isTfSort) {
             recordAndAdvance(Number(e.key) as Confidence, "", tfAllCorrect);
@@ -253,7 +276,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current, picked, answered, isTfSort, tfAllCorrect, tfAssignments, tfFocus, recordAndAdvance]);
+  }, [current, picked, answered, isTfSort, tfAllCorrect, tfAssignments, tfFocus, recordAndAdvance, isFlash, flipped]);
 
   if (prepared.length === 0) {
     return (
@@ -309,11 +332,87 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         key={idx}
         className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 bg-white dark:bg-zinc-900 space-y-5 animate-in fade-in duration-200"
       >
-        <h2 className="text-base sm:text-xl font-medium leading-relaxed">
-          {current.card.question}
-        </h2>
+        {!isFlash && (
+          <h2 className="text-base sm:text-xl font-medium leading-relaxed">
+            {current.card.question}
+          </h2>
+        )}
 
-        {isTfSort ? (
+        {isFlash ? (
+          <div 
+            {...swipeHandlers}
+            onClick={() => !flipped && setFlipped(true)}
+            className="cursor-pointer select-none min-h-[220px] flex flex-col justify-between p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/40 relative overflow-hidden transition-transform active:scale-[0.99] duration-150"
+            style={{
+              transform: `translateX(${swipeDx}px) rotate(${swipeDx * 0.05}deg)`,
+              transition: swipeDx === 0 ? "transform 0.2s ease" : "none",
+            }}
+          >
+            {/* Swiping Indicator Overlays */}
+            {swipeDx > 20 && (
+              <div className="absolute top-4 right-4 bg-emerald-600/20 text-emerald-600 font-bold px-3 py-1 rounded text-xs uppercase tracking-widest border border-emerald-500/20 animate-in fade-in duration-100">
+                Know ✓
+              </div>
+            )}
+            {swipeDx < -20 && (
+              <div className="absolute top-4 left-4 bg-rose-600/20 text-rose-600 font-bold px-3 py-1 rounded text-xs uppercase tracking-widest border border-rose-500/20 animate-in fade-in duration-100">
+                Review ✕
+              </div>
+            )}
+
+            {!flipped ? (
+              <div className="flex-1 flex flex-col justify-center items-center text-center space-y-4">
+                <span className="text-sm text-zinc-500 font-medium">Question (Front)</span>
+                <p className="text-lg sm:text-xl font-medium leading-relaxed">
+                  {current.card.question}
+                </p>
+                <div className="text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-1 rounded">
+                  Tap card or press <kbd className="font-mono">Space</kbd> to flip
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  <span className="text-sm text-zinc-500 font-medium">Answer (Back)</span>
+                  <p className="text-lg sm:text-xl font-medium leading-relaxed text-indigo-600 dark:text-indigo-400">
+                    {current.card.answer}
+                  </p>
+                </div>
+                {current.card.explanation && (
+                  <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                    <span className="text-xs uppercase tracking-wider text-zinc-400">Explanation</span>
+                    <p className="text-sm leading-relaxed mt-1 text-zinc-700 dark:text-zinc-300">
+                      {current.card.explanation}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-3">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      recordAndAdvance(1, "", false);
+                    }}
+                    className="flex-1 px-4 py-2.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 dark:border-rose-950/60 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    Review again ✕
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      recordAndAdvance(3, "", true);
+                    }}
+                    className="flex-1 px-4 py-2.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 dark:border-emerald-950/60 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    Know it ✓
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : isTfSort ? (
           <div className="space-y-2">
             <div className="hidden sm:grid grid-cols-[1fr_auto] text-[11px] uppercase tracking-wide text-zinc-500 px-1">
               <span>Statement</span>
@@ -452,7 +551,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         )}
 
         {/* Post-answer */}
-        {answered && (() => {
+        {answered && !isFlash && (() => {
           const cardCorrect = isTfSort ? tfAllCorrect : picked === current.card.answer;
           const tfCorrectCount = isTfSort
             ? tfStatements.filter((s, i) => tfAssignments[i] === s.isTrue).length
@@ -540,6 +639,10 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                   <Kbd>Enter</Kbd> submit
                 </span>
               </>
+            ) : isFlash ? (
+              <span>
+                <Kbd>Space</Kbd>/<Kbd>Enter</Kbd> flip
+              </span>
             ) : (
               <span>
                 <Kbd>1</Kbd>–<Kbd>4</Kbd> answer
@@ -555,9 +658,15 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             </span>
           </>
         ) : (
-          <span>
-            <Kbd>1</Kbd>/<Kbd>2</Kbd>/<Kbd>3</Kbd> rate confidence & continue
-          </span>
+          isFlash ? (
+            <span>
+              <Kbd>←</Kbd>/<Kbd>J</Kbd> review again · <Kbd>→</Kbd>/<Kbd>K</Kbd> know it
+            </span>
+          ) : (
+            <span>
+              <Kbd>1</Kbd>/<Kbd>2</Kbd>/<Kbd>3</Kbd> rate confidence & continue
+            </span>
+          )
         )}
       </div>
     </div>
