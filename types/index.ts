@@ -93,3 +93,22 @@ export interface BinItem {
   data: Record<string, unknown>;
   deletedAt: string;
 }
+
+export interface FsrsState {
+  stability: number;
+  difficulty: number;
+  elapsed_days: number;
+  scheduled_days: number;
+  reps: number;
+  state: number;
+  last_review: string | null;
+  due: string;
+}
+
+export interface Review {
+  cardId: string;
+  fsrs: FsrsState;
+  dueAt: string;
+  lastReviewedAt: string | null;
+  firstSeenAt: string;
+}
