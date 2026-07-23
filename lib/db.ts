@@ -1,31 +1,33 @@
-import fs from "node:fs";
-import path from "node:path";
+import { getDb, getClient } from "@/lib/mongodb";
 
-const DATA_DIR = path.join(process.cwd(), "data");
+export { resetDbForTests } from "@/lib/mongodb";
 
-function ensureFile(filename: string) {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  const full = path.join(DATA_DIR, filename);
-  if (!fs.existsSync(full)) {
-    fs.writeFileSync(full, "[]", "utf8");
-  }
-  return full;
+function collectionName(name: string): string {
+  return name.replace(/\.json$/, "");
 }
 
-export function readDb<T>(filename: string): T[] {
-  const full = ensureFile(filename);
-  const raw = fs.readFileSync(full, "utf8");
+export async function readDb<T>(name: string): Promise<T[]> {
+  const db = await getDb();
+  const docs = await db
+    .collection(collectionName(name))
+    .find({}, { projection: { _id: 0 } })
+    .toArray();
+  return docs as T[];
+}
+
+export async function writeDb<T>(name: string, data: T[]): Promise<void> {
+  const db = await getDb();
+  const client = await getClient();
+  const coll = db.collection(collectionName(name));
+  const session = client.startSession();
   try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as T[]) : [];
-  } catch {
-    return [];
+    await session.withTransaction(async () => {
+      await coll.deleteMany({}, { session });
+      if (data.length > 0) {
+        await coll.insertMany(data.map((d) => ({ ...d })) as Record<string, unknown>[], { session });
+      }
+    });
+  } finally {
+    await session.endSession();
   }
-}
-
-export function writeDb<T>(filename: string, data: T[]): void {
-  const full = ensureFile(filename);
-  fs.writeFileSync(full, JSON.stringify(data, null, 2), "utf8");
 }
