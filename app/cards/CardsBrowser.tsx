@@ -17,6 +17,7 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
   const [query, setQuery] = useState("");
   const [tagFilter, setTagFilter] = useState<string>("");
   const [diffFilter, setDiffFilter] = useState<number>(0);
+  const [bookmarkedFilter, setBookmarkedFilter] = useState<boolean>(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [exportPayload, setExportPayload] = useState<{
@@ -29,6 +30,7 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
     return cards.filter((c) => {
       if (tagFilter && !c.tags.includes(tagFilter)) return false;
       if (diffFilter && c.difficulty !== diffFilter) return false;
+      if (bookmarkedFilter && !c.bookmarked) return false;
       if (query) {
         const q = query.toLowerCase();
         if (
@@ -39,7 +41,7 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
       }
       return true;
     });
-  }, [cards, query, tagFilter, diffFilter]);
+  }, [cards, query, tagFilter, diffFilter, bookmarkedFilter]);
 
   const filteredIds = useMemo(() => new Set(filtered.map((c) => c.id)), [filtered]);
   const allSelected = filtered.length > 0 && filtered.every((c) => selectedIds.has(c.id));
@@ -193,12 +195,12 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search…"
-          className="px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
+          className="flex-1 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
         />
         <select
           value={tagFilter}
@@ -224,6 +226,18 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
             </option>
           ))}
         </select>
+        <button
+          type="button"
+          onClick={() => setBookmarkedFilter((s) => !s)}
+          className={[
+            "px-3 py-2 rounded-lg border text-sm font-medium transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap",
+            bookmarkedFilter
+              ? "bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-300"
+              : "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800",
+          ].filter(Boolean).join(" ")}
+        >
+          ★ Bookmarked
+        </button>
       </div>
 
       {cards.length === 0 ? (
@@ -317,7 +331,37 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                   {c.kind === "match" && `→ ${(c.pairs?.length ?? 0)} pair${(c.pairs?.length ?? 0) === 1 ? "" : "s"}`}
                   {(!c.kind || c.kind === "mcq") && `→ ${c.answer}`}
                 </div>
-                <div className="flex justify-end gap-2 pt-1">
+                <div className="flex justify-end gap-3 pt-1 items-center">
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const nextVal = !c.bookmarked;
+                      setCards((prev) =>
+                        prev.map((item) =>
+                          item.id === c.id ? { ...item, bookmarked: nextVal } : item
+                        )
+                      );
+                      try {
+                        await api.patch(`/cards/${c.id}`, { bookmarked: nextVal });
+                      } catch {
+                        setCards((prev) =>
+                          prev.map((item) =>
+                            item.id === c.id ? { ...item, bookmarked: !nextVal } : item
+                          )
+                        );
+                      }
+                    }}
+                    className={[
+                      "text-xs transition-colors focus:outline-none",
+                      c.bookmarked
+                        ? "text-amber-500 hover:text-amber-600 font-semibold"
+                        : "text-zinc-400 hover:text-zinc-600 dark:text-zinc-600 dark:hover:text-zinc-400",
+                    ].join(" ")}
+                    aria-label={c.bookmarked ? "Unbookmark card" : "Bookmark card"}
+                  >
+                    {c.bookmarked ? "★" : "☆"}
+                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
