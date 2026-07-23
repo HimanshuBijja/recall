@@ -1,18 +1,21 @@
 # 04 — Current State
 
-_Last updated: 2026-07-23_
+_Last updated: 2026-07-24_
 
 ## Branch
 `master`. Everything below is merged and committed (local; **not yet pushed**).
 Includes: MongoDB migration + Atlas→local mirror, the Flash/Cloze/Match/
-Bookmarks/FSRS feature set (built by the Antigravity/Gemini agent), and the
-build/lint hardening pass.
+Bookmarks/FSRS feature set (built by the Antigravity/Gemini agent), the
+build/lint hardening pass, and the FSRS persistence fix + `/settings` page
+(commit `ed5f25f`).
 
 ## Storage
 - **Atlas** = source of truth (`MONGODB_URI`), replica set (transactions +
   change streams available).
 - **Local mongod** = live one-way mirror of Atlas (standalone, `127.0.0.1:27017`).
 - `data/*.json` retained as a backup snapshot.
+- Collections: `cards`, `tags`, `groups`, `sessions`, `bin`, `reviews`, and
+  `settings` (single-doc FSRS config, defaults if absent).
 
 ## Feature surface
 - Card kinds: **mcq, tf-sort, flash, cloze (`==answer==`), match**.
@@ -52,9 +55,12 @@ mirror target). `.env.local` git-ignored; `.env.local.example` tracked.
 - **Rotate the Atlas DB password** (exposed in a setup transcript).
 - **Push `master`** to origin (currently local-only, several commits ahead).
 - Set `MONGODB_URI`/`MONGODB_DB` in Vercel env before/at deploy.
-- Consider a review of the Gemini implementation against the agreed spec
-  (`docs/superpowers/plans/2026-07-23-all-features.md`) — logic depth of
-  cloze/match/FSRS beyond "tests pass" not yet independently audited.
+- **FSRS scheduling audited** (2026-07-24): found + fixed the critical
+  learning_steps/lapses persistence bug. **Cloze/match** logic depth vs the
+  agreed spec (`docs/superpowers/plans/2026-07-23-all-features.md`) still not
+  independently audited.
+- FSRS uses **default model weights** (`w[]`); they aren't exposed in `/settings`
+  and there's no optimizer fitting them from the `reviews` history yet.
 - Whole-collection replace on every write is O(n); move hot paths to
   per-document ops later.
 
