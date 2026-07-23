@@ -4,8 +4,8 @@ import { CardForm } from "@/components/CardForm";
 
 export const dynamic = "force-dynamic";
 
-export default function NewCardPage() {
-  const tags = readDb<Tag>("tags.json");
+export default async function NewCardPage() {
+  const tags = await readDb<Tag>("tags.json");
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">New card</h1>

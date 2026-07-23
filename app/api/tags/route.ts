@@ -3,7 +3,7 @@ import { readDb, writeDb } from "@/lib/db";
 import type { Tag } from "@/types";
 
 export async function GET() {
-  return Response.json(readDb<Tag>("tags.json"));
+  return Response.json(await readDb<Tag>("tags.json"));
 }
 
 export async function POST(req: NextRequest) {
@@ -11,13 +11,13 @@ export async function POST(req: NextRequest) {
   if (!body.name) {
     return Response.json({ error: "name is required" }, { status: 400 });
   }
-  const tags = readDb<Tag>("tags.json");
+  const tags = await readDb<Tag>("tags.json");
   const tag: Tag = {
     id: crypto.randomUUID(),
     name: body.name,
     parents: body.parents ?? [],
   };
   tags.push(tag);
-  writeDb("tags.json", tags);
+  await writeDb("tags.json", tags);
   return Response.json(tag, { status: 201 });
 }

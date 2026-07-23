@@ -2,9 +2,9 @@ import { readDb } from "@/lib/db";
 import type { Card, Session, Tag, TagStat } from "@/types";
 
 export async function GET() {
-  const sessions = readDb<Session>("sessions.json");
-  const cards = readDb<Card>("cards.json");
-  const tags = readDb<Tag>("tags.json");
+  const sessions = await readDb<Session>("sessions.json");
+  const cards = await readDb<Card>("cards.json");
+  const tags = await readDb<Tag>("tags.json");
   const cardById = new Map(cards.map((c) => [c.id, c]));
 
   // tagId -> { total, correct }

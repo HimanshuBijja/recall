@@ -3,7 +3,7 @@ import { readDb, writeDb } from "@/lib/db";
 import type { Group } from "@/types";
 
 export async function GET() {
-  return Response.json(readDb<Group>("groups.json"));
+  return Response.json(await readDb<Group>("groups.json"));
 }
 
 export async function POST(req: NextRequest) {
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   if (!body.name?.trim()) {
     return Response.json({ error: "name is required" }, { status: 400 });
   }
-  const groups = readDb<Group>("groups.json");
+  const groups = await readDb<Group>("groups.json");
   const group: Group = {
     id: crypto.randomUUID(),
     name: body.name.trim(),
@@ -19,6 +19,6 @@ export async function POST(req: NextRequest) {
     createdAt: new Date().toISOString(),
   };
   groups.push(group);
-  writeDb("groups.json", groups);
+  await writeDb("groups.json", groups);
   return Response.json(group, { status: 201 });
 }

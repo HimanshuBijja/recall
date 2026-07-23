@@ -9,7 +9,7 @@ function purgeExpired(bin: BinItem[]): BinItem[] {
 }
 
 export async function GET() {
-  const bin = purgeExpired(readDb<BinItem>("bin.json"));
-  writeDb("bin.json", bin);
+  const bin = purgeExpired(await readDb<BinItem>("bin.json"));
+  await writeDb("bin.json", bin);
   return Response.json(bin);
 }

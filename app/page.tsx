@@ -22,11 +22,11 @@ function computeStreak(sessions: Session[]): number {
   return streak;
 }
 
-export default function Home() {
-  const cards = readDb<Card>("cards.json");
-  const tags = readDb<Tag>("tags.json");
-  const sessions = readDb<Session>("sessions.json");
-  const groups = readDb<Group>("groups.json");
+export default async function Home() {
+  const cards = await readDb<Card>("cards.json");
+  const tags = await readDb<Tag>("tags.json");
+  const sessions = await readDb<Session>("sessions.json");
+  const groups = await readDb<Group>("groups.json");
 
   // Tag accuracy — uses the LATEST attempt per card so retries reflect improvement.
   const cardById = new Map(cards.map((c) => [c.id, c]));

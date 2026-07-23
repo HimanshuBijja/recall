@@ -17,7 +17,7 @@ function normalizeStatements(raw: unknown): TfStatement[] {
 
 export async function GET(req: NextRequest) {
   const tag = req.nextUrl.searchParams.get("tag");
-  const cards = readDb<Card>("cards.json");
+  const cards = await readDb<Card>("cards.json");
   const filtered = tag ? cards.filter((c) => c.tags.includes(tag)) : cards;
   return Response.json(filtered);
 }
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  const cards = readDb<Card>("cards.json");
+  const cards = await readDb<Card>("cards.json");
   const card: Card = {
     id: crypto.randomUUID(),
     kind,
@@ -53,6 +53,6 @@ export async function POST(req: NextRequest) {
     createdAt: new Date().toISOString(),
   };
   cards.push(card);
-  writeDb("cards.json", cards);
+  await writeDb("cards.json", cards);
   return Response.json(card, { status: 201 });
 }

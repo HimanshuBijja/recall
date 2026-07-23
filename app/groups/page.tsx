@@ -5,10 +5,10 @@ import { GroupsManager } from "./GroupsManager";
 
 export const dynamic = "force-dynamic";
 
-export default function GroupsPage() {
-  const groups = readDb<Group>("groups.json");
-  const tags = readDb<Tag>("tags.json");
-  const cards = readDb<Card>("cards.json");
+export default async function GroupsPage() {
+  const groups = await readDb<Group>("groups.json");
+  const tags = await readDb<Tag>("tags.json");
+  const cards = await readDb<Card>("cards.json");
 
   // Pre-compute card count for each group so the list can show coverage without
   // shipping all cards to the client.

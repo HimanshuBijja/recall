@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "expected an array" }, { status: 400 });
   }
 
-  const cards = readDb<Card>("cards.json");
-  const tags = readDb<Tag>("tags.json");
+  const cards = await readDb<Card>("cards.json");
+  const tags = await readDb<Tag>("tags.json");
   const tagByName = new Map(tags.map((t) => [t.name.toLowerCase(), t]));
 
   const created: Card[] = [];
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     created.push(card);
   }
 
-  writeDb("tags.json", tags);
-  writeDb("cards.json", cards);
+  await writeDb("tags.json", tags);
+  await writeDb("cards.json", cards);
   return Response.json({ inserted: created.length, cards: created }, { status: 201 });
 }

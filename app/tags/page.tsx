@@ -4,9 +4,9 @@ import { TagsManager } from "./TagsManager";
 
 export const dynamic = "force-dynamic";
 
-export default function TagsPage() {
-  const tags = readDb<Tag>("tags.json");
-  const cards = readDb<Card>("cards.json");
+export default async function TagsPage() {
+  const tags = await readDb<Tag>("tags.json");
+  const cards = await readDb<Card>("cards.json");
 
   // Pre-compute usage counts so deletion can flag whether a tag is in use.
   const usage: Record<string, number> = {};

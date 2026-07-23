@@ -40,9 +40,9 @@ export async function POST(req: NextRequest) {
   const body = (await req.json()) as Bundle | BundleCard[];
   const bundle: Bundle = Array.isArray(body) ? { cards: body } : (body ?? {});
 
-  const cards = readDb<Card>("cards.json");
-  const tags = readDb<Tag>("tags.json");
-  const groups = readDb<Group>("groups.json");
+  const cards = await readDb<Card>("cards.json");
+  const tags = await readDb<Tag>("tags.json");
+  const groups = await readDb<Group>("groups.json");
 
   const tagByName = new Map(tags.map((t) => [t.name.toLowerCase(), t]));
 
@@ -145,9 +145,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  writeDb("tags.json", tags);
-  writeDb("cards.json", cards);
-  writeDb("groups.json", groups);
+  await writeDb("tags.json", tags);
+  await writeDb("cards.json", cards);
+  await writeDb("groups.json", groups);
 
   return Response.json(
     {

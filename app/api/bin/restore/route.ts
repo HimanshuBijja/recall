@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "ids required" }, { status: 400 });
   }
 
-  const bin = readDb<BinItem>("bin.json");
+  const bin = await readDb<BinItem>("bin.json");
   const toRestore = bin.filter((item) => ids.includes(item.id));
 
   if (toRestore.length === 0) {
@@ -16,9 +16,9 @@ export async function POST(req: NextRequest) {
   }
 
   // Restore each item to its original file
-  const tags = readDb<Tag>("tags.json");
-  const cards = readDb<Card>("cards.json");
-  const groups = readDb<Group>("groups.json");
+  const tags = await readDb<Tag>("tags.json");
+  const cards = await readDb<Card>("cards.json");
+  const groups = await readDb<Group>("groups.json");
 
   for (const item of toRestore) {
     const d = item.data as Record<string, unknown>;
@@ -35,10 +35,10 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  writeDb("bin.json", bin.filter((item) => !ids.includes(item.id)));
-  writeDb("tags.json", tags);
-  writeDb("cards.json", cards);
-  writeDb("groups.json", groups);
+  await writeDb("bin.json", bin.filter((item) => !ids.includes(item.id)));
+  await writeDb("tags.json", tags);
+  await writeDb("cards.json", cards);
+  await writeDb("groups.json", groups);
 
   return Response.json({ restored: toRestore.length });
 }

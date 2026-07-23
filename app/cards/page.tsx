@@ -4,8 +4,8 @@ import { CardsBrowser } from "./CardsBrowser";
 
 export const dynamic = "force-dynamic";
 
-export default function CardsPage() {
-  const cards = readDb<Card>("cards.json");
-  const tags = readDb<Tag>("tags.json");
+export default async function CardsPage() {
+  const cards = await readDb<Card>("cards.json");
+  const tags = await readDb<Tag>("tags.json");
   return <CardsBrowser initialCards={cards} tags={tags} />;
 }

@@ -8,7 +8,7 @@ export async function PUT(
 ) {
   const { id } = await ctx.params;
   const body = (await req.json()) as Partial<Group>;
-  const groups = readDb<Group>("groups.json");
+  const groups = await readDb<Group>("groups.json");
   const idx = groups.findIndex((g) => g.id === id);
   if (idx === -1) return Response.json({ error: "not found" }, { status: 404 });
   groups[idx] = {
@@ -16,7 +16,7 @@ export async function PUT(
     name: body.name?.trim() || groups[idx].name,
     tagIds: Array.isArray(body.tagIds) ? body.tagIds : groups[idx].tagIds,
   };
-  writeDb("groups.json", groups);
+  await writeDb("groups.json", groups);
   return Response.json(groups[idx]);
 }
 
@@ -25,14 +25,14 @@ export async function DELETE(
   ctx: { params: Promise<{ id: string }> }
 ) {
   const { id } = await ctx.params;
-  const groups = readDb<Group>("groups.json");
+  const groups = await readDb<Group>("groups.json");
   const deleted = groups.find((g) => g.id === id);
   if (!deleted) {
     return Response.json({ error: "not found" }, { status: 404 });
   }
 
   // Soft-delete to bin
-  const bin = readDb<BinItem>("bin.json");
+  const bin = await readDb<BinItem>("bin.json");
   bin.push({
     id: deleted.id,
     kind: "group",
@@ -40,8 +40,8 @@ export async function DELETE(
     data: { ...deleted } as unknown as Record<string, unknown>,
     deletedAt: new Date().toISOString(),
   });
-  writeDb("bin.json", bin);
+  await writeDb("bin.json", bin);
 
-  writeDb("groups.json", groups.filter((g) => g.id !== id));
+  await writeDb("groups.json", groups.filter((g) => g.id !== id));
   return Response.json({ ok: true });
 }

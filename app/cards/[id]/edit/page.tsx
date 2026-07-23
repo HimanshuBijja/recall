@@ -11,10 +11,10 @@ export default async function EditCardPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const cards = readDb<Card>("cards.json");
+  const cards = await readDb<Card>("cards.json");
   const card = cards.find((c) => c.id === id);
   if (!card) notFound();
-  const tags = readDb<Tag>("tags.json");
+  const tags = await readDb<Tag>("tags.json");
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Edit card</h1>

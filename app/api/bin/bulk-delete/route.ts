@@ -7,12 +7,12 @@ export async function POST(req: NextRequest) {
   if (!ids || ids.length === 0) {
     return Response.json({ error: "ids required" }, { status: 400 });
   }
-  const bin = readDb<BinItem>("bin.json");
+  const bin = await readDb<BinItem>("bin.json");
   const next = bin.filter((item) => !ids.includes(item.id));
   const removed = bin.length - next.length;
   if (removed === 0) {
     return Response.json({ error: "none found" }, { status: 404 });
   }
-  writeDb("bin.json", next);
+  await writeDb("bin.json", next);
   return Response.json({ deleted: removed });
 }
