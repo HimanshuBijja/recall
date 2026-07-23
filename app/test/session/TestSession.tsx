@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { selectPool } from "@/lib/session-pool";
 import { useSwipe } from "@/hooks/useSwipe";
 import { parseCloze, gradeCloze } from "@/lib/cloze";
+import { Skeleton } from "@/components/Skeleton";
 
 function shuffleArr<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -39,6 +40,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const minDiff = Number(params.get("min") ?? 1);
   const maxDiff = Number(params.get("max") ?? 5);
   const retryMode = params.get("retry") === "1";
+  const dueMode = params.get("due") === "1";
 
   const selectedTagIds = useMemo(
     () => tagsParam.split(",").map((s) => s.trim()).filter(Boolean),
@@ -50,7 +52,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     [idsParam]
   );
 
-  const prepared: PreparedCard[] = useMemo(() => {
+  const initialPrepared: PreparedCard[] = useMemo(() => {
+    if (dueMode) return [];
     let pool: Card[];
     if (retryMode) {
       try {
@@ -86,6 +89,11 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [prepared, setPrepared] = useState<PreparedCard[]>(initialPrepared);
+  const [loadingDue, setLoadingDue] = useState(dueMode);
+  const [showBatchPrompt, setShowBatchPrompt] = useState(false);
+  const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
+
   const [idx, setIdx] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [tfAssignments, setTfAssignments] = useState<Record<number, boolean | null>>({});
@@ -107,6 +115,72 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const [wrongPair, setWrongPair] = useState<[number, number] | null>(null);
   const [leftOrder, setLeftOrder] = useState<number[]>([]);
   const [rightOrder, setRightOrder] = useState<number[]>([]);
+
+  const loadDueBatch = useCallback(
+    async (excludeIds: Set<string>) => {
+      setLoadingDue(true);
+      try {
+        const excludeStr = Array.from(excludeIds).join(",");
+        const res = await api.get<{ dueIds: string[]; newIds: string[] }>(
+          `/reviews/due?newLimit=20&exclude=${excludeStr}`
+        );
+        const combinedIds = [...res.data.dueIds, ...res.data.newIds].slice(0, 20);
+        if (combinedIds.length === 0) {
+          return [];
+        }
+        const cardMap = new Map(cards.map((c) => [c.id, c]));
+        const batchCards = combinedIds
+          .map((id) => cardMap.get(id))
+          .filter((c): c is Card => !!c);
+
+        const preparedBatch = batchCards.map((card) => {
+          const statementOrder = card.statements
+            ? shuffleArr(card.statements.map((_, i) => i))
+            : [];
+          return {
+            card,
+            options: (card.kind === "tf-sort" || card.kind === "flash" || card.kind === "cloze" || card.kind === "match")
+              ? []
+              : shuffleArr([card.answer, ...card.distractors]),
+            statementOrder,
+          };
+        });
+        return preparedBatch;
+      } catch (err) {
+        console.error(err);
+        return [];
+      } finally {
+        setLoadingDue(false);
+      }
+    },
+    [cards]
+  );
+
+  useEffect(() => {
+    if (!dueMode) return;
+    loadDueBatch(new Set()).then((batch) => {
+      setPrepared(batch);
+      setSeenIds(new Set(batch.map((b) => b.card.id)));
+    });
+  }, [dueMode, loadDueBatch]);
+
+  async function handleContinue() {
+    const nextBatch = await loadDueBatch(seenIds);
+    if (nextBatch.length === 0) {
+      alert("No more cards to review!");
+      finish(results);
+      return;
+    }
+    setSeenIds((prev) => {
+      const nextSet = new Set(prev);
+      for (const b of nextBatch) nextSet.add(b.card.id);
+      return nextSet;
+    });
+    const startOfNewBatch = prepared.length;
+    setPrepared((prev) => [...prev, ...nextBatch]);
+    setShowBatchPrompt(false);
+    setIdx(startOfNewBatch);
+  }
 
   const current = prepared[idx];
   const total = prepared.length;
@@ -196,13 +270,17 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
       const nextResults = [...results, result];
       setResults(nextResults);
       if (idx + 1 >= total) {
-        finish(nextResults);
+        if (dueMode) {
+          setShowBatchPrompt(true);
+        } else {
+          finish(nextResults);
+        }
       } else {
         setIdx(idx + 1);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [idx, total, results, current]
+    [idx, total, results, current, dueMode]
   );
 
   const { handlers: swipeHandlers, dx: swipeDx } = useSwipe({
@@ -370,6 +448,50 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [current, picked, answered, isTfSort, tfAllCorrect, tfAssignments, tfFocus, recordAndAdvance, isFlash, flipped, isCloze, clozeData, clozeInputs, clozeAllCorrect, isMatch, matchAllCorrect]);
+
+  if (dueMode && prepared.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto py-12 px-4 space-y-6 text-center">
+        <Skeleton className="h-6 w-1/3 mx-auto" />
+        <Skeleton className="h-48 w-full rounded-xl" />
+        <p className="text-sm text-zinc-500">Loading your review session…</p>
+      </div>
+    );
+  }
+
+  if (showBatchPrompt) {
+    return (
+      <div className="max-w-md mx-auto py-12 px-4 text-center space-y-6 animate-in fade-in duration-200">
+        <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
+          ✓
+        </div>
+        <div>
+          <h2 className="text-xl font-bold">Batch complete!</h2>
+          <p className="text-sm text-zinc-500 mt-1">
+            You have reviewed {results.length} card{results.length === 1 ? "" : "s"} in this session.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            type="button"
+            onClick={handleContinue}
+            disabled={loadingDue}
+            className="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium text-sm transition-colors shadow-sm"
+          >
+            {loadingDue ? "Loading…" : "Load 20 more"}
+          </button>
+          <button
+            type="button"
+            onClick={() => finish(results)}
+            disabled={submitting}
+            className="px-5 py-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 text-zinc-800 dark:text-zinc-200 font-medium text-sm transition-colors"
+          >
+            {submitting ? "Saving…" : "Finish session"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (prepared.length === 0) {
     return (
