@@ -12,7 +12,7 @@ export default defineConfig({
           name: "node",
           environment: "node",
           include: ["**/*.test.ts"],
-          exclude: ["**/*.test.tsx", "**/node_modules/**"],
+          exclude: ["**/*.test.tsx", "**/node_modules/**", "**/.claude/**"],
         },
       },
       {
@@ -21,7 +21,7 @@ export default defineConfig({
           name: "dom",
           environment: "jsdom",
           include: ["**/*.test.tsx"],
-          exclude: ["**/node_modules/**"],
+          exclude: ["**/node_modules/**", "**/.claude/**"],
           setupFiles: ["./vitest.setup.ts"],
         },
       },
