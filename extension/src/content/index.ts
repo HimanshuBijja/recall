@@ -132,12 +132,41 @@ window.addEventListener(
   true,
 );
 
+// Popup / other extension surfaces can trigger a capture directly, bypassing
+// the OS-level hotkey entirely (useful when Alt+Shift is eaten by the OS).
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg?.type === "PING") {
+    sendResponse({ ok: true, href: location.href });
+    return true;
+  }
+  if (msg?.type === "RUN_CAPTURE" && msg.kind) {
+    void runCapture(msg.kind as CaptureKind);
+    sendResponse({ ok: true });
+    return true;
+  }
+  return false;
+});
+
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "sync" && changes.settings) {
     settings = null;
     void currentSettings();
   }
 });
+
+// Visible proof the content script is actually injected (no console needed).
+function showLoadBanner(): void {
+  const b = document.createElement("div");
+  b.textContent = "✓ Recall Capture active";
+  b.style.cssText = [
+    "position:fixed", "top:12px", "left:50%", "transform:translateX(-50%)",
+    "z-index:2147483647", "padding:8px 16px", "border-radius:8px",
+    "background:#16a34a", "color:#fff", "font:600 13px/1.2 Roboto,Arial,sans-serif",
+    "box-shadow:0 4px 14px rgba(0,0,0,.4)", "pointer-events:none",
+  ].join(";");
+  (document.body ?? document.documentElement).appendChild(b);
+  setTimeout(() => b.remove(), 4000);
+}
 
 // YouTube is an SPA — re-render on internal navigation.
 window.addEventListener("yt-navigate-finish", () => {
@@ -146,4 +175,5 @@ window.addEventListener("yt-navigate-finish", () => {
 
 void currentSettings(); // eager-load so the first keypress has real settings
 setTimeout(() => void refreshMarkers(), 1500); // initial load
+showLoadBanner();
 console.info("[Recall] capture content script loaded on", location.href);

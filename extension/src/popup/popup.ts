@@ -15,9 +15,27 @@ async function init(): Promise<void> {
     name.className = "kind-name";
     name.textContent = kind;
 
+    const capture = document.createElement("button");
+    capture.textContent = "Capture";
+    capture.className = "capture-btn";
+    capture.title = `Capture a ${kind} card from the current video`;
+    capture.addEventListener("click", () => {
+      void (async () => {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.id) return;
+        try {
+          await chrome.tabs.sendMessage(tab.id, { type: "RUN_CAPTURE", kind });
+          window.close();
+        } catch {
+          capture.textContent = "No YouTube tab?";
+        }
+      })();
+    });
+
     const toggle = document.createElement("input");
     toggle.type = "checkbox";
     toggle.checked = settings.kinds[kind].visible;
+    toggle.title = "Show markers of this kind on the timeline";
     toggle.addEventListener("change", () => {
       void (async () => {
         const latest = await loadSettings();
@@ -26,7 +44,7 @@ async function init(): Promise<void> {
       })();
     });
 
-    row.append(name, toggle);
+    row.append(name, capture, toggle);
     kindsContainer.append(row);
   }
 
