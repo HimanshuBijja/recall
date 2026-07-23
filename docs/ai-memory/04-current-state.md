@@ -37,8 +37,14 @@ build/lint hardening pass, and the FSRS persistence fix + `/settings` page
 - `npx tsc --noEmit` → clean.
 - `npm test` → **48/48** (23 files, incl. jsdom component tests).
 - `npm run lint` → **0 problems**.
-- `npm run build` not re-run this pass (project rule: no prod build unless asked);
-  last known-good build generated all pages before the settings page was added.
+- `npm run build` → compiles clean, all pages generated incl. `/settings` +
+  `/api/settings`.
+
+> **Gotcha (fixed):** client components must import FSRS *pure* helpers from
+> `lib/fsrs-config.ts`, NOT `lib/settings.ts`. `lib/settings.ts` imports
+> `lib/db` → `mongodb`, so importing it into a client bundle triggers
+> `Module not found: child_process`. Keep DB-touching code out of anything a
+> `"use client"` file imports.
 
 ## How to run locally
 ```bash

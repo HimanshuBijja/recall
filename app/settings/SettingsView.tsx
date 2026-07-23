@@ -19,7 +19,7 @@ import {
   parseSteps,
   formatSteps,
   toGeneratorParameters,
-} from "@/lib/settings";
+} from "@/lib/fsrs-config";
 import {
   projectPath,
   branchFromNew,
