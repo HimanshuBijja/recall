@@ -48,23 +48,19 @@ export function getReviewsSummary(cards: Card[], reviews: Review[], now: Date) {
 
   const forecast: { date: string; count: number }[] = [];
 
-  const getUtcDateString = (d: Date) => {
-    return d.toISOString().split("T")[0];
-  };
+  const localDayKey = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
   for (let i = 0; i < 14; i++) {
     const targetDay = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayStr = getUtcDateString(targetDay);
+    const dayStr = localDayKey(targetDay);
 
-    let count = 0;
-    if (i === 0) {
-      count = due;
-    } else {
-      count = activeReviews.filter((r) => {
-        const rDateStr = r.dueAt.split("T")[0];
-        return rDateStr === dayStr;
-      }).length;
-    }
+    // Bucket 0 ("today") also absorbs anything overdue from earlier days,
+    // so it matches <= today's local day rather than an exact string match.
+    const count = activeReviews.filter((r) => {
+      const rDay = localDayKey(new Date(r.dueAt));
+      return i === 0 ? rDay <= dayStr : rDay === dayStr;
+    }).length;
 
     forecast.push({ date: dayStr, count });
   }

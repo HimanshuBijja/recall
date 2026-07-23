@@ -407,38 +407,46 @@ export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
         </ChartCard>
 
         <ChartCard title="Accuracy by difficulty" subtitle="Are harder cards actually harder?">
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byDifficulty} margin={{ top: 5, right: 8, bottom: 0, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.12} />
-                <XAxis dataKey="difficulty" stroke="currentColor" fontSize={11} />
-                <YAxis domain={[0, 100]} stroke="currentColor" fontSize={11} />
-                <Tooltip content={<ChartTip />} />
-                <Bar dataKey="accuracy" radius={[4, 4, 0, 0]}>
-                  {byDifficulty.map((d) => (
-                    <Cell
-                      key={d.difficulty}
-                      fill={d.total === 0 ? "#a1a1aa" : d.accuracy >= 75 ? "#10b981" : d.accuracy >= 50 ? "#f59e0b" : "#ef4444"}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {cardsAttempted === 0 ? (
+            <Empty />
+          ) : (
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={byDifficulty} margin={{ top: 5, right: 8, bottom: 0, left: -20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.12} />
+                  <XAxis dataKey="difficulty" stroke="currentColor" fontSize={11} />
+                  <YAxis domain={[0, 100]} stroke="currentColor" fontSize={11} />
+                  <Tooltip content={<ChartTip />} />
+                  <Bar dataKey="accuracy" radius={[4, 4, 0, 0]}>
+                    {byDifficulty.map((d) => (
+                      <Cell
+                        key={d.difficulty}
+                        fill={d.total === 0 ? "#a1a1aa" : d.accuracy >= 75 ? "#10b981" : d.accuracy >= 50 ? "#f59e0b" : "#ef4444"}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </ChartCard>
 
         <ChartCard title="Confidence calibration" subtitle="Higher confidence should mean higher accuracy">
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byConfidence} margin={{ top: 5, right: 8, bottom: 0, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.12} />
-                <XAxis dataKey="confidence" stroke="currentColor" fontSize={11} />
-                <YAxis domain={[0, 100]} stroke="currentColor" fontSize={11} />
-                <Tooltip content={<ChartTip />} />
-                <Bar dataKey="accuracy" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {allResults.length === 0 ? (
+            <Empty />
+          ) : (
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={byConfidence} margin={{ top: 5, right: 8, bottom: 0, left: -20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.12} />
+                  <XAxis dataKey="confidence" stroke="currentColor" fontSize={11} />
+                  <YAxis domain={[0, 100]} stroke="currentColor" fontSize={11} />
+                  <Tooltip content={<ChartTip />} />
+                  <Bar dataKey="accuracy" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </ChartCard>
 
         <ChartCard title="Time investment" subtitle="Total time on tests in this range">

@@ -59,3 +59,13 @@ test("getReviewsSummary reports correct counts and forecast shape", () => {
   expect(summary.forecast.length).toBe(14);
   expect(summary.forecast[0].count).toBe(1);
 });
+
+test("forecast buckets a due-today review once, by local day", () => {
+  const now = new Date("2026-03-10T20:00:00"); // local
+  const cards: Card[] = [{ id: "c1", kind: "flash", question: "Q", answer: "A", distractors: [], explanation: "", hint: "", difficulty: 3, tags: [], createdAt: "" }];
+  const reviews: Review[] = [{ cardId: "c1", dueAt: new Date("2026-03-10T23:00:00").toISOString(), lastReviewedAt: null, firstSeenAt: "",
+    fsrs: { stability: 1, difficulty: 1, elapsed_days: 0, scheduled_days: 0, learning_steps: 0, reps: 1, lapses: 0, state: 1, last_review: null, due: "" } }];
+  const s = getReviewsSummary(cards, reviews, now);
+  expect(s.forecast[0].count).toBe(1);   // today
+  expect(s.forecast[1].count).toBe(0);   // tomorrow, not double-counted
+});
