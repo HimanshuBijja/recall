@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Recall
 
-## Getting Started
+A local-first, single-user flashcard app for spaced revision. Built on Next.js 16
+(App Router) + React 19 + Tailwind v4, with **MongoDB** as the data store.
 
-First, run the development server:
+Two card kinds today — classic **MCQ** and **tf-sort** (sort statements into
+True/False, scored all-or-nothing). Most of the app is kind-agnostic.
+
+## Stack
+
+| Concern     | Choice                                    |
+| ----------- | ----------------------------------------- |
+| Framework   | Next.js 16.2.6 (App Router, Turbopack)    |
+| UI          | React 19 + Tailwind v4                     |
+| HTTP client | Axios (`lib/api.ts`)                       |
+| Charts      | Recharts                                   |
+| Database    | MongoDB (cached client in `lib/mongodb.ts`) |
+| Tests       | Vitest + mongodb-memory-server            |
+| Auth        | None — single-user                         |
+
+## Data storage & sync
+
+- **Source of truth: MongoDB Atlas.** The app (localhost *and* the Vercel
+  deployment) connects to `MONGODB_URI`. Writes work in production.
+- **Local mongod is a one-way mirror** of Atlas, kept fresh so the laptop
+  always holds a recent copy. The app never uses local as its data source —
+  writing to local directly will be overwritten by the mirror.
+- `readDb`/`writeDb` (`lib/db.ts`) are async and Mongo-backed. `writeDb` uses a
+  transaction on Atlas/replica-sets and an atomic temp-collection rename on a
+  standalone mongod.
+
+## Setup
+
+1. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+2. Create `.env.local` (copy from `.env.local.example`):
+
+   ```
+   MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>/?retryWrites=true&w=majority
+   MONGODB_DB=recall
+   LOCAL_MONGODB_URI=mongodb://127.0.0.1:27017/?retryWrites=false
+   ```
+
+3. Seed the database from the JSON snapshots in `data/`:
+
+   ```bash
+   npm run seed:mongo
+   ```
+
+## Scripts
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev          # Next dev server (uses Atlas via MONGODB_URI)
+npm run dev:synced   # pull Atlas->local once, then live mirror + next dev
+npm run build        # production build (types checked here)
+npm run start        # production server
+npm run lint         # eslint
+npm test             # vitest (data-layer tests)
+
+npm run seed:mongo   # seed the DB from data/*.json
+npm run sync:local   # one-shot copy Atlas -> local mongod
+npm run mirror:watch # live change-stream mirror Atlas -> local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+For local dev with the mirror running, use **`npm run dev:synced`** — it pulls
+the latest from Atlas (closing any gap from while the laptop was off), then runs
+the live mirror watcher alongside `next dev`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy (Vercel)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Set `MONGODB_URI` and `MONGODB_DB` in the Vercel project env (Production +
+Preview). The runtime filesystem is read-only, but data lives in MongoDB, so
+runtime writes work. Allow-list Vercel egress in Atlas Network Access (or
+`0.0.0.0/0`).
 
-## Learn More
+## Docs
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See `docs/ai-memory/` for the project overview, architecture, feature log,
+decisions, and current state.
