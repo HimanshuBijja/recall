@@ -14,6 +14,7 @@ interface RawCard {
   distractors?: unknown;
   statements?: unknown;
   clozeText?: unknown;
+  text?: unknown;
   pairs?: unknown;
   explanation?: unknown;
   hint?: unknown;
@@ -43,10 +44,32 @@ interface ParsedBundle {
   shape: "array" | "bundle";
 }
 
+/**
+ * Mirrors the alias normalization in app/api/import/route.ts so the preview
+ * matches what the API will actually save: cloze `text` (alias for
+ * `clozeText`), tf-sort `{statement,truth}` (aliases for `text`/`isTrue`),
+ * and match tuple pairs `["a","b"]` (alias for `{left,right}`).
+ */
+function normalizeCardAliases(r: RawCard, kind: CardKind): void {
+  if (kind === "cloze" && !r.clozeText && typeof r.text === "string") {
+    r.clozeText = r.text;
+  }
+  if (kind === "tf-sort" && Array.isArray(r.statements)) {
+    r.statements = r.statements.map((s) => {
+      const o = (s ?? {}) as { text?: unknown; statement?: unknown; isTrue?: unknown; truth?: unknown };
+      return { text: o.text ?? o.statement, isTrue: o.isTrue ?? o.truth };
+    });
+  }
+  if (kind === "match" && Array.isArray(r.pairs)) {
+    r.pairs = r.pairs.map((p) => (Array.isArray(p) ? { left: p[0], right: p[1] } : p));
+  }
+}
+
 function validateCard(row: unknown): ValidatedCard {
   const r = (row ?? {}) as RawCard & { clozeText?: unknown; pairs?: unknown };
   const errors: string[] = [];
   const kind = (typeof r.kind === "string" ? r.kind : "mcq") as CardKind;
+  normalizeCardAliases(r, kind);
 
   if (kind !== "cloze" && (typeof r.question !== "string" || !r.question.trim())) {
     errors.push("question missing");
@@ -194,6 +217,35 @@ const mixedSample = `[
   }
 ]`;
 
+const aliasSample = `[
+  {
+    "kind": "cloze",
+    "text": "The capital of France is ==Paris==.",
+    "difficulty": 1,
+    "tags": ["geography"]
+  },
+  {
+    "kind": "tf-sort",
+    "question": "Sort each statement as True or False — Go.",
+    "statements": [
+      { "statement": "Go compiles to native machine code.", "truth": true },
+      { "statement": "Go requires a VM at runtime.", "truth": false }
+    ],
+    "difficulty": 2,
+    "tags": ["go"]
+  },
+  {
+    "kind": "match",
+    "question": "Match each capital to its country",
+    "pairs": [
+      ["Paris", "France"],
+      ["Tokyo", "Japan"]
+    ],
+    "difficulty": 2,
+    "tags": ["geography"]
+  }
+]`;
+
 const bundleSample = `{
   "cards": ${mixedSample.replace(/\n/g, "\n  ")},
   "tags": [
@@ -252,7 +304,7 @@ Example (one card):
 
 Now generate <N> cards on the topic: <TOPIC>.`;
 
-type SchemaKey = "mcq" | "tf" | "mixed" | "bundle";
+type SchemaKey = "mcq" | "tf" | "mixed" | "bundle" | "alias";
 type PromptKey = "mcq" | "tf";
 
 const SCHEMA_OPTIONS: { key: SchemaKey; label: string; hint: string; payload: string }[] = [
@@ -260,6 +312,7 @@ const SCHEMA_OPTIONS: { key: SchemaKey; label: string; hint: string; payload: st
   { key: "tf", label: "True / False sort card", hint: "Single tf-sort card array", payload: tfSample },
   { key: "mixed", label: "Mixed card array", hint: "MCQ + tf-sort together", payload: mixedSample },
   { key: "bundle", label: "Full bundle (cards + tags + groups)", hint: "Round-trippable export shape", payload: bundleSample },
+  { key: "alias", label: "Alt shapes (cloze/tf-sort/match)", hint: "Looser aliases: text, statement/truth, pair tuples", payload: aliasSample },
 ];
 
 const PROMPT_OPTIONS: { key: PromptKey; label: string; hint: string; payload: string }[] = [

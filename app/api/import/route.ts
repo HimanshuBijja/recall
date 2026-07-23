@@ -14,11 +14,36 @@ interface BundleCard {
   distractors?: string[];
   statements?: BundleStatement[];
   clozeText?: string;
-  pairs?: Array<{ left?: unknown; right?: unknown }>;
+  text?: string;
+  pairs?: Array<{ left?: unknown; right?: unknown } | unknown[]>;
   explanation?: string;
   hint?: string;
   difficulty?: number;
   tags?: string[];
+}
+
+/**
+ * Accepts a few looser paste shapes alongside the canonical one, so pastes
+ * from ad-hoc AI prompts don't get silently dropped: cloze `text` (alias for
+ * `clozeText`), tf-sort `{statement,truth}` (aliases for `text`/`isTrue`),
+ * and match tuple pairs `["a","b"]` (alias for `{left,right}`). Mutates in
+ * place before the existing per-kind branches run.
+ */
+function normalizeAliases(item: BundleCard): void {
+  if (item.kind === "cloze" && !item.clozeText && typeof item.text === "string") {
+    item.clozeText = item.text;
+  }
+  if (item.kind === "tf-sort" && Array.isArray(item.statements)) {
+    item.statements = item.statements.map((s) => {
+      const o = s as { text?: unknown; statement?: unknown; isTrue?: unknown; truth?: unknown };
+      return { text: o.text ?? o.statement, isTrue: o.isTrue ?? o.truth };
+    });
+  }
+  if (item.kind === "match" && Array.isArray(item.pairs)) {
+    item.pairs = item.pairs.map((p) =>
+      Array.isArray(p) ? { left: p[0], right: p[1] } : p
+    );
+  }
 }
 
 interface BundleTag {
@@ -79,6 +104,7 @@ export async function POST(req: NextRequest) {
 
   let cardsInserted = 0;
   for (const item of bundle.cards ?? []) {
+    normalizeAliases(item);
     const kind: CardKind = item.kind || "mcq";
     if (kind !== "cloze" && typeof item.question !== "string") continue;
     if (kind === "cloze" && typeof item.clozeText !== "string") continue;
