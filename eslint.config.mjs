@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Antigravity/Gemini IDE tooling dropped into the repo — not app code.
     ".gemini/**",
+    // Agent worktrees (git worktrees nested in-repo) — not app code.
+    ".claude/**",
+    // The extension is a separate pnpm workspace with its own lint/tsconfig.
+    "extension/**",
   ]),
 ]);
 
