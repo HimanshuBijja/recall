@@ -3,9 +3,10 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import type { Card, CardKind, Tag, TfStatement } from "@/types";
+import type { Card, CardKind, Tag, TfStatement, MatchPair } from "@/types";
 import { useToast } from "@/components/Toast";
 import { TagSelector, type TagSelectorHandle, type TagSelectorValue } from "@/components/TagSelector";
+import { parseCloze } from "@/lib/cloze";
 
 interface Props {
   initial?: Card;
@@ -35,7 +36,7 @@ function makeAdvanceOnEnter(refs: React.RefObject<HTMLElement | null>[]) {
 export function CardForm({ initial, tags }: Props) {
   const router = useRouter();
   const toast = useToast();
-  const [kind, setKind] = useState<CardKind>(initial?.kind === "tf-sort" ? "tf-sort" : "mcq");
+  const [kind, setKind] = useState<CardKind>(initial?.kind ?? "mcq");
   const [question, setQuestion] = useState(initial?.question ?? "");
   const [answer, setAnswer] = useState(initial?.answer ?? "");
   const [distractors, setDistractors] = useState<string[]>(
@@ -47,6 +48,15 @@ export function CardForm({ initial, tags }: Props) {
       : [
           { text: "", isTrue: true },
           { text: "", isTrue: false },
+        ]
+  );
+  const [clozeText, setClozeText] = useState(initial?.clozeText ?? "");
+  const [pairs, setPairs] = useState<MatchPair[]>(
+    initial?.pairs && initial.pairs.length > 0
+      ? initial.pairs
+      : [
+          { left: "", right: "" },
+          { left: "", right: "" },
         ]
   );
   const [explanation, setExplanation] = useState(initial?.explanation ?? "");
@@ -61,6 +71,7 @@ export function CardForm({ initial, tags }: Props) {
 
   // Refs for Enter-to-advance navigation.
   const qRef = useRef<HTMLTextAreaElement>(null);
+  const clozeRef = useRef<HTMLTextAreaElement>(null);
   const aRef = useRef<HTMLInputElement>(null);
   const d0Ref = useRef<HTMLInputElement>(null);
   const d1Ref = useRef<HTMLInputElement>(null);
@@ -75,19 +86,35 @@ export function CardForm({ initial, tags }: Props) {
   } as unknown as HTMLElement);
 
   const advance = makeAdvanceOnEnter([
-    qRef, aRef, d0Ref, d1Ref, d2Ref, hRef, eRef, tagFocusProxy,
+    qRef, clozeRef, aRef, d0Ref, d1Ref, d2Ref, hRef, eRef, tagFocusProxy,
   ]);
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!question.trim()) e.question = "Question is required";
+    if (kind !== "cloze" && !question.trim()) e.question = "Question is required";
     if (kind === "mcq") {
       if (!answer.trim()) e.answer = "Answer is required";
       if (distractors.filter((d) => d.trim()).length !== 3)
         e.distractors = "Exactly 3 distractors required";
-    } else {
+    } else if (kind === "tf-sort") {
       const filled = statements.filter((s) => s.text.trim());
       if (filled.length < 2) e.statements = "At least 2 statements required";
+    } else if (kind === "flash") {
+      if (!answer.trim()) e.answer = "Answer is required";
+    } else if (kind === "cloze") {
+      if (!clozeText.trim()) {
+        e.clozeText = "Cloze text is required";
+      } else {
+        const { answers } = parseCloze(clozeText);
+        if (answers.length < 1) {
+          e.clozeText = "At least one blank ==like this== is required";
+        }
+      }
+    } else if (kind === "match") {
+      const filled = pairs.filter((p) => p.left.trim() && p.right.trim());
+      if (filled.length < 2) {
+        e.pairs = "At least 2 pairs required";
+      }
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -98,8 +125,6 @@ export function CardForm({ initial, tags }: Props) {
     if (!validate()) return;
     setSaving(true);
     try {
-      // Step 1: create any pending tags, deduping (case-insensitive) against
-      // existing tags in case the user typed a name that already exists.
       const existingByName = new Map(tags.map((t) => [t.name.toLowerCase(), t.id]));
       const createdIds: string[] = [];
       const seen = new Set<string>();
@@ -119,14 +144,21 @@ export function CardForm({ initial, tags }: Props) {
 
       const payload = {
         kind,
-        question: question.trim(),
-        answer: kind === "mcq" ? answer.trim() : "",
+        question: kind === "cloze" ? (question.trim() || clozeText.trim()) : question.trim(),
+        answer: (kind === "mcq" || kind === "flash") ? answer.trim() : "",
         distractors: kind === "mcq" ? distractors.map((d) => d.trim()) : [],
         statements:
           kind === "tf-sort"
             ? statements
                 .map((s) => ({ text: s.text.trim(), isTrue: s.isTrue }))
                 .filter((s) => s.text.length > 0)
+            : undefined,
+        clozeText: kind === "cloze" ? clozeText.trim() : undefined,
+        pairs:
+          kind === "match"
+            ? pairs
+                .map((p) => ({ left: p.left.trim(), right: p.right.trim() }))
+                .filter((p) => p.left.length > 0 && p.right.length > 0)
             : undefined,
         explanation: explanation.trim(),
         hint: hint.trim(),
@@ -158,8 +190,14 @@ export function CardForm({ initial, tags }: Props) {
   return (
     <form onSubmit={submit} className="space-y-5 max-w-2xl">
       <Field label="Card type">
-        <div className="inline-flex rounded-lg border border-zinc-300 dark:border-zinc-700 p-0.5 bg-zinc-50 dark:bg-zinc-900">
-          {(["mcq", "tf-sort"] as const).map((k) => (
+        <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-300 dark:border-zinc-700 p-0.5 bg-zinc-50 dark:bg-zinc-900 w-fit">
+          {([
+            ["mcq", "Multiple choice"],
+            ["tf-sort", "True / False sort"],
+            ["flash", "Flashcard"],
+            ["cloze", "Cloze deletion"],
+            ["match", "Match pairs"],
+          ] as const).map(([k, label]) => (
             <button
               key={k}
               type="button"
@@ -171,42 +209,46 @@ export function CardForm({ initial, tags }: Props) {
                   : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100",
               ].join(" ")}
             >
-              {k === "mcq" ? "Multiple choice" : "True / False sort"}
+              {label}
             </button>
           ))}
         </div>
         <p className="text-xs text-zinc-500 mt-1.5">
-          {kind === "mcq"
-            ? "One question, one correct answer, three distractors."
-            : "User sorts each statement into True / False — scored all-or-nothing."}
+          {kind === "mcq" && "One question, one correct answer, three distractors."}
+          {kind === "tf-sort" && "User sorts each statement into True / False — scored all-or-nothing."}
+          {kind === "flash" && "Self-graded flip card (question on front, answer on back) with swipe."}
+          {kind === "cloze" && "Text with blanks created using ==word== syntax. All blanks must be correct."}
+          {kind === "match" && "Match left terms to right definitions (2-8 pairs). All correct to pass."}
         </p>
       </Field>
 
-      <Field label="Question" error={errors.question}>
-        <textarea
-          ref={qRef}
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          onKeyDown={advance(0)}
-          rows={2}
-          autoFocus
-          className={inputCls}
-          placeholder={
-            kind === "tf-sort"
-              ? "e.g. Sort each statement as True or False — advantages of go build"
-              : undefined
-          }
-        />
-      </Field>
+      {kind !== "cloze" && (
+        <Field label="Question" error={errors.question}>
+          <textarea
+            ref={qRef}
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={advance(0)}
+            rows={2}
+            autoFocus
+            className={inputCls}
+            placeholder={
+              kind === "tf-sort"
+                ? "e.g. Sort each statement as True or False — advantages of go build"
+                : undefined
+            }
+          />
+        </Field>
+      )}
 
-      {kind === "mcq" ? (
+      {kind === "mcq" && (
         <>
           <Field label="Correct answer" error={errors.answer}>
             <input
               ref={aRef}
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              onKeyDown={advance(1)}
+              onKeyDown={advance(2)}
               className={inputCls}
             />
           </Field>
@@ -222,7 +264,7 @@ export function CardForm({ initial, tags }: Props) {
                   n[0] = e.target.value;
                   setDistractors(n);
                 }}
-                onKeyDown={advance(2)}
+                onKeyDown={advance(3)}
                 className={inputCls}
               />
               <input
@@ -234,7 +276,7 @@ export function CardForm({ initial, tags }: Props) {
                   n[1] = e.target.value;
                   setDistractors(n);
                 }}
-                onKeyDown={advance(3)}
+                onKeyDown={advance(4)}
                 className={inputCls}
               />
               <input
@@ -246,13 +288,15 @@ export function CardForm({ initial, tags }: Props) {
                   n[2] = e.target.value;
                   setDistractors(n);
                 }}
-                onKeyDown={advance(4)}
+                onKeyDown={advance(5)}
                 className={inputCls}
               />
             </div>
           </Field>
         </>
-      ) : (
+      )}
+
+      {kind === "tf-sort" && (
         <Field label="Statements" error={errors.statements}>
           <div className="space-y-2">
             {statements.map((s, i) => (
@@ -324,6 +368,133 @@ export function CardForm({ initial, tags }: Props) {
             </button>
             <p className="text-[11px] text-zinc-500">
               Mark each as True or False — the user will sort them and is graded all-or-nothing.
+            </p>
+          </div>
+        </Field>
+      )}
+
+      {kind === "flash" && (
+        <Field label="Back (answer)" error={errors.answer}>
+          <input
+            ref={aRef}
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            onKeyDown={advance(2)}
+            className={inputCls}
+            placeholder="Answer shown on back of card"
+          />
+        </Field>
+      )}
+
+      {kind === "cloze" && (
+        <>
+          <Field label="Cloze Text" error={errors.clozeText}>
+            <div className="space-y-2">
+              <textarea
+                ref={clozeRef}
+                value={clozeText}
+                onChange={(e) => setClozeText(e.target.value)}
+                rows={4}
+                className={inputCls}
+                placeholder="Type your text here. Highlight a word and click 'Cloze it' to create a blank."
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const el = clozeRef.current;
+                  if (!el) return;
+                  const start = el.selectionStart;
+                  const end = el.selectionEnd;
+                  if (start === end) return;
+                  const text = el.value;
+                  const selected = text.slice(start, end);
+                  const newVal = text.slice(0, start) + `==${selected}==` + text.slice(end);
+                  setClozeText(newVal);
+                  setTimeout(() => {
+                    el.focus();
+                    el.setSelectionRange(start + 2, start + 2 + selected.length);
+                  }, 0);
+                }}
+                className="text-xs px-3 py-1.5 rounded bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-semibold"
+              >
+                == Cloze it ==
+              </button>
+            </div>
+          </Field>
+
+          <div className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
+            <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Preview</div>
+            <div className="text-sm leading-relaxed whitespace-pre-wrap">
+              {(() => {
+                const { segments, answers } = parseCloze(clozeText);
+                if (answers.length === 0) return <span className="text-zinc-400">No blanks created yet.</span>;
+                return segments.map((seg, i) => (
+                  <span key={i}>
+                    {seg}
+                    {i < answers.length && (
+                      <span className="inline-block px-2 py-0.5 mx-1 rounded border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 font-mono text-zinc-600 dark:text-zinc-400">
+                        ____
+                      </span>
+                    )}
+                  </span>
+                ));
+              })()}
+            </div>
+          </div>
+        </>
+      )}
+
+      {kind === "match" && (
+        <Field label="Pairs" error={errors.pairs}>
+          <div className="space-y-2">
+            {pairs.map((p, i) => (
+              <div key={i} className="flex items-stretch gap-2">
+                <input
+                  value={p.left}
+                  onChange={(e) => {
+                    const n = [...pairs];
+                    n[i] = { ...n[i], left: e.target.value };
+                    setPairs(n);
+                  }}
+                  placeholder={`Left term ${i + 1}`}
+                  className={inputCls + " flex-1"}
+                />
+                <span className="flex items-center text-zinc-400">→</span>
+                <input
+                  value={p.right}
+                  onChange={(e) => {
+                    const n = [...pairs];
+                    n[i] = { ...n[i], right: e.target.value };
+                    setPairs(n);
+                  }}
+                  placeholder={`Right matches ${i + 1}`}
+                  className={inputCls + " flex-1"}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (pairs.length <= 2) return;
+                    setPairs(pairs.filter((_, j) => j !== i));
+                  }}
+                  disabled={pairs.length <= 2}
+                  className="shrink-0 px-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:text-rose-600 hover:border-rose-300 disabled:opacity-40 disabled:hover:text-zinc-500 disabled:hover:border-zinc-300"
+                  aria-label={`Remove pair ${i + 1}`}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            {pairs.length < 8 && (
+              <button
+                type="button"
+                onClick={() => setPairs([...pairs, { left: "", right: "" }])}
+                className="text-xs px-2.5 py-1.5 rounded-md border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-indigo-400 hover:text-indigo-600"
+              >
+                + Add pair
+              </button>
+            )}
+            <p className="text-[11px] text-zinc-500">
+              Create 2 to 8 matching pairs. The left side remains in order while the right side will be shuffled.
             </p>
           </div>
         </Field>
