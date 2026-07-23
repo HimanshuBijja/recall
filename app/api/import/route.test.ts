@@ -93,3 +93,64 @@ test("import route processes flash, cloze, and match cards", async () => {
     { left: "B", right: "2" }
   ]);
 });
+
+test("import route normalizes alias shapes for cloze, tf-sort, and match", async () => {
+  const payload = {
+    cards: [
+      {
+        kind: "cloze",
+        text: "The capital of France is ==Paris==.",
+        difficulty: 2,
+        tags: []
+      },
+      {
+        kind: "tf-sort",
+        question: "Sort these",
+        statements: [
+          { statement: "Go compiles to native code.", truth: true },
+          { statement: "Go requires a VM to run.", truth: false }
+        ],
+        difficulty: 2,
+        tags: []
+      },
+      {
+        kind: "match",
+        question: "Match them",
+        pairs: [
+          ["A", "1"],
+          ["B", "2"]
+        ],
+        difficulty: 2,
+        tags: []
+      }
+    ]
+  };
+
+  const req = new NextRequest("http://localhost/api/import", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+
+  const res = await POST(req);
+  expect(res.status).toBe(201);
+
+  const data = await res.json();
+  expect(data.cards.inserted).toBe(3);
+
+  const cards = await readDb<Card>("cards.json");
+
+  const clozeCard = cards.find((c) => c.kind === "cloze");
+  expect(clozeCard?.clozeText).toBe("The capital of France is ==Paris==.");
+
+  const tfCard = cards.find((c) => c.kind === "tf-sort");
+  expect(tfCard?.statements).toEqual([
+    { text: "Go compiles to native code.", isTrue: true },
+    { text: "Go requires a VM to run.", isTrue: false }
+  ]);
+
+  const matchCard = cards.find((c) => c.kind === "match" && c.question === "Match them");
+  expect(matchCard?.pairs).toEqual([
+    { left: "A", right: "1" },
+    { left: "B", right: "2" }
+  ]);
+});

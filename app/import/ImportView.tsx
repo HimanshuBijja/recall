@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import type { CardKind } from "@/types";
 import { parseCloze } from "@/lib/cloze";
+import { applyBulkTags, findDuplicates } from "@/lib/import-dedupe";
 
 interface RawCard {
   kind?: unknown;
@@ -14,6 +15,7 @@ interface RawCard {
   distractors?: unknown;
   statements?: unknown;
   clozeText?: unknown;
+  text?: unknown;
   pairs?: unknown;
   explanation?: unknown;
   hint?: unknown;
@@ -43,10 +45,32 @@ interface ParsedBundle {
   shape: "array" | "bundle";
 }
 
+/**
+ * Mirrors the alias normalization in app/api/import/route.ts so the preview
+ * matches what the API will actually save: cloze `text` (alias for
+ * `clozeText`), tf-sort `{statement,truth}` (aliases for `text`/`isTrue`),
+ * and match tuple pairs `["a","b"]` (alias for `{left,right}`).
+ */
+function normalizeCardAliases(r: RawCard, kind: CardKind): void {
+  if (kind === "cloze" && !r.clozeText && typeof r.text === "string") {
+    r.clozeText = r.text;
+  }
+  if (kind === "tf-sort" && Array.isArray(r.statements)) {
+    r.statements = r.statements.map((s) => {
+      const o = (s ?? {}) as { text?: unknown; statement?: unknown; isTrue?: unknown; truth?: unknown };
+      return { text: o.text ?? o.statement, isTrue: o.isTrue ?? o.truth };
+    });
+  }
+  if (kind === "match" && Array.isArray(r.pairs)) {
+    r.pairs = r.pairs.map((p) => (Array.isArray(p) ? { left: p[0], right: p[1] } : p));
+  }
+}
+
 function validateCard(row: unknown): ValidatedCard {
   const r = (row ?? {}) as RawCard & { clozeText?: unknown; pairs?: unknown };
   const errors: string[] = [];
   const kind = (typeof r.kind === "string" ? r.kind : "mcq") as CardKind;
+  normalizeCardAliases(r, kind);
 
   if (kind !== "cloze" && (typeof r.question !== "string" || !r.question.trim())) {
     errors.push("question missing");
@@ -194,6 +218,35 @@ const mixedSample = `[
   }
 ]`;
 
+const aliasSample = `[
+  {
+    "kind": "cloze",
+    "text": "The capital of France is ==Paris==.",
+    "difficulty": 1,
+    "tags": ["geography"]
+  },
+  {
+    "kind": "tf-sort",
+    "question": "Sort each statement as True or False — Go.",
+    "statements": [
+      { "statement": "Go compiles to native machine code.", "truth": true },
+      { "statement": "Go requires a VM at runtime.", "truth": false }
+    ],
+    "difficulty": 2,
+    "tags": ["go"]
+  },
+  {
+    "kind": "match",
+    "question": "Match each capital to its country",
+    "pairs": [
+      ["Paris", "France"],
+      ["Tokyo", "Japan"]
+    ],
+    "difficulty": 2,
+    "tags": ["geography"]
+  }
+]`;
+
 const bundleSample = `{
   "cards": ${mixedSample.replace(/\n/g, "\n  ")},
   "tags": [
@@ -252,7 +305,7 @@ Example (one card):
 
 Now generate <N> cards on the topic: <TOPIC>.`;
 
-type SchemaKey = "mcq" | "tf" | "mixed" | "bundle";
+type SchemaKey = "mcq" | "tf" | "mixed" | "bundle" | "alias";
 type PromptKey = "mcq" | "tf";
 
 const SCHEMA_OPTIONS: { key: SchemaKey; label: string; hint: string; payload: string }[] = [
@@ -260,6 +313,7 @@ const SCHEMA_OPTIONS: { key: SchemaKey; label: string; hint: string; payload: st
   { key: "tf", label: "True / False sort card", hint: "Single tf-sort card array", payload: tfSample },
   { key: "mixed", label: "Mixed card array", hint: "MCQ + tf-sort together", payload: mixedSample },
   { key: "bundle", label: "Full bundle (cards + tags + groups)", hint: "Round-trippable export shape", payload: bundleSample },
+  { key: "alias", label: "Alt shapes (cloze/tf-sort/match)", hint: "Looser aliases: text, statement/truth, pair tuples", payload: aliasSample },
 ];
 
 const PROMPT_OPTIONS: { key: PromptKey; label: string; hint: string; payload: string }[] = [
@@ -278,6 +332,18 @@ export function ImportView() {
   const [hoverKeep, setHoverKeep] = useState<string | null>(null);
   const [marked, setMarked] = useState<Set<string>>(new Set());
   const [hideMarked, setHideMarked] = useState<Set<number>>(new Set());
+  const [existingCards, setExistingCards] = useState<
+    { kind?: string; question?: string; clozeText?: string }[]
+  >([]);
+  const [skipDuplicates, setSkipDuplicates] = useState(true);
+  const [bulkTagsInput, setBulkTagsInput] = useState("");
+
+  useEffect(() => {
+    api
+      .get("/cards")
+      .then((res) => setExistingCards(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setExistingCards([]));
+  }, []);
 
   function toggleMark(cardIdx: number, sIdx: number) {
     const key = `${cardIdx}:${sIdx}`;
@@ -445,6 +511,16 @@ export function ImportView() {
     });
   }
 
+  function applyBulkTagsToPreview() {
+    const additions = bulkTagsInput.split(",").map((t) => t.trim()).filter(Boolean);
+    if (!additions.length) return;
+    mutateCards((cards) => {
+      const merged = applyBulkTags(cards as unknown as { tags?: string[] }[], additions);
+      merged.forEach((c, i) => { cards[i] = c as unknown as Record<string, unknown>; });
+    });
+    toast("success", `Tagged ${cardRows.length} card${cardRows.length === 1 ? "" : "s"}`);
+  }
+
   async function copyPayload(id: string, payload: string, label: string) {
     try {
       await navigator.clipboard.writeText(payload);
@@ -483,11 +559,28 @@ export function ImportView() {
   const tagRows = bundle?.tags ?? [];
   const groupRows = bundle?.groups ?? [];
 
+  const duplicateIndices = useMemo(
+    () =>
+      findDuplicates(
+        cardRows.map((r) => r.raw as { kind?: string; question?: string; clozeText?: string }),
+        existingCards
+      ),
+    [bundle, existingCards] // eslint-disable-line react-hooks/exhaustive-deps -- cardRows is derived from bundle
+  );
+
   const validCards = cardRows.filter((r) => r.errors.length === 0);
   const validTags = tagRows.filter((r) => r.errors.length === 0);
   const validGroups = groupRows.filter((r) => r.errors.length === 0);
 
-  const totalValid = validCards.length + validTags.length + validGroups.length;
+  const cardsForImport = cardRows
+    .map((r, i) => ({ r, i }))
+    .filter(({ r, i }) => r.errors.length === 0 && !(skipDuplicates && duplicateIndices.has(i)))
+    .map(({ r }) => r);
+
+  const duplicateCount = cardRows.filter((r, i) => r.errors.length === 0 && duplicateIndices.has(i)).length;
+  const newCardCount = validCards.length - duplicateCount;
+
+  const totalValid = cardsForImport.length + validTags.length + validGroups.length;
   const totalInvalid =
     cardRows.length - validCards.length +
     (tagRows.length - validTags.length) +
@@ -498,7 +591,7 @@ export function ImportView() {
     setImporting(true);
     try {
       const payload = {
-        cards: validCards.map((r) => {
+        cards: cardsForImport.map((r) => {
           const kind = (r.raw.kind || "mcq") as CardKind;
           return {
             kind,
@@ -737,37 +830,77 @@ export function ImportView() {
       )}
 
       {(bundle && (cardRows.length + tagRows.length + groupRows.length > 0)) && (
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sticky top-2 z-10 shadow-sm">
-          <div className="text-sm flex flex-wrap items-center gap-x-3 gap-y-1">
-            {bundle.shape === "bundle" && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                Bundle
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3 flex flex-col gap-3 sticky top-2 z-10 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="text-sm flex flex-wrap items-center gap-x-3 gap-y-1">
+              {bundle.shape === "bundle" && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                  Bundle
+                </span>
+              )}
+              <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                {totalValid} valid
               </span>
-            )}
-            <span className="text-emerald-700 dark:text-emerald-400 font-medium">
-              {totalValid} valid
-            </span>
-            {totalInvalid > 0 && (
-              <span className="text-rose-700 dark:text-rose-400 font-medium">
-                {totalInvalid} invalid
-              </span>
-            )}
+              {totalInvalid > 0 && (
+                <span className="text-rose-700 dark:text-rose-400 font-medium">
+                  {totalInvalid} invalid
+                </span>
+              )}
+              {cardRows.length > 0 && (
+                <span className="text-zinc-500">
+                  {newCardCount} new card{newCardCount === 1 ? "" : "s"}
+                  {duplicateCount > 0 && `, ${duplicateCount} duplicate${duplicateCount === 1 ? "" : "s"}`}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={doImport}
+              disabled={importing || totalValid === 0}
+              className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium disabled:opacity-50 text-sm whitespace-nowrap"
+            >
+              {importing
+                ? "Importing…"
+                : totalValid === 0
+                ? "Nothing to import"
+                : `Import ${[
+                    cardsForImport.length && `${cardsForImport.length} card${cardsForImport.length === 1 ? "" : "s"}`,
+                    validTags.length && `${validTags.length} tag${validTags.length === 1 ? "" : "s"}`,
+                    validGroups.length && `${validGroups.length} group${validGroups.length === 1 ? "" : "s"}`,
+                  ].filter(Boolean).join(", ")}`}
+            </button>
           </div>
-          <button
-            onClick={doImport}
-            disabled={importing || totalValid === 0}
-            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium disabled:opacity-50 text-sm whitespace-nowrap"
-          >
-            {importing
-              ? "Importing…"
-              : totalValid === 0
-              ? "Nothing to import"
-              : `Import ${[
-                  validCards.length && `${validCards.length} card${validCards.length === 1 ? "" : "s"}`,
-                  validTags.length && `${validTags.length} tag${validTags.length === 1 ? "" : "s"}`,
-                  validGroups.length && `${validGroups.length} group${validGroups.length === 1 ? "" : "s"}`,
-                ].filter(Boolean).join(", ")}`}
-          </button>
+          {cardRows.length > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+              {duplicateCount > 0 && (
+                <label className="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                  <input
+                    type="checkbox"
+                    checked={skipDuplicates}
+                    onChange={(e) => setSkipDuplicates(e.target.checked)}
+                    aria-label="Skip duplicates"
+                  />
+                  Skip duplicates
+                </label>
+              )}
+              <div className="flex items-center gap-1.5 flex-1">
+                <input
+                  type="text"
+                  value={bulkTagsInput}
+                  onChange={(e) => setBulkTagsInput(e.target.value)}
+                  placeholder="Bulk tags — comma-separated tags to add to every card"
+                  className="flex-1 min-w-0 text-xs px-2 py-1 rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
+                />
+                <button
+                  type="button"
+                  onClick={applyBulkTagsToPreview}
+                  disabled={!bulkTagsInput.trim()}
+                  className="shrink-0 text-xs px-2.5 py-1 rounded-md border border-zinc-300 dark:border-zinc-700 hover:border-indigo-400 hover:text-indigo-600 disabled:opacity-40"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -822,6 +955,11 @@ export function ImportView() {
                         >
                           {String(r.raw.kind || "mcq").toUpperCase()}
                         </span>
+                        {duplicateIndices.has(i) && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">
+                            Duplicate
+                          </span>
+                        )}
                         <div className="text-sm font-medium truncate">
                           {String(r.raw.question || r.raw.clozeText || "—")}
                         </div>
@@ -1211,6 +1349,7 @@ export function ImportView() {
         </div>
         <textarea
           ref={textareaRef}
+          aria-label="JSON input"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onFocus={() => setTextareaFocused(true)}
