@@ -26,13 +26,19 @@ export async function POST(req: NextRequest): Promise<Response> {
       draftCardFromFrame(body.frameDataUrl, body.kind),
       uploadFrame(body.frameDataUrl),
     ]);
+    if (uploadRes.status === "rejected") {
+      console.error("[capture] R2 upload failed (non-fatal):", uploadRes.reason);
+    }
     if (draftRes.status === "rejected") {
+      console.error("[capture] Gemini draft failed:", draftRes.reason);
       throw draftRes.reason;
     }
     const { draft, ocrText } = draftRes.value;
     const screenshotUrl = uploadRes.status === "fulfilled" ? uploadRes.value : undefined;
     return Response.json({ ok: true, draft, ocrText, screenshotUrl, marker: MARKER[body.kind] } satisfies CaptureResponse);
   } catch (e) {
-    return Response.json({ ok: false, error: e instanceof Error ? e.message : "capture failed" } satisfies CaptureResponse, { status: 500 });
+    const msg = e instanceof Error ? e.message : "capture failed";
+    console.error("[capture] 500:", msg, e);
+    return Response.json({ ok: false, error: msg } satisfies CaptureResponse, { status: 500 });
   }
 }
