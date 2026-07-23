@@ -14,7 +14,7 @@
 - Data access ONLY through `lib/db.ts` `readDb<T>(name)` / `writeDb<T>(name, data)`; never a raw driver call in a component. Route handlers reading data export `dynamic = "force-dynamic"`.
 - `SessionResult.correct` stays a single boolean across kinds. `Card.id` is `crypto.randomUUID()`; `_id` never leaks.
 - Recall UI is hand-rolled Tailwind v4 (no shadcn/RHF/Zod), toasts via `useToast()`, skeletons not spinners. Match it. (Recall's `instructions.md` names shadcn but the codebase does not use it — follow the code.)
-- **Money guardrail (from clipper `instructions.md`):** every capture calls Gemini (approved for this feature). No other paid calls without the user's say-so. Gemini creds via `GEMINI_API_KEY` or `service-account.json` (Vertex ADC), same detection as clipper.
+- **Money guardrail (`instructions.md`): ALWAYS ask permission before any live Vertex/Gemini call — it costs money. The user smoke-tests all real captures manually.** So: every automated step in this plan mocks Gemini (see A3/A4 tests); no agent runs the real API. The design uses Gemini for drafting, but wiring/tests must never spend without explicit approval. Gemini creds via `GEMINI_API_KEY` or `service-account.json` (Vertex ADC), same detection as clipper.
 - Card kinds & shortcuts (defaults, all user-configurable in the options page; validated to avoid Chrome/YouTube reserved combos):
   `quiz`→`mcq` = `Alt+Shift+Q`, `flash` = `Alt+Shift+F`, `cloze` = `Alt+Shift+C`, `tf-sort` = `Alt+Shift+T`, `match` = `Alt+Shift+M`.
 - Per-kind marker defaults (shape, color): mcq = circle `#f59e0b`, flash = square `#3b82f6`, cloze = triangle `#a855f7`, tf-sort = diamond `#10b981`, match = star `#ec4899`.
@@ -784,7 +784,7 @@ git commit -m "feat(ui): lazy 'Show frame' reveal in test, result, and cards vie
   "description": "Capture YouTube frames into Recall cards (quiz/flash/cloze/tf-sort/match).",
   "icons": { "128": "icons/icon128.png" },
   "action": { "default_title": "Recall Capture", "default_popup": "popup.html" },
-  "options_page": "options.html",
+  "options_ui": { "page": "options.html", "open_in_tab": true },
   "background": { "service_worker": "background.js", "type": "module" },
   "content_scripts": [
     { "matches": ["https://www.youtube.com/*"], "js": ["content.js"], "run_at": "document_idle" }
@@ -1142,6 +1142,8 @@ git commit -m "feat(extension): wire hotkey -> capture -> overlay -> save"
 
 ### Task C4: Options page (configure shortcuts, markers, base URL)
 
+> **Settings open as a full page in a NEW browser tab**, not the small embedded panel. Achieved by `manifest.options_ui.open_in_tab: true` (Task B1) + opening via `chrome.runtime.openOptionsPage()`. Style `options.html` as a full-width page (max-width container, generous padding), not a cramped popup.
+
 **Files:**
 - Create: `extension/src/options/options.html`, `extension/src/options/options.ts`
 - Test: `extension/tests/options-validate.test.ts`
@@ -1189,9 +1191,9 @@ git commit -m "feat(extension): options page — shortcuts, markers, base URL"
 - Test: manual.
 
 **Interfaces:**
-- Behavior: popup lists the five kinds with a visibility toggle each (writes `Settings.kinds[kind].visible` via `saveSettings`), a "Open Recall" button (opens `baseUrl` in a tab), and an "Options" link. Content scripts react via `chrome.storage.onChanged` to re-render markers immediately.
+- Behavior: popup lists the five kinds with a visibility toggle each (writes `Settings.kinds[kind].visible` via `saveSettings`), a "Open Recall" button (opens `baseUrl` in a tab), and a "Settings" button that calls `chrome.runtime.openOptionsPage()` (opens the full-page options in a new tab). Content scripts react via `chrome.storage.onChanged` to re-render markers immediately.
 
-- [ ] **Step 1: Implement `popup.ts` + `popup.html`** — load settings, render five toggles, persist on change, buttons for Recall + options.
+- [ ] **Step 1: Implement `popup.ts` + `popup.html`** — load settings, render five toggles, persist on change, an "Open Recall" button, and a "Settings" button calling `chrome.runtime.openOptionsPage()` (full-page options in a new tab).
 - [ ] **Step 2: Build** — Run: `pnpm --dir extension build` — Expected: `dist/popup.html` present.
 - [ ] **Step 3: Manual check** — toggling a kind hides/shows its markers on an open YouTube tab live.
 - [ ] **Step 4: Commit**
