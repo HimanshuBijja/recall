@@ -6,6 +6,7 @@ import { GroupQuickLaunch } from "@/components/GroupQuickLaunch";
 import { ExportAllButton } from "@/components/ExportAllButton";
 import { exportBundle } from "@/lib/export";
 import { getReviewsSummary } from "@/lib/due";
+import { buildCardHistory, latestPerCard } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -34,24 +35,16 @@ export default async function Home() {
 
   // Tag accuracy — uses the LATEST attempt per card so retries reflect improvement.
   const cardById = new Map(cards.map((c) => [c.id, c]));
-  const cardHistory = new Map<string, { correct: boolean; t: string }[]>();
-  for (const s of sessions) {
-    for (const r of s.results ?? []) {
-      const arr = cardHistory.get(r.cardId) ?? [];
-      arr.push({ correct: r.correct, t: s.completedAt });
-      cardHistory.set(r.cardId, arr);
-    }
-  }
+  const cardHistory = buildCardHistory(sessions);
+  const latest = latestPerCard(cardHistory);
   const buckets = new Map<string, { total: number; correct: number }>();
-  for (const [cid, hist] of cardHistory) {
+  for (const [cid, result] of latest) {
     const card = cardById.get(cid);
     if (!card) continue;
-    hist.sort((a, b) => a.t.localeCompare(b.t));
-    const latest = hist[hist.length - 1];
     for (const tagId of card.tags) {
       const b = buckets.get(tagId) ?? { total: 0, correct: 0 };
       b.total += 1;
-      if (latest.correct) b.correct += 1;
+      if (result.correct) b.correct += 1;
       buckets.set(tagId, b);
     }
   }

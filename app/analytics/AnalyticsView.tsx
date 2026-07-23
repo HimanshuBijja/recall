@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import type { Card, Session, Tag, Review } from "@/types";
 import { getReviewsSummary } from "@/lib/due";
+import { buildCardHistory, latestPerCard as latestPerCardMap, overallAccuracy as computeOverallAccuracy, tagTrend } from "@/lib/analytics";
 
 interface Props {
   sessions: Session[];
@@ -83,27 +84,10 @@ export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
    *   - latest-attempt deduping (accuracy metrics)
    *   - per-card latest-vs-prior trend
    */
-  const cardHistory = useMemo(() => {
-    const m = new Map<string, { result: Session["results"][number]; t: string }[]>();
-    for (const s of filteredSessions) {
-      for (const r of s.results ?? []) {
-        const arr = m.get(r.cardId) ?? [];
-        arr.push({ result: r, t: s.completedAt });
-        m.set(r.cardId, arr);
-      }
-    }
-    for (const h of m.values()) h.sort((a, b) => a.t.localeCompare(b.t));
-    return m;
-  }, [filteredSessions]);
+  const cardHistory = useMemo(() => buildCardHistory(filteredSessions), [filteredSessions]);
 
   /** Most-recent attempt per card. This is what "current understanding" means. */
-  const latestPerCard = useMemo(() => {
-    const m = new Map<string, Session["results"][number]>();
-    for (const [cid, hist] of cardHistory) {
-      if (hist.length > 0) m.set(cid, hist[hist.length - 1].result);
-    }
-    return m;
-  }, [cardHistory]);
+  const latestPerCard = useMemo(() => latestPerCardMap(cardHistory), [cardHistory]);
 
   const latestResults = useMemo(() => [...latestPerCard.values()], [latestPerCard]);
   const allResults = useMemo(
@@ -115,10 +99,7 @@ export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
   // improvement. Time stats use lifetime attempts because the time really was
   // spent. Best score is per-session as usual.
   const cardsAttempted = latestResults.length;
-  const cardsCorrectNow = latestResults.filter((r) => r.correct).length;
-  const overallAccuracy = cardsAttempted
-    ? Math.round((cardsCorrectNow / cardsAttempted) * 100)
-    : 0;
+  const overallAccuracy = computeOverallAccuracy(cardHistory);
   const totalAttempts = allResults.length;
   const avgTime = cardsAttempted
     ? Math.round(latestResults.reduce((a, r) => a + r.timeTaken, 0) / cardsAttempted)
@@ -205,8 +186,7 @@ export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
       let correct = 0;
       let timeSum = 0;
       let attempts = 0;
-      let retriedCards = 0;
-      let trendSum = 0;
+      const tagCardIds: string[] = [];
 
       for (const [cardId, hist] of cardHistory) {
         const card = cardById.get(cardId);
@@ -217,20 +197,12 @@ export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
         total += 1;
         timeSum += latest.timeTaken;
         if (latest.correct) correct += 1;
-
-        // Per-card trend: latest correctness vs the attempt immediately before it.
-        // Values: +1 (improved), 0 (same), -1 (regressed). Averaged at the end.
-        if (hist.length >= 2) {
-          const prior = hist[hist.length - 2].result;
-          retriedCards += 1;
-          trendSum += (latest.correct ? 1 : 0) - (prior.correct ? 1 : 0);
-        }
+        tagCardIds.push(cardId);
       }
 
       const accuracy = total ? Math.round((correct / total) * 100) : 0;
       const avgTime = total ? Math.round(timeSum / total) : 0;
-      const trend =
-        retriedCards > 0 ? Math.round((trendSum / retriedCards) * 100) : null;
+      const trend = tagTrend(tagCardIds, cardHistory);
 
       let band: TagPerf["band"];
       if (total === 0) band = "untested";
@@ -435,38 +407,46 @@ export function AnalyticsView({ sessions, cards, tags, reviews = [] }: Props) {
         </ChartCard>
 
         <ChartCard title="Accuracy by difficulty" subtitle="Are harder cards actually harder?">
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byDifficulty} margin={{ top: 5, right: 8, bottom: 0, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.12} />
-                <XAxis dataKey="difficulty" stroke="currentColor" fontSize={11} />
-                <YAxis domain={[0, 100]} stroke="currentColor" fontSize={11} />
-                <Tooltip content={<ChartTip />} />
-                <Bar dataKey="accuracy" radius={[4, 4, 0, 0]}>
-                  {byDifficulty.map((d) => (
-                    <Cell
-                      key={d.difficulty}
-                      fill={d.total === 0 ? "#a1a1aa" : d.accuracy >= 75 ? "#10b981" : d.accuracy >= 50 ? "#f59e0b" : "#ef4444"}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {cardsAttempted === 0 ? (
+            <Empty />
+          ) : (
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={byDifficulty} margin={{ top: 5, right: 8, bottom: 0, left: -20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.12} />
+                  <XAxis dataKey="difficulty" stroke="currentColor" fontSize={11} />
+                  <YAxis domain={[0, 100]} stroke="currentColor" fontSize={11} />
+                  <Tooltip content={<ChartTip />} />
+                  <Bar dataKey="accuracy" radius={[4, 4, 0, 0]}>
+                    {byDifficulty.map((d) => (
+                      <Cell
+                        key={d.difficulty}
+                        fill={d.total === 0 ? "#a1a1aa" : d.accuracy >= 75 ? "#10b981" : d.accuracy >= 50 ? "#f59e0b" : "#ef4444"}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </ChartCard>
 
         <ChartCard title="Confidence calibration" subtitle="Higher confidence should mean higher accuracy">
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byConfidence} margin={{ top: 5, right: 8, bottom: 0, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.12} />
-                <XAxis dataKey="confidence" stroke="currentColor" fontSize={11} />
-                <YAxis domain={[0, 100]} stroke="currentColor" fontSize={11} />
-                <Tooltip content={<ChartTip />} />
-                <Bar dataKey="accuracy" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {allResults.length === 0 ? (
+            <Empty />
+          ) : (
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={byConfidence} margin={{ top: 5, right: 8, bottom: 0, left: -20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.12} />
+                  <XAxis dataKey="confidence" stroke="currentColor" fontSize={11} />
+                  <YAxis domain={[0, 100]} stroke="currentColor" fontSize={11} />
+                  <Tooltip content={<ChartTip />} />
+                  <Bar dataKey="accuracy" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </ChartCard>
 
         <ChartCard title="Time investment" subtitle="Total time on tests in this range">
