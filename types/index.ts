@@ -13,6 +13,18 @@ export interface MatchPair {
   right: string;
 }
 
+export type MarkerShape = "circle" | "square" | "triangle" | "diamond" | "star";
+
+export interface CardSource {
+  videoId: string;
+  url: string;
+  timestamp: number;
+  channel?: string;
+  title?: string;
+  screenshotUrl?: string;
+  marker?: { shape: MarkerShape; color: string };
+}
+
 /**
  * A flashcard. Kinds:
  * - "mcq": single correct answer + 3 distractors.
@@ -36,6 +48,7 @@ export interface Card {
   difficulty: Difficulty;
   tags: string[];
   createdAt: string;
+  source?: CardSource;
 }
 
 export interface Tag {

@@ -24,3 +24,31 @@ test("match requires at least 2 pairs", () => {
   expect(result.card?.kind).toBe("match");
   expect(buildCardFromInput({ kind: "match", question: "Match", pairs: [{ left: "a", right: "1" }] }).error).toMatch(/pairs/i);
 });
+
+test("passes through a well-formed source", () => {
+  const { card, error } = buildCardFromInput({
+    kind: "mcq", question: "Q", answer: "A", distractors: ["b", "c", "d"],
+    source: { videoId: "abc", url: "https://youtu.be/abc", timestamp: 12.5,
+      channel: "Chan", title: "T", screenshotUrl: "https://r2/x.png",
+      marker: { shape: "circle", color: "#f59e0b" } },
+  });
+  expect(error).toBeUndefined();
+  expect(card!.source).toEqual({
+    videoId: "abc", url: "https://youtu.be/abc", timestamp: 12.5,
+    channel: "Chan", title: "T", screenshotUrl: "https://r2/x.png",
+    marker: { shape: "circle", color: "#f59e0b" },
+  });
+});
+
+test("omits source when absent", () => {
+  const { card } = buildCardFromInput({ kind: "flash", question: "Q", answer: "A" });
+  expect(card!.source).toBeUndefined();
+});
+
+test("drops a malformed source (missing videoId)", () => {
+  const { card } = buildCardFromInput({
+    kind: "flash", question: "Q", answer: "A",
+    source: { url: "x", timestamp: 1 },
+  });
+  expect(card!.source).toBeUndefined();
+});

@@ -4,9 +4,20 @@ import type { Card } from "@/types";
 
 import { buildCardFromInput } from "./validate";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
-  const tag = req.nextUrl.searchParams.get("tag");
+  const params = req.nextUrl.searchParams;
+  const tag = params.get("tag");
+  const videoId = params.get("videoId");
   const cards = await readDb<Card>("cards.json");
+  if (videoId) {
+    return Response.json(
+      cards
+        .filter((c) => c.source?.videoId === videoId)
+        .map((c) => ({ id: c.id, kind: c.kind ?? "mcq", timestamp: c.source!.timestamp, marker: c.source!.marker })),
+    );
+  }
   const filtered = tag ? cards.filter((c) => c.tags.includes(tag)) : cards;
   return Response.json(filtered);
 }

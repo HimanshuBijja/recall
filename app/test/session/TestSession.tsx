@@ -9,6 +9,7 @@ import { selectPool } from "@/lib/session-pool";
 import { useSwipe } from "@/hooks/useSwipe";
 import { parseCloze, gradeCloze } from "@/lib/cloze";
 import { Skeleton } from "@/components/Skeleton";
+import { CardFrame } from "@/components/CardFrame";
 
 function shuffleArr<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -554,6 +555,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             {current.card.question}
           </h2>
         )}
+
+        <CardFrame url={current.card.source?.screenshotUrl} />
 
         {isFlash ? (
           <div 

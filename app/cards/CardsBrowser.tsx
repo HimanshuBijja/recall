@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { Skeleton } from "@/components/Skeleton";
 import { ExportDialog } from "@/components/ExportDialog";
+import { CardFrame } from "@/components/CardFrame";
 import { exportCard, exportCards } from "@/lib/export";
 
 export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tags: Tag[] }) {
@@ -331,6 +332,11 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                   {c.kind === "match" && `→ ${(c.pairs?.length ?? 0)} pair${(c.pairs?.length ?? 0) === 1 ? "" : "s"}`}
                   {(!c.kind || c.kind === "mcq") && `→ ${c.answer}`}
                 </div>
+                {c.source?.screenshotUrl && (
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <CardFrame url={c.source.screenshotUrl} />
+                  </div>
+                )}
                 <div className="flex justify-end gap-3 pt-1 items-center">
                   <button
                     type="button"

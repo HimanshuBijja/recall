@@ -1,5 +1,23 @@
-import type { Card, CardKind, TfStatement, MatchPair } from "@/types";
+import type { Card, CardKind, TfStatement, MatchPair, CardSource, MarkerShape } from "@/types";
 import { parseCloze } from "@/lib/cloze";
+
+const SHAPES: MarkerShape[] = ["circle", "square", "triangle", "diamond", "star"];
+
+function normalizeSource(raw: unknown): CardSource | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  if (typeof o.videoId !== "string" || !o.videoId) return undefined;
+  if (typeof o.url !== "string" || typeof o.timestamp !== "number") return undefined;
+  const src: CardSource = { videoId: o.videoId, url: o.url, timestamp: o.timestamp };
+  if (typeof o.channel === "string") src.channel = o.channel;
+  if (typeof o.title === "string") src.title = o.title;
+  if (typeof o.screenshotUrl === "string") src.screenshotUrl = o.screenshotUrl;
+  const m = o.marker as Record<string, unknown> | undefined;
+  if (m && SHAPES.includes(m.shape as MarkerShape) && typeof m.color === "string") {
+    src.marker = { shape: m.shape as MarkerShape, color: m.color };
+  }
+  return src;
+}
 
 function normalizeStatements(raw: unknown): TfStatement[] {
   if (!Array.isArray(raw)) return [];
@@ -50,6 +68,7 @@ export function buildCardFromInput(input: unknown): { card?: Omit<Card, "id" | "
     difficulty: difficulty as Card["difficulty"],
     tags: Array.isArray(body.tags) ? body.tags.map(String) : [],
     bookmarked: body.bookmarked !== undefined ? Boolean(body.bookmarked) : undefined,
+    source: normalizeSource(body.source),
   };
 
   if (kind === "mcq") {
