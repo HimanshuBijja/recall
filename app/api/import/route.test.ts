@@ -154,3 +154,26 @@ test("import route normalizes alias shapes for cloze, tf-sort, and match", async
     { left: "B", right: "2" }
   ]);
 });
+
+test("import preserves card.source (bundle round-trip)", async () => {
+  const req = new NextRequest("http://localhost/api/import", {
+    method: "POST",
+    body: JSON.stringify({
+      cards: [{
+        kind: "flash", question: "Q", answer: "A", difficulty: 3, tags: [],
+        source: { videoId: "vid1", url: "https://youtu.be/vid1", timestamp: 42,
+          channel: "Chan", title: "Lesson", screenshotUrl: "https://r2/x.png",
+          marker: { shape: "square", color: "#3b82f6" } },
+      }],
+    }),
+  });
+  const res = await POST(req);
+  expect((await res.json()).cards.inserted).toBe(1);
+
+  const cards = await readDb<Card>("cards.json");
+  expect(cards[0].source).toEqual({
+    videoId: "vid1", url: "https://youtu.be/vid1", timestamp: 42,
+    channel: "Chan", title: "Lesson", screenshotUrl: "https://r2/x.png",
+    marker: { shape: "square", color: "#3b82f6" },
+  });
+});

@@ -620,6 +620,7 @@ export function ImportView() {
             hint: r.raw.hint ? String(r.raw.hint) : "",
             difficulty: Number(r.raw.difficulty ?? 3),
             tags: Array.isArray(r.raw.tags) ? (r.raw.tags as unknown[]).map(String) : [],
+            source: (r.raw as { source?: unknown }).source,
           };
         }),
         tags: validTags.map((r) => ({

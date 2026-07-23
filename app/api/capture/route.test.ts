@@ -33,3 +33,17 @@ test("400 on missing frame", async () => {
   const res = await POST(req({ kind: "mcq", videoId: "abc", url: "u", title: "t", channel: "c", timestamp: 5 }));
   expect(res.status).toBe(400);
 });
+
+test("R2 upload failure still returns the (paid-for) draft, no screenshot", async () => {
+  const { uploadFrame } = await import("@/lib/storage");
+  (uploadFrame as unknown as { mockRejectedValueOnce: (e: Error) => void }).mockRejectedValueOnce(new Error("R2 down"));
+  const res = await POST(req({
+    kind: "mcq", videoId: "abc", url: "u", title: "t", channel: "c",
+    timestamp: 5, frameDataUrl: "data:image/png;base64,AAAA",
+  }));
+  const json = await res.json();
+  expect(res.status).toBe(200);
+  expect(json.ok).toBe(true);
+  expect(json.draft.answer).toBe("A");
+  expect(json.screenshotUrl).toBeUndefined();
+});

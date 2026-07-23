@@ -26,6 +26,17 @@ test("draftToCard builds a POST body with source", () => {
   });
 });
 
+test("draftToCard sets clozeText (not question) for cloze cards", () => {
+  const body = draftToCard(
+    { kind: "cloze", question: "", answer: "", distractors: [], clozeText: "The capital is ==Paris==.", tags: [], explanation: "", hint: "" },
+    { videoId: "abc", url: "u", timestamp: 1 },
+    undefined,
+    undefined,
+  );
+  // The /api/cards cloze branch requires body.clozeText; question is derived from it.
+  expect(body.clozeText).toBe("The capital is ==Paris==.");
+});
+
 test("draftToCard carries kind-specific fields (tf-sort statements)", () => {
   const body = draftToCard(
     {

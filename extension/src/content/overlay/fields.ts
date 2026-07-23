@@ -28,7 +28,7 @@ export function draftToCard(
       ...(marker ? { marker } : {}),
     },
   };
-  if (draft.kind === "cloze") body.question = draft.clozeText ?? "";
+  if (draft.kind === "cloze") body.clozeText = draft.clozeText ?? "";
   if (draft.kind === "tf-sort") body.statements = draft.statements ?? [];
   if (draft.kind === "match") body.pairs = draft.pairs ?? [];
   return body;

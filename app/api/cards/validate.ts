@@ -3,7 +3,7 @@ import { parseCloze } from "@/lib/cloze";
 
 const SHAPES: MarkerShape[] = ["circle", "square", "triangle", "diamond", "star"];
 
-function normalizeSource(raw: unknown): CardSource | undefined {
+export function normalizeSource(raw: unknown): CardSource | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const o = raw as Record<string, unknown>;
   if (typeof o.videoId !== "string" || !o.videoId) return undefined;

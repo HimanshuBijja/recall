@@ -52,7 +52,9 @@ export function getReviewsSummary(cards: Card[], reviews: Review[], now: Date) {
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
   for (let i = 0; i < 14; i++) {
-    const targetDay = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+    // Increment by calendar day (not fixed 24h ms) so a local DST transition
+    // can't repeat or skip a day and silently drop a review from the forecast.
+    const targetDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
     const dayStr = localDayKey(targetDay);
 
     // Bucket 0 ("today") also absorbs anything overdue from earlier days,

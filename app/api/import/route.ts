@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
 import type { Card, CardKind, Group, Tag, TfStatement } from "@/types";
+import { normalizeSource } from "@/app/api/cards/validate";
 
 interface BundleStatement {
   text?: unknown;
@@ -20,6 +21,7 @@ interface BundleCard {
   hint?: string;
   difficulty?: number;
   tags?: string[];
+  source?: unknown;
 }
 
 /**
@@ -121,6 +123,7 @@ export async function POST(req: NextRequest) {
       difficulty: ((item.difficulty ?? 3) as Card["difficulty"]),
       tags: tagIds,
       createdAt: new Date().toISOString(),
+      source: normalizeSource(item.source),
     };
 
     let card: Card;

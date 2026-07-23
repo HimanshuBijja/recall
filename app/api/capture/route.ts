@@ -20,10 +20,17 @@ export async function POST(req: NextRequest): Promise<Response> {
     return Response.json({ ok: false, error: "frameDataUrl, kind, videoId required" } satisfies CaptureResponse, { status: 400 });
   }
   try {
-    const [{ draft, ocrText }, screenshotUrl] = await Promise.all([
+    // Run both concurrently but don't let an R2 failure discard the
+    // already-paid-for Gemini draft — return the draft with no screenshot.
+    const [draftRes, uploadRes] = await Promise.allSettled([
       draftCardFromFrame(body.frameDataUrl, body.kind),
       uploadFrame(body.frameDataUrl),
     ]);
+    if (draftRes.status === "rejected") {
+      throw draftRes.reason;
+    }
+    const { draft, ocrText } = draftRes.value;
+    const screenshotUrl = uploadRes.status === "fulfilled" ? uploadRes.value : undefined;
     return Response.json({ ok: true, draft, ocrText, screenshotUrl, marker: MARKER[body.kind] } satisfies CaptureResponse);
   } catch (e) {
     return Response.json({ ok: false, error: e instanceof Error ? e.message : "capture failed" } satisfies CaptureResponse, { status: 500 });
