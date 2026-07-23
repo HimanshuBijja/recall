@@ -5,6 +5,7 @@ import { readDb, writeDb, resetDbForTests } from "@/lib/db";
 let mongo: MongoMemoryReplSet;
 
 beforeAll(async () => {
+  await resetDbForTests();
   // Replica set so transactions (used by writeDb) work.
   mongo = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   process.env.MONGODB_URI = mongo.getUri();
@@ -12,7 +13,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  resetDbForTests();
+  await resetDbForTests();
   await mongo.stop();
 });
 

@@ -3,9 +3,9 @@
 # Recall — flashcard revision app
 
 Local-first, single-user flashcard app for spaced revision. Built on
-Next.js 16 App Router + React 19 + Tailwind v4. Data lives in flat JSON
-files at `/data` so the whole thing works offline and ships to Vercel as
-a read-only snapshot.
+Next.js 16 App Router + React 19 + Tailwind v4. Data lives in MongoDB,
+accessed through an async `readDb`/`writeDb` layer (`lib/db.ts`,
+`lib/mongodb.ts`), so the app is writable in production, not just locally.
 
 Two card kinds are supported: classic **MCQ** (single answer + 3 distractors)
 and **tf-sort** (a set of statements the learner sorts into True/False bins,
@@ -20,7 +20,7 @@ session, and result views branch on `card.kind`.
 | UI             | React 19 + Tailwind v4 (`@import "tailwindcss"`) |
 | HTTP (client)  | Axios (`lib/api.ts`)                  |
 | Charts         | Recharts                              |
-| Persistence    | Flat JSON via Node `fs` (`lib/db.ts`) |
+| Persistence    | MongoDB via async `readDb`/`writeDb` (`lib/db.ts`, `lib/mongodb.ts`) |
 | Auth           | None — single-user, local-only        |
 
 > **Heads-up:** AGENTS.md warns this is not the Next.js you know. Always
@@ -117,13 +117,24 @@ BinItem    = { id, kind: "tag"|"card"|"group", name, data: {…}, deletedAt: ISO
 
 ## Persistence: `lib/db.ts`
 
-- `readDb<T>(filename)` — sync `fs.readFileSync`, returns `[]` on missing/invalid file
-- `writeDb<T>(filename, data)` — sync `fs.writeFileSync`, pretty-printed
-- Initializes the file with `[]` on first access
+Data lives in MongoDB (`MONGODB_URI` / `MONGODB_DB` env vars), accessed
+through a cached client (`lib/mongodb.ts`, `getDb`/`getClient`, memoized
+across hot reloads and serverless invocations).
 
-> **Important:** Vercel's runtime filesystem is read-only. The intent is
-> to edit data locally, commit, push. **Do not** design features that
-> require writes at runtime in production.
+- `readDb<T>(name)` — async, reads the whole `name` (sans `.json`)
+  collection, returns `[]` for an empty/missing collection
+- `writeDb<T>(name, data)` — async, replaces the entire collection with
+  `data`. On a replica set/Atlas it uses a transaction (delete + insert).
+  On a standalone mongod (no transaction support) it instead writes into
+  a temp collection and atomically `renameCollection`s it over the
+  target, avoiding the data-loss window a plain delete-then-insert would
+  have on crash.
+- `supportsTransactions()` (`lib/mongodb.ts`) detects replica-set/mongos
+  support once via `hello` and caches the result; `writeDb` reads that
+  cache instead of re-checking topology on every write.
+
+> **Important:** the app is writable in production — there is no
+> read-only filesystem constraint anymore. Writes go straight to MongoDB.
 
 ## Tags as a DAG
 
@@ -629,10 +640,10 @@ so they fill the row width on phone.
 
 ## Env
 
-`.env.local.example` has `APP_PASSWORD` / `SESSION_SECRET` placeholders
-left over from the auth-enabled spec. They're unused — auth was scoped
-out for the single-user local case. Don't add an auth dependency
-without re-reading the deployment story (Vercel read-only FS).
+`.env.local.example` documents the required `MONGODB_URI` / `MONGODB_DB`
+vars, plus `APP_PASSWORD` / `SESSION_SECRET` placeholders left over from
+the auth-enabled spec. The auth vars are unused — auth was scoped out
+for the single-user local case.
 
 ## Scripts
 

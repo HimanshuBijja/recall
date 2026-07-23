@@ -7,14 +7,15 @@ import { readDb, writeDb, resetDbForTests } from "@/lib/db";
 let mongo: MongoMemoryServer;
 
 beforeAll(async () => {
+  await resetDbForTests();
   mongo = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mongo.getUri();
   process.env.MONGODB_DB = "recall_standalone_test";
-  resetDbForTests();
+  await resetDbForTests();
 });
 
 afterAll(async () => {
-  resetDbForTests();
+  await resetDbForTests();
   await mongo.stop();
 });
 

@@ -1,4 +1,4 @@
-import { getDb, getClient } from "@/lib/mongodb";
+import { getDb, getClient, supportsTransactions } from "@/lib/mongodb";
 
 export { resetDbForTests } from "@/lib/mongodb";
 
@@ -21,15 +21,22 @@ export async function writeDb<T>(name: string, data: T[]): Promise<void> {
   const coll = db.collection(collectionName(name));
   const docs = data.map((d) => ({ ...d })) as Record<string, unknown>[];
 
-  // Transactions require a replica set (Atlas) or mongos; a standalone
-  // local mongod rejects them. Detect support and fall back to a
-  // non-atomic replace so the same code runs against either deployment.
-  const hello = await client.db("admin").command({ hello: 1 });
-  const canTransact = Boolean(hello.setName) || hello.msg === "isdbgrid";
+  const canTransact = await supportsTransactions();
 
   if (!canTransact) {
-    await coll.deleteMany({});
-    if (docs.length > 0) await coll.insertMany(docs);
+    if (docs.length === 0) {
+      await coll.deleteMany({});
+      return;
+    }
+    // No transactions on standalone mongod, so swap in a fully-written
+    // temp collection atomically instead of delete-then-insert, which
+    // would leave the collection empty if the process crashes mid-write.
+    const target = collectionName(name);
+    const tmpName = `${target}__write_tmp`;
+    const tmp = db.collection(tmpName);
+    await tmp.drop().catch(() => {});
+    await tmp.insertMany(docs);
+    await db.renameCollection(tmpName, target, { dropTarget: true });
     return;
   }
 

@@ -3,6 +3,7 @@ import { MongoClient, type Db } from "mongodb";
 // Cache across hot reloads (dev) and serverless invocations (prod).
 const globalForMongo = globalThis as unknown as {
   _mongoClientPromise?: Promise<MongoClient>;
+  _supportsTxn?: Promise<boolean>;
 };
 
 function clientPromise(): Promise<MongoClient> {
@@ -24,6 +25,26 @@ export async function getClient(): Promise<MongoClient> {
   return clientPromise();
 }
 
-export function resetDbForTests(): void {
+// Transactions require a replica set (Atlas) or mongos; a standalone local
+// mongod rejects them. Topology doesn't change at runtime, so cache the
+// result instead of running `hello` on every write.
+export async function supportsTransactions(): Promise<boolean> {
+  if (!globalForMongo._supportsTxn) {
+    globalForMongo._supportsTxn = (async () => {
+      const client = await clientPromise();
+      const hello = await client.db("admin").command({ hello: 1 });
+      return Boolean(hello.setName) || hello.msg === "isdbgrid";
+    })();
+  }
+  return globalForMongo._supportsTxn;
+}
+
+export async function resetDbForTests(): Promise<void> {
+  try {
+    await (await globalForMongo._mongoClientPromise)?.close();
+  } catch {
+    // ignore — connection may already be closed or never established
+  }
   globalForMongo._mongoClientPromise = undefined;
+  globalForMongo._supportsTxn = undefined;
 }
