@@ -9,7 +9,10 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed:mongo": "node --env-file=.env.local scripts/seed-mongo.mjs"
+    "seed:mongo": "node --env-file=.env.local scripts/seed-mongo.mjs",
+    "sync:local": "node --env-file=.env.local scripts/mirror-pull.mjs",
+    "mirror:watch": "node --env-file=.env.local scripts/mirror-watch.mjs",
+    "dev:synced": "node --env-file=.env.local scripts/dev-synced.mjs"
   },
   "dependencies": {
     "axios": "^1.16.1",
