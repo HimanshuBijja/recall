@@ -106,6 +106,12 @@ function isTypingTarget(target: EventTarget | null): boolean {
   );
 }
 
+// Guard so the popup can re-inject this script (chrome.scripting) into a tab
+// that was open before the extension loaded, without double-registering.
+const w = window as unknown as { __recallLoaded?: boolean };
+if (!w.__recallLoaded) {
+  w.__recallLoaded = true;
+
 window.addEventListener(
   "keydown",
   (e: KeyboardEvent) => {
@@ -177,3 +183,5 @@ void currentSettings(); // eager-load so the first keypress has real settings
 setTimeout(() => void refreshMarkers(), 1500); // initial load
 showLoadBanner();
 console.info("[Recall] capture content script loaded on", location.href);
+
+}

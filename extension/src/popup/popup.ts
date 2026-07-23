@@ -23,11 +23,25 @@ async function init(): Promise<void> {
       void (async () => {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab?.id) return;
+        if (!/^https:\/\/www\.youtube\.com\//.test(tab.url ?? "")) {
+          capture.textContent = "Open a youtube.com video";
+          return;
+        }
+        const send = () => chrome.tabs.sendMessage(tab.id!, { type: "RUN_CAPTURE", kind });
         try {
-          await chrome.tabs.sendMessage(tab.id, { type: "RUN_CAPTURE", kind });
+          await send();
           window.close();
         } catch {
-          capture.textContent = "No YouTube tab?";
+          // Content script not in this tab yet (tab predates the extension load)
+          // — inject it on demand, then retry. The content script self-guards
+          // against double-registration.
+          try {
+            await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["content.js"] });
+            await send();
+            window.close();
+          } catch {
+            capture.textContent = "Reload the video tab";
+          }
         }
       })();
     });
