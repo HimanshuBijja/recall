@@ -2,6 +2,29 @@
 
 Newest first.
 
+## 2026-07-23 — Flashcard, Cloze, Match kinds, Bookmarks, and FSRS scheduler
+Branch: `master` (current upgrades).
+
+**What:** Integrated new card kinds (Flashcards, Cloze, Match), bookmarking system, and FSRS-based spaced-repetition scheduler with due sessions, batching, dashboard alerts, and analytics forest charts.
+
+**Added**
+- `lib/cloze.ts` — pure parser and grader for cloze-deletions.
+- `lib/srs.ts` — FSRS parameter tuning and state advancement.
+- `lib/due.ts` — reviews due-status forecasting and summary calculator.
+- `app/api/reviews/due/route.ts` — endpoint for due flashcards.
+- `app/bookmarks/page.tsx`, `BookmarksView.tsx` — bookmarks browsing, filtering, and testing page.
+- `components/__tests__/session-due.test.tsx`, `session-match.test.tsx`, `session-cloze.test.tsx`, `bookmarks-toggle.test.tsx`, `bookmarks-page.test.tsx`, `analytics.test.tsx` — full component tests suite.
+
+**Modified**
+- `types/index.ts` — added `cloze` and `match` kind types, `FsrsState`, `Review`, and bookmark fields.
+- `components/CardForm.tsx` — added Cloze edit area ("Cloze it") and Match pairs creator.
+- `app/test/session/TestSession.tsx` — added Cloze inputs/grading, Match interactive column pairing, and FSRS due-mode batch continue.
+- `app/cards/CardsBrowser.tsx` — added bookmark filter toggles and star bookmarking UI.
+- `app/page.tsx` — added Spaced Repetition Review action card.
+- `app/analytics/AnalyticsView.tsx` — added SRS retention metric and 14-day reviews forecast bar chart.
+- `app/api/cards/[id]/route.ts` — added PATCH endpoint to toggle bookmark state.
+- `app/api/sessions/route.ts` — updates FSRS review cards upon completing review tests.
+
 ## 2026-07-23 — MongoDB migration + Atlas→local mirror
 Branch: `feat/mongodb-atlas-storage`.
 

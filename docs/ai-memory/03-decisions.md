@@ -40,3 +40,14 @@ that invariant; partial credit would require reworking every metric.
 **Decision:** Did not delete the JSON files after migrating.
 **Why:** Local mongod is not otherwise backed up; the JSON snapshot is a
 rollback net and the seed source.
+
+## 2026-07-23 — FSRS Spaced Repetition integration
+**Decision:** Standardized on `ts-fsrs` package for spaced repetition mathematical state transitions.
+**Why:** Avoids custom implementations of SRS intervals, ensuring optimized stability, difficulty, and interval forecasting calculations.
+**How:** Wrapped `ts-fsrs` with simple grading map mapping learner confidence rating (1=Hard, 2=Good, 3=Easy) or incorrect (0=Again) onto `Rating` enums.
+
+## 2026-07-23 — Match interaction with column shuffling
+**Decision:** Selected item matching splits items into left and right columns, shuffled independently.
+**Why:** Standard match-making can be trivialized if options align directly. Independent column shuffling challenges understanding of the paired items.
+**How:** Track selected elements on left and right, highlight errors with brief shake animation, and freeze correct matches.
+

@@ -7,10 +7,12 @@ Next.js 16 App Router + React 19 + Tailwind v4. Data lives in MongoDB,
 accessed through an async `readDb`/`writeDb` layer (`lib/db.ts`,
 `lib/mongodb.ts`), so the app is writable in production, not just locally.
 
-Two card kinds are supported: classic **MCQ** (single answer + 3 distractors)
-and **tf-sort** (a set of statements the learner sorts into True/False bins,
-scored all-or-nothing). Most of the app is kind-agnostic — only the form,
-session, and result views branch on `card.kind`.
+Five card kinds are supported: classic **MCQ** (single answer + 3 distractors),
+**tf-sort** (a set of statements the learner sorts into True/False bins),
+**flash** (simple front/back text cards),
+**cloze** (sentence with cloze deletion blanks like `{{c1::answer}}`),
+and **match** (two columns of elements paired together).
+Most of the app is kind-agnostic — only the form, session, and result views branch on `card.kind`.
 
 ## Stack
 
@@ -92,19 +94,18 @@ data/
 ## Data model
 
 All shapes are TypeScript interfaces (not classes). IDs are
-`crypto.randomUUID()`.
-
-```ts
-Card       = { id, kind?: "mcq"|"tf-sort" (default "mcq"),
+`crypto.randomUUID()`.Card       = { id, kind?: "mcq"|"tf-sort"|"flash"|"cloze"|"match" (default "mcq"),
                question, answer, distractors[3],
-               statements?: { text, isTrue }[],   // tf-sort only, ≥2 entries
-               explanation, hint,
+               statements?: { text, isTrue }[],           // tf-sort only, ≥2 entries
+               pairs?: { left: string, right: string }[], // match only, ≥2 entries
+               explanation, hint, bookmarked?: boolean,
                difficulty 1-5, tags: TagId[], createdAt: ISO }
 Tag        = { id, name, parents: TagId[] }            // DAG, multi-parent
 Group      = { id, name, tagIds: TagId[], createdAt: ISO }
 Session    = { id, tagIds, results[], score 0-100, completedAt: ISO }
 SessionResult = { cardId, correct, timeTaken (ms), confidence 1|2|3 }
 BinItem    = { id, kind: "tag"|"card"|"group", name, data: {…}, deletedAt: ISO }
+Review     = { cardId, fsrs: FsrsState, dueAt: string, lastReviewedAt: string | null, firstSeenAt: string }
 ```
 
 - For `kind: "mcq"` (or missing/undefined — legacy data): `answer` and
@@ -114,6 +115,9 @@ BinItem    = { id, kind: "tag"|"card"|"group", name, data: {…}, deletedAt: ISO
   card's `SessionResult.correct` is `true` only when every statement
   matches its `isTrue`. There is no per-statement breakdown in the
   session record by design (keeps the existing analytics math intact).
+- For `kind: "flash"`: only `question` (front) and `answer` (back) are used/required.
+- For `kind: "cloze"`: `question` contains `{{c1::answer}}` cloze deletion syntax.
+- For `kind: "match"`: `pairs` (≥ 2 pairs) is required. Scoring is **all-or-nothing**.
 
 ## Persistence: `lib/db.ts`
 

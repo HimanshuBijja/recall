@@ -33,12 +33,7 @@ mirror target). `.env.local` is git-ignored; `.env.local.example` is tracked.
 
 ## Open items / TODO
 - **Rotate the Atlas DB password** (exposed in a setup transcript).
-- Merge or PR the branch (integration decision pending).
 - Set `MONGODB_URI`/`MONGODB_DB` in Vercel env before/at deploy.
-- Roadmap features not started: cloze / match / flashcard card kinds, quick-test
-  from card browser, bookmark/flag, SRS scheduler, PWA/offline. See
-  `docs/superpowers/plans/2026-07-23-recall-upgrades-roadmap.md`.
 
 ## Next suggested step
-Merge the branch, then start the roadmap (suggested first: quick-test from card
-browser → flashcards).
+Deploy the updated application to production and monitor the MongoDB database logs during live spaced-repetition sessions.
