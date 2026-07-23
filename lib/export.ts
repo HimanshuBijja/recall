@@ -1,4 +1,4 @@
-import type { Card, CardKind, Group, Tag, TfStatement } from "@/types";
+import type { Card, CardKind, CardSource, Group, Tag, TfStatement } from "@/types";
 
 export interface ExportedCard {
   kind?: CardKind;
@@ -12,6 +12,7 @@ export interface ExportedCard {
   hint: string;
   difficulty: number;
   tags: string[];
+  source?: CardSource;
 }
 
 export interface ExportedTag {
@@ -49,6 +50,7 @@ export function exportCard(card: Card, tagById: Map<string, Tag>): ExportedCard 
     hint: card.hint ?? "",
     difficulty: card.difficulty,
     tags: (card.tags ?? []).map((id) => tagById.get(id)?.name).filter(Boolean) as string[],
+    source: card.source,
   };
 }
 

@@ -38,3 +38,20 @@ test("exportCard and exportGroup handle missing tags/tagIds gracefully", () => {
   const exportedGroup = exportGroup(groupWithoutTags, new Map());
   expect(exportedGroup.tags).toEqual([]);
 });
+
+test("export preserves source", () => {
+  const card = {
+    id: "1", kind: "flash", question: "Q", answer: "A", distractors: [],
+    explanation: "", hint: "", difficulty: 3, tags: [], createdAt: "",
+    source: { videoId: "abc", url: "u", timestamp: 3 },
+  } as Card;
+  expect(exportCard(card, new Map()).source).toEqual({ videoId: "abc", url: "u", timestamp: 3 });
+});
+
+test("export omits source when absent", () => {
+  const card = {
+    id: "2", kind: "flash", question: "Q", answer: "A", distractors: [],
+    explanation: "", hint: "", difficulty: 3, tags: [], createdAt: "",
+  } as Card;
+  expect(exportCard(card, new Map()).source).toBeUndefined();
+});
