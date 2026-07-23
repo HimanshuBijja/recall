@@ -34,11 +34,17 @@ export function matchShortcut(e: KeyboardEvent, shortcut: string): boolean {
     meta: parts.includes("meta"),
   };
   const mainKey = parts[parts.length - 1];
+  // Match on physical key (e.code, e.g. "KeyQ") as well as e.key: Alt/Shift can
+  // change e.key to an accented char or dead key on some OS/keyboard layouts
+  // (notably Windows), so e.key alone is unreliable. e.code is layout-stable.
+  const key = (e.key ?? "").toLowerCase();
+  const code = (e.code ?? "").toLowerCase();
+  const keyMatches = key === mainKey || code === `key${mainKey}` || code === `digit${mainKey}`;
   return (
     Boolean(e.ctrlKey) === need.ctrl &&
     Boolean(e.altKey) === need.alt &&
     Boolean(e.shiftKey) === need.shift &&
     Boolean(e.metaKey) === need.meta &&
-    e.key.toLowerCase() === mainKey
+    keyMatches
   );
 }

@@ -1,4 +1,4 @@
-import { loadSettings, matchShortcut, CAPTURE_KINDS } from "../shared/config";
+import { loadSettings, matchShortcut, CAPTURE_KINDS, DEFAULT_SETTINGS } from "../shared/config";
 import type { CaptureKind, CardDraft, MarkerRow, Settings, CaptureRequest, CaptureResponse } from "../shared/types";
 import { getPageMeta, extractVideoId } from "./metadata";
 import { captureFrame, getPlayerVideo } from "./capture";
@@ -110,16 +110,24 @@ window.addEventListener(
   "keydown",
   (e: KeyboardEvent) => {
     if (isTypingTarget(e.target)) return;
-    void currentSettings().then((s) => {
-      for (const kind of CAPTURE_KINDS) {
-        if (matchShortcut(e, s.kinds[kind].shortcut)) {
-          e.preventDefault();
-          e.stopPropagation();
-          void runCapture(kind);
-          return;
-        }
+    // Match synchronously so preventDefault lands in time. Use cached settings
+    // (falls back to defaults until the first async load resolves).
+    const kinds = (settings ?? DEFAULT_SETTINGS).kinds;
+    // Diagnostic: log any Alt/Ctrl+Shift combo so we can see what the browser
+    // actually delivers (helps when an OS shortcut, e.g. Windows Alt+Shift
+    // language switch, mangles or swallows the key).
+    if (e.altKey || (e.ctrlKey && e.shiftKey)) {
+      console.debug("[Recall] keydown", { key: e.key, code: e.code, alt: e.altKey, shift: e.shiftKey, ctrl: e.ctrlKey });
+    }
+    for (const kind of CAPTURE_KINDS) {
+      if (matchShortcut(e, kinds[kind].shortcut)) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.info(`[Recall] capturing ${kind} (${kinds[kind].shortcut})`);
+        void runCapture(kind);
+        return;
       }
-    });
+    }
   },
   true,
 );
@@ -127,6 +135,7 @@ window.addEventListener(
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "sync" && changes.settings) {
     settings = null;
+    void currentSettings();
   }
 });
 
@@ -134,4 +143,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 window.addEventListener("yt-navigate-finish", () => {
   setTimeout(() => void refreshMarkers(), 1000);
 });
+
+void currentSettings(); // eager-load so the first keypress has real settings
 setTimeout(() => void refreshMarkers(), 1500); // initial load
+console.info("[Recall] capture content script loaded on", location.href);
