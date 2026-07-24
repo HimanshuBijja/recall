@@ -29,6 +29,8 @@ interface PreparedCard {
   card: Card;
   options: string[];
   statementOrder: number[];
+  leftOrder: number[];
+  rightOrder: number[];
 }
 
 const OPTION_LETTERS = ["A", "B", "C", "D"];
@@ -87,6 +89,12 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
       const statementOrder = card.statements
         ? shuffleArr(card.statements.map((_, i) => i))
         : [];
+      const leftOrder = card.pairs
+        ? shuffleArr(card.pairs.map((_, i) => i))
+        : [];
+      const rightOrder = card.pairs
+        ? shuffleArr(card.pairs.map((_, i) => i))
+        : [];
       return {
         card,
         options:
@@ -96,6 +104,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             ? shuffleArr([...(card.answers ?? []), ...card.distractors])
             : shuffleArr([card.answer, ...card.distractors]),
         statementOrder,
+        leftOrder,
+        rightOrder,
       };
     });
     // intentionally only on mount
@@ -128,9 +138,6 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const [wrongPair, setWrongPair] = useState<[number, number] | null>(null);
   const [multiPicked, setMultiPicked] = useState<Set<string>>(new Set());
   const [multiSubmitted, setMultiSubmitted] = useState(false);
-  const [leftOrder, setLeftOrder] = useState<number[]>([]);
-  const [rightOrder, setRightOrder] = useState<number[]>([]);
-
   const loadDueBatch = useCallback(
     async (excludeIds: Set<string>) => {
       setLoadingDue(true);
@@ -152,6 +159,12 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
           const statementOrder = card.statements
             ? shuffleArr(card.statements.map((_, i) => i))
             : [];
+          const leftOrder = card.pairs
+            ? shuffleArr(card.pairs.map((_, i) => i))
+            : [];
+          const rightOrder = card.pairs
+            ? shuffleArr(card.pairs.map((_, i) => i))
+            : [];
           return {
             card,
             options:
@@ -161,6 +174,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                 ? shuffleArr([...(card.answers ?? []), ...card.distractors])
                 : shuffleArr([card.answer, ...card.distractors]),
             statementOrder,
+            leftOrder,
+            rightOrder,
           };
         });
         return preparedBatch;
@@ -252,12 +267,6 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     setWrongPair(null);
     setMultiPicked(new Set());
     setMultiSubmitted(false);
-
-    if (current?.card.kind === "match" && current.card.pairs) {
-      const n = current.card.pairs.length;
-      setLeftOrder(shuffleArr(Array.from({ length: n }, (_, i) => i)));
-      setRightOrder(shuffleArr(Array.from({ length: n }, (_, i) => i)));
-    }
   }, [idx, current]);
 
   // Live timer (stops once answered)
@@ -698,7 +707,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             <div className="grid grid-cols-2 gap-4">
               {/* Left Column */}
               <div className="space-y-2">
-                {leftOrder.map((pairIdx) => {
+                {(current.leftOrder ?? []).map((pairIdx) => {
                   const p = current.card.pairs![pairIdx];
                   const isMatched = matchedPairs.has(pairIdx);
                   const isSelected = selectedLeft === pairIdx;
@@ -748,7 +757,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
 
               {/* Right Column */}
               <div className="space-y-2">
-                {rightOrder.map((pairIdx) => {
+                {(current.rightOrder ?? []).map((pairIdx) => {
                   const p = current.card.pairs![pairIdx];
                   const isMatched = matchedPairs.has(pairIdx);
                   const isSelected = selectedRight === pairIdx;
