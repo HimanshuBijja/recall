@@ -8,6 +8,15 @@ import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { descendantTagIds } from "@/lib/tags";
 
+const KIND_LABELS: Record<string, string> = {
+  mcq: "Multiple Choice",
+  multi: "Multiple Answer",
+  flash: "Flashcard",
+  cloze: "Cloze Deletion",
+  "tf-sort": "True / False",
+  match: "Match Pairs",
+};
+
 export function GroupDetailClient({
   group: initialGroup,
   tags,
@@ -29,6 +38,7 @@ export function GroupDetailClient({
   const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTagFilter, setSelectedTagFilter] = useState("");
+  const [selectedKindFilter, setSelectedKindFilter] = useState("");
   const [deletingCards, setDeletingCards] = useState(false);
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
@@ -52,9 +62,10 @@ export function GroupDetailClient({
       const q = searchQuery.trim().toLowerCase();
       const matchesSearch = !q || c.question.toLowerCase().includes(q) || c.answer.toLowerCase().includes(q);
       const matchesTag = !selectedTagFilter || c.tags.includes(selectedTagFilter);
-      return matchesSearch && matchesTag;
+      const matchesKind = !selectedKindFilter || c.kind === selectedKindFilter;
+      return matchesSearch && matchesTag && matchesKind;
     });
-  }, [matchingCards, searchQuery, selectedTagFilter]);
+  }, [matchingCards, searchQuery, selectedTagFilter, selectedKindFilter]);
 
   const uniqueTagsInGroup = useMemo(() => {
     const tIds = new Set<string>();
@@ -65,6 +76,14 @@ export function GroupDetailClient({
     }
     return Array.from(tIds).map((tid) => tagById.get(tid)).filter(Boolean) as Tag[];
   }, [matchingCards, tagById]);
+
+  const uniqueKindsInGroup = useMemo(() => {
+    const kinds = new Set<string>();
+    for (const c of matchingCards) {
+      if (c.kind) kinds.add(c.kind);
+    }
+    return Array.from(kinds);
+  }, [matchingCards]);
 
   const allFilteredSelected = filteredCards.length > 0 && filteredCards.every((c) => selectedCardIds.includes(c.id));
 
@@ -302,12 +321,26 @@ export function GroupDetailClient({
               <select
                 value={selectedTagFilter}
                 onChange={(e) => setSelectedTagFilter(e.target.value)}
-                className="px-3 py-1.5 border border-border bg-black/45 text-foreground text-sm rounded-[4px] focus:outline-none focus:border-accent cursor-pointer"
+                className="px-3 py-1.5 border border-border bg-zinc-900 text-zinc-100 text-sm rounded-[4px] focus:outline-none focus:border-accent cursor-pointer"
               >
-                <option value="">All Tags</option>
+                <option value="" className="bg-zinc-900 text-zinc-100">All Tags</option>
                 {uniqueTagsInGroup.map((t) => (
-                  <option key={t.id} value={t.id}>
+                  <option key={t.id} value={t.id} className="bg-zinc-900 text-zinc-100">
                     {t.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Card Type Filter */}
+              <select
+                value={selectedKindFilter}
+                onChange={(e) => setSelectedKindFilter(e.target.value)}
+                className="px-3 py-1.5 border border-border bg-zinc-900 text-zinc-100 text-sm rounded-[4px] focus:outline-none focus:border-accent cursor-pointer"
+              >
+                <option value="" className="bg-zinc-900 text-zinc-100">All Card Types</option>
+                {uniqueKindsInGroup.map((k) => (
+                  <option key={k} value={k} className="bg-zinc-900 text-zinc-100">
+                    {KIND_LABELS[k] || k}
                   </option>
                 ))}
               </select>
