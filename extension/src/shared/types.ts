@@ -61,3 +61,32 @@ export interface MarkerRow {
   timestamp: number;
   marker?: { shape: MarkerShape; color: string };
 }
+
+export interface WebSourceMeta {
+  type: "web";
+  url: string;
+  title?: string;
+  siteName?: string;
+  excerpt?: string;
+  capturedAt: string;
+}
+
+export interface GenerateRequest {
+  text: string;
+  kind: CaptureKind;
+  count: number;
+  pageTitle?: string;
+  pageUrl?: string;
+}
+
+export interface GenerateResponse {
+  ok: boolean;
+  drafts?: CardDraft[];
+  error?: string;
+}
+
+export interface SaveCardsResult {
+  saved: number;
+  queued: number;
+  failed: number;
+}
