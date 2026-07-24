@@ -70,6 +70,7 @@ export interface Card {
   clozeText?: string;
   pairs?: MatchPair[];
   bookmarked?: boolean;
+  exempted?: boolean;
   explanation: string;
   hint: string;
   difficulty: Difficulty;

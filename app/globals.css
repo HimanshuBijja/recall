@@ -3,13 +3,13 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #181818;
-  --foreground: #EBDCC4;
+  --background: #09090b; /* zinc 950 */
+  --foreground: #fafafa; /* zinc 50 */
 }
 
 .dark {
-  --background: #181818;
-  --foreground: #EBDCC4;
+  --background: #09090b;
+  --foreground: #fafafa;
 }
 
 @theme inline {
@@ -18,10 +18,10 @@
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
 
-  --color-muted: #B6A596;
-  --color-accent: #DC9F85;
-  --color-border: #4A4441;
-  --color-divider: #2e2927;
+  --color-muted: #a1a1aa; /* zinc 400 */
+  --color-accent: #6366f1; /* Indigo 500 */
+  --color-border: #27272a; /* zinc 800 */
+  --color-divider: #18181b; /* zinc 900 */
 }
 
 html,
@@ -37,7 +37,7 @@ body {
   text-transform: uppercase;
   letter-spacing: -0.05em;
   line-height: 0.85;
-  color: #EBDCC4;
+  color: #fafafa;
 }
 .cinematic-headline::before {
   content: attr(data-text);
@@ -45,7 +45,7 @@ body {
   left: 4px;
   top: 4px;
   z-index: -1;
-  -webkit-text-stroke: 1px #4A4441;
+  -webkit-text-stroke: 1px #27272a;
   color: transparent;
   pointer-events: none;
 }
@@ -63,53 +63,67 @@ body {
 /* --- Cinematic Editorial Styling Overrides --- */
 
 .rounded-xl, .rounded-lg, .rounded-md, .rounded-2xl {
-  border-radius: 4px !important;
+  border-radius: 6px !important;
 }
 
 .border, .border-t, .border-b, .border-l, .border-r {
-  border-color: #4A4441 !important;
+  border-color: #27272a !important;
 }
 
-.bg-indigo-600, .bg-indigo-700, .bg-indigo-500, .bg-amber-600, .bg-amber-700 {
-  background-color: #1c1513 !important;
-  color: #EBDCC4 !important;
-  border: 1px solid #4A4441 !important;
-  font-weight: 700 !important;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-radius: 4px !important;
+.bg-indigo-600, .bg-indigo-700, .bg-indigo-50, .bg-indigo-50\/40, .dark\:bg-zinc-900 {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+  border: 1px solid #6366f1 !important;
+  font-weight: 600 !important;
+  text-transform: none;
+  letter-spacing: normal;
+  border-radius: 6px !important;
 }
-.bg-indigo-600:hover, .bg-indigo-700:hover, .bg-indigo-500:hover, .bg-amber-600:hover, .bg-amber-700:hover {
-  background-color: #261d1a !important;
-  border-color: #DC9F85 !important;
+.bg-indigo-600:hover, .bg-indigo-700:hover, .bg-indigo-50:hover, .bg-indigo-50\/40:hover, .dark\:bg-zinc-900:hover {
+  background-color: #4338ca !important;
+  border-color: #4f46e5 !important;
 }
 
 .bg-white, .bg-zinc-50, .bg-zinc-100, .bg-indigo-50, .bg-indigo-50\/40, .dark\:bg-zinc-900 {
-  background-color: #1c1513 !important;
+  background-color: #18181b !important;
 }
 
 .text-zinc-500, .text-zinc-400, .text-zinc-600 {
-  color: #B6A596 !important;
+  color: #a1a1aa !important;
 }
 
 .text-indigo-600, .text-indigo-400, .text-indigo-700 {
-  color: #DC9F85 !important;
+  color: #818cf8 !important;
 }
 .text-indigo-600:hover, .text-indigo-400:hover {
-  color: #EBDCC4 !important;
+  color: #fafafa !important;
   text-decoration: underline;
 }
 
 input, textarea, select {
-  background-color: transparent !important;
-  border: 1px solid #4A4441 !important;
-  color: #EBDCC4 !important;
-  border-radius: 4px !important;
+  background-color: #09090b !important;
+  border: 1px solid #27272a !important;
+  color: #fafafa !important;
+  border-radius: 6px !important;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: #6366f1 !important;
+  outline: none;
 }
 input::placeholder, textarea::placeholder {
-  color: #4A4441 !important;
+  color: #71717a !important;
 }
 
 li:hover, tr:hover, .hover\:bg-zinc-100:hover, .dark\:hover\:bg-zinc-800:hover {
-  background-color: #261d1a !important;
+  background-color: #18181b !important;
+}
+
+.cinematic-editor-panel {
+  background-color: rgba(9, 9, 11, 0.5) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(39, 39, 42, 0.6) !important;
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.7) !important;
+  border-radius: 6px !important;
+  padding: 24px !important;
 }

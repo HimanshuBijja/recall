@@ -207,41 +207,42 @@ export function CardForm({ initial, tags }: Props) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-5 max-w-2xl">
-      <Field label="Card type">
-        <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-300 dark:border-zinc-700 p-0.5 bg-zinc-50 dark:bg-zinc-900 w-fit">
-          {([
-            ["mcq", "Multiple choice"],
-            ["multi", "Multiple answers"],
-            ["tf-sort", "True / False sort"],
-            ["flash", "Flashcard"],
-            ["cloze", "Cloze deletion"],
-            ["match", "Match pairs"],
-          ] as const).map(([k, label]) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setKind(k)}
-              className={[
-                "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
-                kind === k
-                  ? "bg-indigo-600 text-white"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100",
-              ].join(" ")}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-zinc-500 mt-1.5">
-          {kind === "mcq" && "One question, one correct answer, three distractors."}
-          {kind === "multi" && "One question, several correct answers — scored all-or-nothing."}
-          {kind === "tf-sort" && "User sorts each statement into True / False — scored all-or-nothing."}
-          {kind === "flash" && "Self-graded flip card (question on front, answer on back) with swipe."}
-          {kind === "cloze" && "Text with blanks created using ==word== syntax. All blanks must be correct."}
-          {kind === "match" && "Match left terms to right definitions (2-8 pairs). All correct to pass."}
-        </p>
-      </Field>
+    <div className="border border-zinc-800 bg-zinc-900/30 rounded-lg p-6 md:p-8 shadow-xl max-w-2xl">
+      <form onSubmit={submit} className="space-y-6">
+        <Field label="Card type">
+          <div className="flex flex-wrap gap-1 rounded border border-zinc-800 p-0.5 bg-zinc-900/40 w-fit">
+            {([
+              ["mcq", "Multiple choice"],
+              ["multi", "Multiple answers"],
+              ["tf-sort", "True / False sort"],
+              ["flash", "Flashcard"],
+              ["cloze", "Cloze deletion"],
+              ["match", "Match pairs"],
+            ] as const).map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setKind(k)}
+                className={[
+                  "px-3 py-1.5 rounded text-[10px] uppercase font-bold tracking-wider transition-colors duration-150",
+                  kind === k
+                    ? "bg-indigo-600 text-white"
+                    : "text-zinc-400 hover:text-zinc-200",
+                ].join(" ")}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-zinc-500 mt-1">
+            {kind === "mcq" && "One question, one correct answer, three distractors."}
+            {kind === "multi" && "One question, several correct answers — scored all-or-nothing."}
+            {kind === "tf-sort" && "User sorts each statement into True / False — scored all-or-nothing."}
+            {kind === "flash" && "Self-graded flip card (question on front, answer on back) with swipe."}
+            {kind === "cloze" && "Text with blanks created using ==word== syntax. All blanks must be correct."}
+            {kind === "match" && "Match left terms to right definitions (2-8 pairs). All correct to pass."}
+          </p>
+        </Field>
 
       {kind !== "cloze" && (
         <Field label="Question" error={errors.question}>
@@ -638,28 +639,29 @@ export function CardForm({ initial, tags }: Props) {
         />
       </Field>
 
-      <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          disabled={saving}
-          className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium disabled:opacity-50"
-        >
-          {saving ? "Saving…" : initial ? "Save changes" : "Create card"}
-        </button>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+        <div className="flex gap-3 pt-4 border-t border-zinc-800">
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider transition-colors duration-150 disabled:opacity-50"
+          >
+            {saving ? "Saving…" : initial ? "Save changes" : "Create card"}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="px-4 py-2 rounded border border-zinc-800 hover:bg-zinc-900 text-zinc-300 font-bold text-xs uppercase tracking-wider transition-colors duration-150"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 
 const inputCls =
-  "w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500";
+  "w-full px-3.5 py-2.5 rounded border border-zinc-800 bg-zinc-950 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm";
 
 function Field({
   label,
@@ -671,10 +673,12 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block">
-      <div className="text-sm font-medium mb-1.5">{label}</div>
+    <label className="flex flex-col gap-1.5 cursor-pointer">
+      <span className="text-[10px] uppercase tracking-wider font-mono font-bold text-zinc-400">
+        {label}
+      </span>
       {children}
-      {error && <div className="text-xs text-rose-600 mt-1">{error}</div>}
+      {error && <div className="text-xs text-rose-500 font-semibold mt-0.5">{error}</div>}
     </label>
   );
 }
