@@ -8,7 +8,13 @@
   "options_ui": { "page": "options.html", "open_in_tab": true },
   "background": { "service_worker": "background.js", "type": "module" },
   "content_scripts": [
-    { "matches": ["https://www.youtube.com/*"], "js": ["content.js"], "run_at": "document_idle" }
+    { "matches": ["https://www.youtube.com/*"], "js": ["content.js"], "run_at": "document_idle" },
+    {
+      "matches": ["<all_urls>"],
+      "exclude_matches": ["https://www.youtube.com/*"],
+      "js": ["web.js"],
+      "run_at": "document_idle"
+    }
   ],
   "host_permissions": ["http://localhost:3000/*", "https://*/*"],
   "permissions": ["storage", "alarms", "tabs", "scripting", "contextMenus"]

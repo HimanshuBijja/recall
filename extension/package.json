@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build && vite build --config vite.content.config.ts && node copy-static.mjs",
+    "build": "vite build && vite build --config vite.content.config.ts && vite build --config vite.web.config.ts && node copy-static.mjs",
     "test": "vitest run"
   },
   "devDependencies": {
