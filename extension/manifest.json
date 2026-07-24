@@ -11,5 +11,5 @@
     { "matches": ["https://www.youtube.com/*"], "js": ["content.js"], "run_at": "document_idle" }
   ],
   "host_permissions": ["http://localhost:3000/*", "https://*/*"],
-  "permissions": ["storage", "alarms", "tabs", "scripting"]
+  "permissions": ["storage", "alarms", "tabs", "scripting", "contextMenus"]
 }

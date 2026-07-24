@@ -1,10 +1,14 @@
 import { loadSettings } from "./shared/config";
-import type { CaptureRequest, CaptureResponse } from "./shared/types";
+import type { CaptureRequest, CaptureResponse, GenerateRequest, GenerateResponse, SaveCardsResult } from "./shared/types";
 
 const QUEUE_KEY = "queue";
 
 export function buildCaptureUrl(baseUrl: string): string {
   return `${baseUrl}/api/capture`;
+}
+
+export function buildGenerateUrl(baseUrl: string): string {
+  return `${baseUrl}/api/generate`;
 }
 
 export function buildCardsUrl(baseUrl: string): string {
@@ -16,14 +20,18 @@ export type BgMessage =
   | { type: "SAVE_CARD"; card: unknown }
   | { type: "GET_MARKERS"; videoId: string }
   | { type: "GET_TAGS" }
-  | { type: "EDIT_TEXT"; selection?: string; prompt: string; draft?: unknown };
+  | { type: "EDIT_TEXT"; selection?: string; prompt: string; draft?: unknown }
+  | { type: "GENERATE_QUESTIONS"; req: GenerateRequest }
+  | { type: "SAVE_CARDS"; cards: unknown[] };
 
 export type BgResponse =
   | CaptureResponse
   | { ok: true; card: unknown }
   | { ok: false; queued: true }
   | { ok: false; error: string }
-  | unknown[];
+  | unknown[]
+  | GenerateResponse
+  | SaveCardsResult;
 
 async function baseUrl(): Promise<string> {
   const settings = await loadSettings();
@@ -163,6 +171,48 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
     }
   }
 
+  if (msg.type === "GENERATE_QUESTIONS") {
+    const controller = new AbortController();
+    // Generating N cards takes materially longer than a single capture.
+    const id = setTimeout(() => controller.abort(), 60000);
+    try {
+      const res = await fetch(buildGenerateUrl(base), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(msg.req),
+        signal: controller.signal,
+      });
+      clearTimeout(id);
+      if (!res.ok) {
+        const errJson = (await res.json().catch(() => ({}))) as { error?: string };
+        return { ok: false, error: errJson.error || `generation failed (${res.status})` };
+      }
+      return (await res.json()) as GenerateResponse;
+    } catch (e) {
+      clearTimeout(id);
+      const isAbort = e instanceof Error && e.name === "AbortError";
+      return {
+        ok: false,
+        error: isAbort ? "AI request timed out (60s)" : e instanceof Error ? e.message : "generation failed",
+      };
+    }
+  }
+
+  if (msg.type === "SAVE_CARDS") {
+    let saved = 0;
+    let queued = 0;
+    for (const card of msg.cards) {
+      const result = await postCard(base, card);
+      if (result.ok) {
+        saved += 1;
+      } else {
+        await enqueue(card);
+        queued += 1;
+      }
+    }
+    return { saved, queued, failed: 0 };
+  }
+
   return { ok: false, error: "unknown message" };
 }
 
@@ -177,4 +227,27 @@ chrome.alarms.onAlarm.addListener((a) => {
   if (a.name === "flush-queue") {
     void flushQueue();
   }
+});
+
+const MENU_ID = "recall-add-question";
+
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: MENU_ID,
+      title: "Add question",
+      contexts: ["selection"],
+    });
+  });
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId !== MENU_ID || !tab?.id) return;
+  const tabId = tab.id;
+  // The always-on content script is not present in tabs that were already
+  // open when the extension installed or reloaded — inject it, then retry.
+  void chrome.tabs.sendMessage(tabId, { type: "OPEN_QUESTION_MODAL" }).catch(async () => {
+    await chrome.scripting.executeScript({ target: { tabId }, files: ["web.js"] });
+    await chrome.tabs.sendMessage(tabId, { type: "OPEN_QUESTION_MODAL" });
+  });
 });
