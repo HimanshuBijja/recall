@@ -15,7 +15,9 @@ export interface MatchPair {
 
 export type MarkerShape = "circle" | "square" | "triangle" | "diamond" | "star";
 
-export interface CardSource {
+/** A card captured from a video frame (YouTube extension). */
+export interface VideoSource {
+  type?: "video";
   videoId: string;
   url: string;
   timestamp: number;
@@ -24,6 +26,28 @@ export interface CardSource {
   screenshotUrl?: string;
   marker?: { shape: MarkerShape; color: string };
 }
+
+/**
+ * A card generated from selected text on an ordinary web page.
+ * The video-only properties are declared as `?: undefined` so that existing
+ * `card.source?.videoId` reads keep type-checking against the union.
+ */
+export interface WebSource {
+  type: "web";
+  url: string;
+  title?: string;
+  siteName?: string;
+  /** First ~400 chars of the text the card was generated from. */
+  excerpt?: string;
+  capturedAt: string;
+  videoId?: undefined;
+  timestamp?: undefined;
+  channel?: undefined;
+  screenshotUrl?: undefined;
+  marker?: undefined;
+}
+
+export type CardSource = VideoSource | WebSource;
 
 /**
  * A flashcard. Kinds:
@@ -95,6 +119,7 @@ export interface Group {
   createdAt: string;
   videoId?: string;
   videoUrl?: string;
+  exempted?: boolean;
 }
 
 export interface Subject {
@@ -102,6 +127,7 @@ export interface Subject {
   name: string;
   groupIds: string[];
   createdAt: string;
+  exempted?: boolean;
 }
 
 /**

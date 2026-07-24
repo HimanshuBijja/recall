@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { buildCardFromInput } from "@/app/api/cards/validate";
+import { buildCardFromInput, normalizeSource } from "@/app/api/cards/validate";
 
 test("flash requires question and answer", () => {
   expect(buildCardFromInput({ kind: "flash", question: "Q", answer: "A" }).card?.kind).toBe("flash");
@@ -72,4 +72,37 @@ test("multi rejects zero correct answers", () => {
 test("multi rejects fewer than 2 total options", () => {
   const { error } = buildCardFromInput({ kind: "multi", question: "Q", answers: ["only"], distractors: [] });
   expect(error).toMatch(/at least 2 options/i);
+});
+
+test("normalizeSource accepts a web source", () => {
+  const src = normalizeSource({
+    type: "web",
+    url: "https://developer.mozilla.org/en-US/docs/Web/CSS/grid",
+    title: "CSS grid",
+    siteName: "MDN",
+    excerpt: "The grid CSS property is a shorthand...",
+    capturedAt: "2026-07-25T10:00:00.000Z",
+  });
+  expect(src).toEqual({
+    type: "web",
+    url: "https://developer.mozilla.org/en-US/docs/Web/CSS/grid",
+    title: "CSS grid",
+    siteName: "MDN",
+    excerpt: "The grid CSS property is a shorthand...",
+    capturedAt: "2026-07-25T10:00:00.000Z",
+  });
+});
+
+test("normalizeSource fills capturedAt when a web source omits it", () => {
+  const src = normalizeSource({ type: "web", url: "https://example.com" });
+  expect(src?.type).toBe("web");
+  expect(typeof (src as { capturedAt?: string }).capturedAt).toBe("string");
+});
+
+test("normalizeSource drops a web source with no url", () => {
+  expect(normalizeSource({ type: "web", title: "no url" })).toBeUndefined();
+});
+
+test("normalizeSource still drops a video source with no videoId", () => {
+  expect(normalizeSource({ url: "u", timestamp: 3 })).toBeUndefined();
 });

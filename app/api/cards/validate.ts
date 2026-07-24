@@ -1,4 +1,4 @@
-import type { Card, CardKind, TfStatement, MatchPair, CardSource, MarkerShape } from "@/types";
+import type { Card, CardKind, TfStatement, MatchPair, CardSource, VideoSource, WebSource, MarkerShape } from "@/types";
 import { parseCloze } from "@/lib/cloze";
 
 const SHAPES: MarkerShape[] = ["circle", "square", "triangle", "diamond", "star"];
@@ -6,9 +6,23 @@ const SHAPES: MarkerShape[] = ["circle", "square", "triangle", "diamond", "star"
 export function normalizeSource(raw: unknown): CardSource | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const o = raw as Record<string, unknown>;
+
+  if (o.type === "web") {
+    if (typeof o.url !== "string" || !o.url) return undefined;
+    const src: WebSource = {
+      type: "web",
+      url: o.url,
+      capturedAt: typeof o.capturedAt === "string" && o.capturedAt ? o.capturedAt : new Date().toISOString(),
+    };
+    if (typeof o.title === "string") src.title = o.title;
+    if (typeof o.siteName === "string") src.siteName = o.siteName;
+    if (typeof o.excerpt === "string") src.excerpt = o.excerpt.slice(0, 400);
+    return src;
+  }
+
   if (typeof o.videoId !== "string" || !o.videoId) return undefined;
   if (typeof o.url !== "string" || typeof o.timestamp !== "number") return undefined;
-  const src: CardSource = { videoId: o.videoId, url: o.url, timestamp: o.timestamp };
+  const src: VideoSource = { videoId: o.videoId, url: o.url, timestamp: o.timestamp };
   if (typeof o.channel === "string") src.channel = o.channel;
   if (typeof o.title === "string") src.title = o.title;
   if (typeof o.screenshotUrl === "string") src.screenshotUrl = o.screenshotUrl;

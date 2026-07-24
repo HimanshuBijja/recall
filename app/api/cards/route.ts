@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
 import type { Card, Tag, Group } from "@/types";
+import { isVideoSource } from "@/lib/source";
 
 import { buildCardFromInput } from "./validate";
 
@@ -13,9 +14,11 @@ export async function GET(req: NextRequest) {
   const cards = await readDb<Card>("cards.json");
   if (videoId) {
     return Response.json(
-      cards
-        .filter((c) => c.source?.videoId === videoId)
-        .map((c) => ({ id: c.id, kind: c.kind ?? "mcq", timestamp: c.source!.timestamp, marker: c.source!.marker })),
+      cards.flatMap((c) => {
+        const s = c.source;
+        if (!isVideoSource(s) || s.videoId !== videoId) return [];
+        return [{ id: c.id, kind: c.kind ?? "mcq", timestamp: s.timestamp, marker: s.marker }];
+      }),
     );
   }
   const filtered = tag ? cards.filter((c) => c.tags.includes(tag)) : cards;
@@ -73,19 +76,20 @@ export async function POST(req: NextRequest) {
   };
   cards.push(card);
   await writeDb("cards.json", cards);
-  // Auto-group by video if videoId is present
-  if (card.source?.videoId) {
+  // Auto-group by video if this came from a video capture. Web-page captures
+  // deliberately do not create groups.
+  const videoSource = isVideoSource(card.source) ? card.source : null;
+  if (videoSource) {
     const groups = await readDb<Group>("groups.json");
-    const videoId = card.source.videoId;
-    const groupExists = groups.some((g) => g.videoId === videoId);
+    const groupExists = groups.some((g) => g.videoId === videoSource.videoId);
     if (!groupExists) {
       const newGroup: Group = {
         id: crypto.randomUUID(),
-        name: card.source.title || "Video Group",
+        name: videoSource.title || "Video Group",
         tagIds: [],
         createdAt: new Date().toISOString(),
-        videoId: videoId,
-        videoUrl: card.source.url,
+        videoId: videoSource.videoId,
+        videoUrl: videoSource.url,
       };
       groups.push(newGroup);
       await writeDb("groups.json", groups);
