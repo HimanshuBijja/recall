@@ -12,6 +12,7 @@ export function NewSubjectClient({ groups }: { groups: Group[] }) {
   const toast = useToast();
   const [name, setName] = useState("");
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
+  const [exempted, setExempted] = useState(false);
   const [saving, setSaving] = useState(false);
 
   function toggleGroup(gid: string) {
@@ -31,6 +32,7 @@ export function NewSubjectClient({ groups }: { groups: Group[] }) {
       await api.post("/subjects", {
         name: name.trim(),
         groupIds: selectedGroupIds,
+        exempted: exempted,
       });
       toast("success", "Subject created");
       router.push("/subjects");
@@ -74,6 +76,19 @@ export function NewSubjectClient({ groups }: { groups: Group[] }) {
           />
         </div>
 
+        <div className="flex items-center gap-2">
+          <input
+            id="subject-exempted"
+            type="checkbox"
+            checked={exempted}
+            onChange={(e) => setExempted(e.target.checked)}
+            className="w-4 h-4 accent-indigo-600 rounded border-border bg-transparent cursor-pointer"
+          />
+          <label htmlFor="subject-exempted" className="text-xs uppercase tracking-wide text-muted mb-0 select-none cursor-pointer">
+            Exempt from spaced repetition
+          </label>
+        </div>
+
         <div className="space-y-3">
           <div className="text-xs uppercase font-bold tracking-wider text-muted">
             Select Study Groups
@@ -105,7 +120,7 @@ export function NewSubjectClient({ groups }: { groups: Group[] }) {
                     <div>
                       <div className="text-sm font-semibold">{g.name}</div>
                       <div className="text-[10px] text-muted font-mono mt-0.5">
-                        {g.videoId ? "YouTube Video Group" : `${g.tagIds.length} tags`}
+                        {g.videoId ? "YouTube Video Group" : g.webUrl ? "Web Page Group" : `${g.tagIds.length} tags`}
                       </div>
                     </div>
                     <div

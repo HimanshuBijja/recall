@@ -63,6 +63,7 @@ async function runAddQuestion(): Promise<void> {
     drafts,
     source: buildWebSource(snap),
     allTags: Array.isArray(allTags) ? allTags : [],
+    groupName: res.groupName,
   });
 
   if (result.action !== "save") {
@@ -74,6 +75,7 @@ async function runAddQuestion(): Promise<void> {
   const saveRes = (await chrome.runtime.sendMessage({
     type: "SAVE_CARDS",
     cards: result.cards,
+    groupName: result.groupName,
   })) as SaveCardsResult;
 
   if (saveRes.queued > 0) {

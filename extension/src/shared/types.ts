@@ -82,6 +82,7 @@ export interface GenerateRequest {
 export interface GenerateResponse {
   ok: boolean;
   drafts?: CardDraft[];
+  groupName?: string;
   error?: string;
 }
 

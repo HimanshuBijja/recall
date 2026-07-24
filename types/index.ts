@@ -119,6 +119,7 @@ export interface Group {
   createdAt: string;
   videoId?: string;
   videoUrl?: string;
+  webUrl?: string;
   exempted?: boolean;
 }
 

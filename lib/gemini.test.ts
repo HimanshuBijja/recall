@@ -86,3 +86,18 @@ test("parseDrafts keeps tf-sort statements and drops under-filled ones", () => {
   expect(drafts).toHaveLength(1);
   expect(drafts[0].statements).toHaveLength(2);
 });
+
+import { parseDraftsWithGroup } from "@/lib/gemini";
+
+test("parseDraftsWithGroup extracts groupName and cards", () => {
+  const raw = JSON.stringify({
+    groupName: "DBMS Transactions",
+    cards: [
+      { question: "Q1", answer: "A1", distractors: [], tags: [], explanation: "", hint: "" }
+    ]
+  });
+  const res = parseDraftsWithGroup(raw, "mcq", 10, "Default");
+  expect(res.groupName).toBe("DBMS Transactions");
+  expect(res.drafts).toHaveLength(1);
+  expect(res.drafts[0].question).toBe("Q1");
+});

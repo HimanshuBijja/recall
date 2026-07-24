@@ -39,6 +39,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const tagsParam = params.get("tags") ?? "";
   const idsParam = params.get("ids") ?? "";
   const videoIdParam = params.get("videoId") ?? "";
+  const webUrlParam = params.get("webUrl") ?? "";
   const shuffle = params.get("shuffle") !== "false";
   const minDiff = Number(params.get("min") ?? 1);
   const maxDiff = Number(params.get("max") ?? 5);
@@ -68,6 +69,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     } else {
       if (videoIdParam) {
         pool = cards.filter((c) => c.source?.videoId === videoIdParam);
+      } else if (webUrlParam) {
+        pool = cards.filter((c) => c.source?.type === "web" && c.source.url === webUrlParam);
       } else {
         const expanded = descendantTagIds(tags, selectedTagIds);
         pool = selectPool(cards, {

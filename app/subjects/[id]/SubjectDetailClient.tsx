@@ -23,8 +23,11 @@ export function SubjectDetailClient({
   const toast = useToast();
   const [subject, setSubject] = useState<Subject>(initialSubject);
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>(initialSubject.groupIds);
+  const [exempted, setExempted] = useState(initialSubject.exempted ?? false);
+  const [name, setName] = useState(initialSubject.name);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingExempt, setSavingExempt] = useState(false);
 
   const groupById = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
 
@@ -63,18 +66,44 @@ export function SubjectDetailClient({
     );
   }
 
+  async function handleToggleExempt(checked: boolean) {
+    setSavingExempt(true);
+    setExempted(checked);
+    try {
+      const res = await api.put<Subject>(`/subjects/${subject.id}`, {
+        name: name.trim(),
+        groupIds: subject.groupIds,
+        exempted: checked,
+      });
+      setSubject(res.data);
+      toast("success", checked ? "Subject exempted from spaced repetition" : "Subject included in spaced repetition");
+      router.refresh();
+    } catch {
+      toast("error", "Failed to update subject settings");
+      setExempted(!checked); // revert state on failure
+    } finally {
+      setSavingExempt(false);
+    }
+  }
+
   async function handleSaveChanges() {
+    if (!name.trim()) {
+      toast("error", "Subject name is required");
+      return;
+    }
     setSaving(true);
     try {
       const res = await api.put<Subject>(`/subjects/${subject.id}`, {
+        name: name.trim(),
         groupIds: selectedGroupIds,
+        exempted: exempted,
       });
       setSubject(res.data);
       toast("success", "Subject updated successfully");
       setIsEditing(false);
       router.refresh();
     } catch {
-      toast("error", "Failed to update subject groups");
+      toast("error", "Failed to update subject settings");
     } finally {
       setSaving(false);
     }
@@ -101,15 +130,32 @@ export function SubjectDetailClient({
             <span className="w-6 h-[2px] bg-accent" />
             Subject Details & Config
           </div>
-          <h1 className="cinematic-headline text-[5vw] md:text-[3.5vw] sm:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text={subject.name}>
-            {subject.name}
-          </h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="cinematic-headline text-[5vw] md:text-[3.5vw] sm:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text={subject.name}>
+              {subject.name}
+            </h1>
+            {subject.exempted && (
+              <span className="text-xs font-bold px-2 py-1 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30 uppercase tracking-widest shrink-0">
+                Exempt
+              </span>
+            )}
+          </div>
           <p className="text-xs text-muted font-mono mt-1">
             {cardCount} Total revision card{cardCount === 1 ? "" : "s"} inside
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center flex-wrap">
+          <label className="flex items-center gap-2.5 px-4 py-2 border border-border bg-black/25 hover:bg-zinc-900 rounded-[4px] cursor-pointer transition-colors text-xs font-bold uppercase tracking-widest text-muted select-none">
+            <input
+              type="checkbox"
+              checked={exempted}
+              onChange={(e) => handleToggleExempt(e.target.checked)}
+              disabled={savingExempt}
+              className="w-4 h-4 accent-accent cursor-pointer"
+            />
+            Exempt Subject
+          </label>
           <Link
             href="/subjects"
             className="px-4 py-2 border border-border hover:bg-zinc-900 text-foreground font-bold text-xs uppercase tracking-widest transition-colors duration-150 rounded-[4px]"
@@ -162,7 +208,7 @@ export function SubjectDetailClient({
                     >
                       <div className="text-sm font-semibold">{g.name}</div>
                       <div className="text-[10px] text-muted font-mono">
-                        {groupCardLen} card{groupCardLen === 1 ? "" : "s"} · {g.videoId ? "YouTube Video" : "Tags"}
+                        {groupCardLen} card{groupCardLen === 1 ? "" : "s"} · {g.videoId ? "YouTube Video" : g.webUrl ? "Web Page" : "Tags"}
                       </div>
                     </div>
                   );
@@ -172,15 +218,38 @@ export function SubjectDetailClient({
           </div>
         </div>
 
-        {/* Right pane: Group Manager panel (span 5) */}
+        {/* Right pane: Subject Settings & Group Manager panel (span 5) */}
         <div className="md:col-span-5 space-y-6">
           {isEditing && (
             <div className="border border-border p-5 bg-zinc-950/40 rounded-[4px] space-y-4">
               <div>
                 <h3 className="text-xs uppercase font-bold tracking-wider text-muted mb-1">
-                  Manage Included Groups
+                  Subject Settings
                 </h3>
-                <p className="text-[10px] text-muted uppercase tracking-wide">
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="edit-subject-name" className="text-[10px] uppercase font-bold tracking-wider text-muted">
+                  Subject Name
+                </label>
+                <input
+                  id="edit-subject-name"
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Computer Science, Medical Revision..."
+                  className="w-full px-3 py-2 border border-border rounded-[4px] bg-transparent text-foreground focus:outline-none focus:border-accent"
+                />
+              </div>
+
+
+
+              <div className="pt-2 border-t border-divider">
+                <h4 className="text-[10px] uppercase font-bold tracking-wide text-muted mb-1">
+                  Manage Included Groups
+                </h4>
+                <p className="text-[9px] text-muted uppercase tracking-wide">
                   Check or uncheck groups to modify what is inside this subject.
                 </p>
               </div>
@@ -220,7 +289,7 @@ export function SubjectDetailClient({
                 </div>
               )}
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-2 border-t border-divider">
                 <button
                   onClick={handleSaveChanges}
                   disabled={saving}
@@ -231,6 +300,8 @@ export function SubjectDetailClient({
                 <button
                   onClick={() => {
                     setSelectedGroupIds(subject.groupIds);
+                    setExempted(subject.exempted ?? false);
+                    setName(subject.name);
                     setIsEditing(false);
                   }}
                   className="px-4 py-2 border border-border hover:bg-zinc-900 text-foreground font-bold text-xs uppercase tracking-widest transition-colors duration-150 rounded-[4px]"

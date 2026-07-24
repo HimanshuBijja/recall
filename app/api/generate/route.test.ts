@@ -1,10 +1,13 @@
 import { expect, test, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/gemini", () => ({
-  draftCardsFromText: vi.fn(async () => [
-    { kind: "mcq", question: "Q1", answer: "A1", distractors: ["b", "c", "d"], tags: ["css"], explanation: "", hint: "" },
-    { kind: "mcq", question: "Q2", answer: "A2", distractors: ["b", "c", "d"], tags: ["css"], explanation: "", hint: "" },
-  ]),
+  draftCardsFromText: vi.fn(async () => ({
+    drafts: [
+      { kind: "mcq", question: "Q1", answer: "A1", distractors: ["b", "c", "d"], tags: ["css"], explanation: "", hint: "" },
+      { kind: "mcq", question: "Q2", answer: "A2", distractors: ["b", "c", "d"], tags: ["css"], explanation: "", hint: "" },
+    ],
+    groupName: "CSS grid",
+  })),
 }));
 
 import { POST } from "@/app/api/generate/route";
@@ -54,7 +57,7 @@ test("500 with the message when generation throws", async () => {
 
 test("200 with an empty list when the model produced nothing usable", async () => {
   const { draftCardsFromText } = await import("@/lib/gemini");
-  (draftCardsFromText as unknown as { mockResolvedValueOnce: (v: unknown[]) => void }).mockResolvedValueOnce([]);
+  (draftCardsFromText as unknown as { mockResolvedValueOnce: (v: unknown) => void }).mockResolvedValueOnce({ drafts: [], groupName: "" });
   const res = await POST(req({ text: "some text", kind: "mcq", count: 2 }));
   const json = await res.json();
   expect(res.status).toBe(200);

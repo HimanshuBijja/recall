@@ -22,7 +22,7 @@ export type BgMessage =
   | { type: "GET_TAGS" }
   | { type: "EDIT_TEXT"; selection?: string; prompt: string; draft?: unknown }
   | { type: "GENERATE_QUESTIONS"; req: GenerateRequest }
-  | { type: "SAVE_CARDS"; cards: unknown[] };
+  | { type: "SAVE_CARDS"; cards: unknown[]; groupName?: string };
 
 export type BgResponse =
   | CaptureResponse
@@ -202,11 +202,14 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
     let saved = 0;
     let queued = 0;
     for (const card of msg.cards) {
-      const result = await postCard(base, card);
+      const payload = msg.groupName && typeof card === "object" && card !== null
+        ? { ...(card as Record<string, unknown>), groupName: msg.groupName }
+        : card;
+      const result = await postCard(base, payload);
       if (result.ok) {
         saved += 1;
       } else {
-        await enqueue(card);
+        await enqueue(payload);
         queued += 1;
       }
     }

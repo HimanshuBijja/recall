@@ -21,8 +21,10 @@ export function GroupDetailClient({
   const toast = useToast();
   const [group, setGroup] = useState<Group>(initialGroup);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialGroup.tagIds);
+  const [exempted, setExempted] = useState(initialGroup.exempted ?? false);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingExempt, setSavingExempt] = useState(false);
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
@@ -30,6 +32,8 @@ export function GroupDetailClient({
   const matchingCards = useMemo(() => {
     if (group.videoId) {
       return cards.filter((c) => c.source?.videoId === group.videoId);
+    } else if (group.webUrl) {
+      return cards.filter((c) => c.source?.type === "web" && c.source.url === group.webUrl);
     } else {
       const expanded = descendantTagIds(tags, group.tagIds);
       return cards.filter((c) => c.tags.some((t) => expanded.has(t)));
@@ -44,12 +48,33 @@ export function GroupDetailClient({
     );
   }
 
+  async function handleToggleExempt(checked: boolean) {
+    setSavingExempt(true);
+    setExempted(checked);
+    try {
+      const res = await api.put<Group>(`/groups/${group.id}`, {
+        name: group.name,
+        tagIds: group.tagIds,
+        exempted: checked,
+      });
+      setGroup(res.data);
+      toast("success", checked ? "Group exempted from spaced repetition" : "Group included in spaced repetition");
+      router.refresh();
+    } catch {
+      toast("error", "Failed to update group settings");
+      setExempted(!checked); // revert state on failure
+    } finally {
+      setSavingExempt(false);
+    }
+  }
+
   async function handleSaveChanges() {
     setSaving(true);
     try {
       const res = await api.put<Group>(`/groups/${group.id}`, {
         name: group.name,
         tagIds: selectedTagIds,
+        exempted: exempted,
       });
       setGroup(res.data);
       toast("success", "Group tags updated successfully");
@@ -83,15 +108,32 @@ export function GroupDetailClient({
             <span className="w-6 h-[2px] bg-accent" />
             Group Details & Cards List
           </div>
-          <h1 className="cinematic-headline text-[5vw] md:text-[3.5vw] sm:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text={group.name}>
-            {group.name}
-          </h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="cinematic-headline text-[5vw] md:text-[3.5vw] sm:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text={group.name}>
+              {group.name}
+            </h1>
+            {group.exempted && (
+              <span className="text-xs font-bold px-2 py-1 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30 uppercase tracking-widest shrink-0">
+                Exempt
+              </span>
+            )}
+          </div>
           <p className="text-xs text-muted font-mono mt-1">
             {matchingCards.length} matching card{matchingCards.length === 1 ? "" : "s"} inside
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center flex-wrap">
+          <label className="flex items-center gap-2.5 px-4 py-2 border border-border bg-black/25 hover:bg-zinc-900 rounded-[4px] cursor-pointer transition-colors text-xs font-bold uppercase tracking-widest text-muted select-none">
+            <input
+              type="checkbox"
+              checked={exempted}
+              onChange={(e) => handleToggleExempt(e.target.checked)}
+              disabled={savingExempt}
+              className="w-4 h-4 accent-accent cursor-pointer"
+            />
+            Exempt Group
+          </label>
           <Link
             href="/groups"
             className="px-4 py-2 border border-border hover:bg-zinc-900 text-foreground font-bold text-xs uppercase tracking-widest transition-colors duration-150 rounded-[4px]"
@@ -134,14 +176,38 @@ export function GroupDetailClient({
         </div>
       )}
 
+      {group.webUrl && (
+        <div className="border border-border p-4 bg-zinc-950/20 rounded-[4px] flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <div className="text-[10px] uppercase font-bold tracking-wider text-muted mb-0.5">Associated Web Source</div>
+            <a
+              href={group.webUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-accent hover:underline break-all font-mono"
+            >
+              {group.webUrl}
+            </a>
+          </div>
+          <a
+            href={group.webUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 border border-border hover:border-accent text-foreground font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 rounded-[4px]"
+          >
+            Visit Website ↗
+          </a>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
         {/* Left column: Cards list (span 8 or full depending on editing state) */}
-        <div className={group.videoId ? "md:col-span-12 space-y-4" : "md:col-span-8 space-y-4"}>
+        <div className={!group.videoId && !group.webUrl && isEditing ? "md:col-span-8 space-y-4" : "md:col-span-12 space-y-4"}>
           <div className="flex justify-between items-center">
             <h2 className="text-xs uppercase font-bold tracking-wider text-muted">
               Cards in this group
             </h2>
-            {!group.videoId && (
+            {!group.videoId && !group.webUrl && (
               <button
                 onClick={() => {
                   setSelectedTagIds(group.tagIds);
@@ -203,7 +269,7 @@ export function GroupDetailClient({
         </div>
 
         {/* Right column: Manage Tags config panel (span 4) */}
-        {!group.videoId && isEditing && (
+        {!group.videoId && !group.webUrl && isEditing && (
           <div className="md:col-span-4 space-y-4">
             <div className="border border-border p-5 bg-zinc-950/40 rounded-[4px] space-y-4">
               <div>
@@ -250,7 +316,7 @@ export function GroupDetailClient({
                 </div>
               )}
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-2 border-t border-divider">
                 <button
                   onClick={handleSaveChanges}
                   disabled={saving}

@@ -16,6 +16,8 @@ export default async function GroupsPage() {
   for (const g of groups) {
     if (g.videoId) {
       groupCardCounts[g.id] = cards.filter((c) => c.source?.videoId === g.videoId).length;
+    } else if (g.webUrl) {
+      groupCardCounts[g.id] = cards.filter((c) => c.source?.type === "web" && c.source.url === g.webUrl).length;
     } else {
       const expanded = descendantTagIds(tags, g.tagIds);
       groupCardCounts[g.id] = cards.filter((c) =>

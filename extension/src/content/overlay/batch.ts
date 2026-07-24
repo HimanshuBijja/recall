@@ -8,10 +8,11 @@ export interface BatchOverlayOptions {
   drafts: CardDraft[];
   source: SourceMeta;
   allTags?: { id: string; name: string }[];
+  groupName?: string;
 }
 
 export type BatchResult =
-  | { action: "save"; cards: Record<string, unknown>[] }
+  | { action: "save"; cards: Record<string, unknown>[]; groupName?: string }
   | { action: "cancel" };
 
 const HOST_ID = "recall-batch-overlay-host";
@@ -52,6 +53,8 @@ export function openBatchOverlay(opts: BatchOverlayOptions): Promise<BatchResult
     const headerRow = document.createElement("div");
     headerRow.className = "header-row";
 
+    let groupName = opts.groupName || "";
+
     const heading = document.createElement("div");
     heading.className = "batch-heading";
     const badge = document.createElement("span");
@@ -60,6 +63,25 @@ export function openBatchOverlay(opts: BatchOverlayOptions): Promise<BatchResult
     const count = document.createElement("span");
     count.className = "batch-count";
     heading.append(badge, count);
+
+    if (opts.source.type === "web") {
+      const groupLabel = document.createElement("span");
+      groupLabel.style.cssText = "font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#B6A596;margin-left:16px;white-space:nowrap;";
+      groupLabel.textContent = "Group:";
+
+      const groupInput = document.createElement("input");
+      groupInput.type = "text";
+      groupInput.value = groupName;
+      groupInput.placeholder = "Group Name (e.g. Topic)";
+      groupInput.style.cssText = "background:#121212;border:1px solid #2e2927;color:#EBDCC4;font-size:12px;padding:4px 8px;border-radius:4px;width:240px;box-sizing:border-box;";
+      groupInput.addEventListener("input", () => {
+        groupName = groupInput.value.trim();
+      });
+      groupInput.addEventListener("keydown", (e) => {
+        e.stopPropagation();
+      });
+      heading.append(groupLabel, groupInput);
+    }
 
     const actions = document.createElement("div");
     actions.className = "actions";
@@ -200,7 +222,7 @@ export function openBatchOverlay(opts: BatchOverlayOptions): Promise<BatchResult
     function doSave(): void {
       const cards = kept().map((e) => draftToCard(e.fields.readValues(), opts.source));
       cleanup();
-      resolve({ action: "save", cards });
+      resolve({ action: "save", cards, groupName: groupName || undefined });
     }
 
     function doCancel(): void {

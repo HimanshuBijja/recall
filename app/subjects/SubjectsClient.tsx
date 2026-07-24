@@ -32,6 +32,8 @@ export function SubjectsClient({
     for (const g of groups) {
       if (g.videoId) {
         map.set(g.id, cards.filter((c) => c.source?.videoId === g.videoId));
+      } else if (g.webUrl) {
+        map.set(g.id, cards.filter((c) => c.source?.type === "web" && c.source.url === g.webUrl));
       } else {
         const expanded = descendantTagIds(tags, g.tagIds);
         map.set(g.id, cards.filter((c) => c.tags.some((t) => expanded.has(t))));
@@ -128,9 +130,16 @@ export function SubjectsClient({
               <div className="space-y-4">
                 <div className="flex justify-between items-start gap-2">
                   <Link href={`/subjects/${subject.id}`} className="text-left group block hover:no-underline">
-                    <h2 className="text-lg font-bold font-display uppercase tracking-tight text-foreground group-hover:text-accent transition-colors">
-                      {subject.name}
-                    </h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-bold font-display uppercase tracking-tight text-foreground group-hover:text-accent transition-colors">
+                        {subject.name}
+                      </h2>
+                      {subject.exempted && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30 uppercase tracking-wider shrink-0">
+                          Exempt
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted font-mono mt-0.5">
                       {cardCount} card{cardCount === 1 ? "" : "s"} ready
                     </p>

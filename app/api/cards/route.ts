@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
 import type { Card, Tag, Group } from "@/types";
-import { isVideoSource } from "@/lib/source";
+import { isVideoSource, isWebSource } from "@/lib/source";
 
 import { buildCardFromInput } from "./validate";
 
@@ -76,8 +76,7 @@ export async function POST(req: NextRequest) {
   };
   cards.push(card);
   await writeDb("cards.json", cards);
-  // Auto-group by video if this came from a video capture. Web-page captures
-  // deliberately do not create groups.
+  // Auto-group by video if this came from a video capture.
   const videoSource = isVideoSource(card.source) ? card.source : null;
   if (videoSource) {
     const groups = await readDb<Group>("groups.json");
@@ -90,6 +89,25 @@ export async function POST(req: NextRequest) {
         createdAt: new Date().toISOString(),
         videoId: videoSource.videoId,
         videoUrl: videoSource.url,
+      };
+      groups.push(newGroup);
+      await writeDb("groups.json", groups);
+    }
+  }
+
+  // Auto-group by website if this came from a web capture.
+  const webSource = isWebSource(card.source) ? card.source : null;
+  if (webSource) {
+    const groups = await readDb<Group>("groups.json");
+    const groupExists = groups.some((g) => g.webUrl === webSource.url);
+    if (!groupExists) {
+      const gName = typeof body.groupName === "string" ? body.groupName.trim() : "";
+      const newGroup: Group = {
+        id: crypto.randomUUID(),
+        name: gName || webSource.title || "Web Group",
+        tagIds: [],
+        createdAt: new Date().toISOString(),
+        webUrl: webSource.url,
       };
       groups.push(newGroup);
       await writeDb("groups.json", groups);

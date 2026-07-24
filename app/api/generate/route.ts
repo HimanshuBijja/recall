@@ -29,8 +29,8 @@ export async function POST(req: NextRequest): Promise<Response> {
   const pageTitle = typeof body.pageTitle === "string" ? body.pageTitle : undefined;
 
   try {
-    const drafts = await draftCardsFromText(text, kind, count, pageTitle);
-    return Response.json({ ok: true, drafts });
+    const { drafts, groupName } = await draftCardsFromText(text, kind, count, pageTitle);
+    return Response.json({ ok: true, drafts, groupName });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "generation failed";
     console.error("[generate] 500:", msg, e);

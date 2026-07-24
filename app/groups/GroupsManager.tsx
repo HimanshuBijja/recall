@@ -73,6 +73,15 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
       router.push(`/test/session?${params.toString()}`);
       return;
     }
+    if (g.webUrl) {
+      const params = new URLSearchParams();
+      params.set("webUrl", g.webUrl);
+      params.set("shuffle", "true");
+      params.set("min", "1");
+      params.set("max", "5");
+      router.push(`/test/session?${params.toString()}`);
+      return;
+    }
     if (g.tagIds.length === 0) {
       toast("error", "This group has no tags yet");
       return;
@@ -295,6 +304,16 @@ function VideoIcon() {
   );
 }
 
+function WebIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  );
+}
+
 function GroupCard({
   group, tagById, cardCount, selected, onToggle, onTest, onEdit, onDelete, onExport,
 }: {
@@ -331,9 +350,16 @@ function GroupCard({
             ✓
           </span>
           <Link href={`/groups/${group.id}`} className="min-w-0 hover:no-underline group block w-full text-left">
-            <h3 className="font-semibold truncate group-hover:text-accent transition-colors">{group.name}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold truncate group-hover:text-accent transition-colors">{group.name}</h3>
+              {group.exempted && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30 uppercase tracking-wider shrink-0">
+                  Exempt
+                </span>
+              )}
+            </div>
             <p className="text-xs text-zinc-500 mt-0.5">
-              {group.tagIds.length} tag{group.tagIds.length === 1 ? "" : "s"} ·{" "}
+              {group.videoId ? "YouTube Video" : group.webUrl ? "Web Page" : `${group.tagIds.length} tag${group.tagIds.length === 1 ? "" : "s"}`} ·{" "}
               {cardCount} card{cardCount === 1 ? "" : "s"}
             </p>
           </Link>
@@ -415,6 +441,18 @@ function GroupCard({
             <VideoIcon />
           </a>
         )}
+        {group.webUrl && (
+          <a
+            href={group.webUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:text-indigo-600 hover:border-indigo-300 dark:hover:border-indigo-800"
+            title="Visit web source"
+          >
+            <WebIcon />
+          </a>
+        )}
         <button
           onClick={(e) => { e.stopPropagation(); onTest(); }}
           disabled={cardCount === 0}
@@ -457,7 +495,11 @@ function GroupEditor({
     }
     setSaving(true);
     try {
-      const payload = { name: name.trim(), tagIds: [...selected] };
+      const payload = {
+        name: name.trim(),
+        tagIds: [...selected],
+        exempted: initial ? initial.exempted : false,
+      };
       if (initial) {
         const res = await api.put<Group>(`/groups/${initial.id}`, payload);
         // Card count needs server-side recomputation — easiest path is a
@@ -478,49 +520,51 @@ function GroupEditor({
   }
 
   return (
-    <div className="rounded-xl border border-indigo-300 dark:border-indigo-800 p-4 bg-indigo-50/40 dark:bg-indigo-950/30 space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">{initial ? "Edit group" : "New group"}</h3>
+    <div className="cinematic-editor-panel space-y-6">
+      <div className="flex items-center justify-between pb-3 border-b border-divider/30">
+        <h3 className="font-semibold text-sm uppercase tracking-wider text-foreground">
+          {initial ? "Edit group" : "New group"}
+        </h3>
         <button
           onClick={onCancel}
-          className="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+          className="text-xs text-muted hover:text-accent font-bold uppercase tracking-wider transition-colors cursor-pointer"
         >
           Cancel
         </button>
       </div>
 
-      <div>
-        <label className="text-xs uppercase tracking-wide text-zinc-500">Name</label>
+      <div className="space-y-1.5">
+        <label className="text-[10px] uppercase font-bold tracking-wider text-muted">Name</label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder='e.g. "Frontend revision", "JS quirks"'
           autoFocus
-          className="mt-1 w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
+          className="mt-1 w-full px-4 py-2.5 rounded-[4px] border border-border/50 bg-black/40 text-foreground placeholder-zinc-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all duration-150"
         />
       </div>
 
-      <div>
-        <div className="flex items-baseline justify-between mb-1">
-          <label className="text-xs uppercase tracking-wide text-zinc-500">Tags</label>
-          <span className="text-xs text-zinc-500">{selected.size} selected</span>
+      <div className="space-y-2">
+        <div className="flex items-baseline justify-between">
+          <label className="text-[10px] uppercase font-bold tracking-wider text-muted">Tags</label>
+          <span className="text-xs text-accent font-mono font-semibold">{selected.size} selected</span>
         </div>
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 max-h-80 overflow-y-auto">
+        <div className="rounded-[4px] border border-border/30 bg-black/40 p-3.5 max-h-80 overflow-y-auto">
           <TagTree tags={tags} selected={selected} onToggle={toggle} searchable />
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-3 pt-4 border-t border-divider/40">
         <button
           onClick={save}
           disabled={saving}
-          className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium disabled:opacity-50"
+          className="px-6 py-2.5 bg-accent hover:bg-accent/80 text-background font-bold text-xs uppercase tracking-widest transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed rounded-[4px]"
         >
           {saving ? "Saving…" : initial ? "Save changes" : "Create group"}
         </button>
         <button
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm"
+          className="px-6 py-2.5 border border-border/60 hover:bg-zinc-900 text-foreground font-bold text-xs uppercase tracking-widest transition-all duration-150 rounded-[4px]"
         >
           Cancel
         </button>

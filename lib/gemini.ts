@@ -116,23 +116,45 @@ function hasContent(d: CardDraft): boolean {
 }
 
 export function parseDrafts(raw: string, kind: CardKind, max: number): CardDraft[] {
+  return parseDraftsWithGroup(raw, kind, max, "").drafts;
+}
+
+export function parseDraftsWithGroup(
+  raw: string,
+  kind: CardKind,
+  max: number,
+  defaultGroupName: string,
+): { drafts: CardDraft[]; groupName: string } {
   const parsed = extractJson(raw);
-  if (!parsed) return [];
-  let list: unknown[];
+  let list: unknown[] = [];
+  let groupName = defaultGroupName;
+  if (!parsed) return { drafts: [], groupName };
+
   if (Array.isArray(parsed)) {
     list = parsed;
-  } else if (typeof parsed === "object" && Array.isArray((parsed as { cards?: unknown }).cards)) {
-    list = (parsed as { cards: unknown[] }).cards;
   } else if (typeof parsed === "object") {
-    list = [parsed];
+    const pObj = parsed as Record<string, unknown>;
+    if (typeof pObj.groupName === "string" && pObj.groupName.trim()) {
+      groupName = pObj.groupName.trim();
+    }
+    if (Array.isArray(pObj.cards)) {
+      list = pObj.cards;
+    } else if (Array.isArray(pObj.drafts)) {
+      list = pObj.drafts;
+    } else {
+      list = [parsed];
+    }
   } else {
-    return [];
+    return { drafts: [], groupName };
   }
-  return list
+
+  const drafts = list
     .filter((x): x is Record<string, unknown> => Boolean(x) && typeof x === "object")
     .map((x) => normalizeDraftObject(x, kind))
     .filter(hasContent)
     .slice(0, max);
+
+  return { drafts, groupName };
 }
 
 export async function draftCardFromFrame(
@@ -219,9 +241,10 @@ export async function draftCardsFromText(
   kind: CardKind,
   count: number,
   pageTitle?: string,
-): Promise<CardDraft[]> {
+): Promise<{ drafts: CardDraft[]; groupName: string }> {
   const source = text.slice(0, MAX_SOURCE_CHARS);
-  const prompt = `You are turning a passage of text from a web page into EXACTLY ${count} revision card(s).
+  const fallbackGroupName = pageTitle || "Web Group";
+  const prompt = `You are turning a passage of text from a web page into EXACTLY ${count} revision card(s) and suggesting a clean, descriptive study group name for this passage.
 ${pageTitle ? `The page title is: "${pageTitle}".` : ""}
 
 SOURCE TEXT:
@@ -230,6 +253,7 @@ ${source}
 """
 
 RULES:
+- Suggest a clean, concise, descriptive group name (usually 2-5 words) representing the topic of this passage (e.g. "DBMS Schema Architecture", "Responsive CSS Grid", "Photosynthesis Stages").
 - Produce exactly ${count} cards, each testing a DIFFERENT fact or idea from the source text. Do not repeat a fact across cards.
 - Base every card strictly on the source text. Do not invent facts that are not in it.
 - If the source text does not contain enough distinct material for ${count} cards, return as many good cards as it supports rather than padding with filler.
@@ -237,11 +261,15 @@ RULES:
 
 ${KIND_INSTRUCTIONS[kind]}
 
-Return ONLY a JSON array of ${count} card objects with the keys described above. No prose, no markdown fences.`;
+Return ONLY a JSON object with two keys:
+- "groupName": a string representing your suggested group name.
+- "cards": a JSON array of the card objects described above.
+
+No prose, no markdown fences.`;
 
   const res = await client().models.generateContent({
     model: MODEL,
     contents: [{ role: "user", parts: [{ text: prompt }] }],
   });
-  return parseDrafts(res.text ?? "", kind, count);
+  return parseDraftsWithGroup(res.text ?? "", kind, count, fallbackGroupName);
 }
