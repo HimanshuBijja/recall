@@ -1,11 +1,17 @@
-import type { CardDraft, CaptureKind, MarkerShape } from "../../shared/types";
+import type { CardDraft, CaptureKind, MarkerShape, WebSourceMeta } from "../../shared/types";
 
-export interface SourceMeta {
+export interface VideoSourceMeta {
   videoId: string;
   url: string;
   timestamp: number;
   channel?: string;
   title?: string;
+}
+
+export type SourceMeta = VideoSourceMeta | WebSourceMeta;
+
+function isWebSourceMeta(s: SourceMeta): s is WebSourceMeta {
+  return "type" in s && s.type === "web";
 }
 
 export function draftToCard(
@@ -22,11 +28,13 @@ export function draftToCard(
     explanation: draft.explanation,
     hint: draft.hint,
     tags: draft.tags,
-    source: {
-      ...source,
-      ...(screenshotUrl ? { screenshotUrl } : {}),
-      ...(marker ? { marker } : {}),
-    },
+    source: isWebSourceMeta(source)
+      ? { ...source }
+      : {
+          ...source,
+          ...(screenshotUrl ? { screenshotUrl } : {}),
+          ...(marker ? { marker } : {}),
+        },
   };
   if (draft.kind === "cloze") body.clozeText = draft.clozeText ?? "";
   if (draft.kind === "tf-sort") body.statements = draft.statements ?? [];
@@ -77,12 +85,15 @@ function input(value: string, placeholder: string): HTMLInputElement {
   return i;
 }
 
+export type OptionsLayout = "rows" | "table";
+
 export function renderFields(
   kind: CaptureKind,
   draft: CardDraft,
   kindRoot: HTMLElement,
   metaRoot: HTMLElement,
   allTags: { id: string; name: string }[] = [],
+  optionsLayout: OptionsLayout = "rows",
 ): FieldsRoot {
   kindRoot.innerHTML = "";
   metaRoot.innerHTML = "";
@@ -130,7 +141,10 @@ export function renderFields(
     }
   }
 
-  const optionsContainer = el("div", { style: "display:flex;flex-direction:column;gap:8px;margin-bottom:8px;" });
+  const optionsContainer = el("div", {
+    class: optionsLayout === "table" ? "options-table" : "",
+    style: "display:flex;flex-direction:column;gap:8px;margin-bottom:8px;",
+  });
 
   const toggleOption = (idx: number) => {
     const opt = initialOptions[idx];
@@ -145,12 +159,28 @@ export function renderFields(
 
   const renderOptions = () => {
     optionsContainer.innerHTML = "";
+
+    if (optionsLayout === "table") {
+      const head = el("div", { class: "options-table-head" }, [
+        el("span", { class: "option-index" }, ["#"]),
+        el("span", {}, ["Option"]),
+        el("span", {}, [kind === "mcq" ? "Correct" : "Correct?"]),
+        el("span", {}, [""]),
+      ]);
+      optionsContainer.append(head);
+    }
+
     initialOptions.forEach((opt, idx) => {
       const isCorrect = opt.isCorrect;
-      const toggleBtn = el("button", {
-        type: "button",
-        class: `toggle-correct-btn ${isCorrect ? "correct" : ""}`,
-      }, [isCorrect ? "✓" : ""]);
+      const toggleBtn = el(
+        "button",
+        {
+          type: "button",
+          class: `toggle-correct-btn ${isCorrect ? "correct" : ""}`,
+          title: kind === "mcq" ? "Mark this option as the correct answer" : "Toggle this option as a correct answer",
+        },
+        [isCorrect ? "✓" : ""],
+      );
 
       const textInput = textarea(opt.text, `Option ${idx + 1}`);
       textInput.setAttribute("data-field", "option");
@@ -160,10 +190,14 @@ export function renderFields(
         opt.text = textInput.value;
       });
 
-      const removeBtn = el("button", {
-        type: "button",
-        style: "background:transparent;color:#B6A596;cursor:pointer;font-size:16px;padding:4px 8px;margin-left:4px;border:none;"
-      }, ["✕"]);
+      const removeBtn = el(
+        "button",
+        {
+          type: "button",
+          style: "background:transparent;color:#B6A596;cursor:pointer;font-size:16px;padding:4px 8px;margin-left:4px;border:none;",
+        },
+        ["✕"],
+      );
 
       removeBtn.addEventListener("click", () => {
         if (initialOptions.length > 2) {
@@ -172,7 +206,12 @@ export function renderFields(
         }
       });
 
-      const rowEl = el("div", { class: "option-row" }, [toggleBtn, textInput, removeBtn]);
+      const cells: HTMLElement[] =
+        optionsLayout === "table"
+          ? [el("span", { class: "option-index" }, [String(idx + 1)]), textInput, toggleBtn, removeBtn]
+          : [toggleBtn, textInput, removeBtn];
+
+      const rowEl = el("div", { class: optionsLayout === "table" ? "option-row option-row-table" : "option-row" }, cells);
       toggleBtn.addEventListener("click", () => toggleOption(idx));
       optionsContainer.append(rowEl);
     });
