@@ -329,3 +329,55 @@ export const overlayStyles = `
     margin-top: 4px;
   }
 `;
+
+export const batchStyles = `
+  .batch-heading { display: flex; align-items: center; gap: 10px; }
+  .batch-count {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #B6A596;
+  }
+  .batch-list { display: flex; flex-direction: column; gap: 10px; }
+  .batch-card { border: 1px solid #4A4441; border-radius: 4px; background: #181818; }
+  .batch-card-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #2e2927;
+  }
+  .batch-chevron {
+    background: transparent;
+    border: none;
+    color: #B6A596;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0 2px;
+  }
+  .batch-index {
+    font-size: 10px;
+    font-weight: 700;
+    color: #DC9F85;
+    min-width: 14px;
+  }
+  .batch-summary {
+    flex: 1;
+    font-size: 13px;
+    color: #EBDCC4;
+    cursor: pointer;
+    line-height: 1.4;
+  }
+  .batch-discard {
+    background: transparent;
+    border: none;
+    color: #B6A596;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+  }
+  .batch-discard:hover { color: #fda4af; }
+  .batch-card-body { padding: 14px 12px; display: flex; flex-direction: column; gap: 12px; }
+  .save:disabled { opacity: 0.4; cursor: not-allowed; }
+`;
