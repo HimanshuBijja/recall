@@ -5,6 +5,7 @@ export interface ExportedCard {
   question: string;
   answer: string;
   distractors: string[];
+  answers?: string[];
   statements?: TfStatement[];
   clozeText?: string;
   pairs?: Array<{ left: string; right: string }>;
@@ -37,12 +38,14 @@ export function exportCard(card: Card, tagById: Map<string, Tag>): ExportedCard 
   const isMatch = card.kind === "match";
   const isMcq = !card.kind || card.kind === "mcq";
   const isFlash = card.kind === "flash";
+  const isMulti = card.kind === "multi";
 
   return {
     kind: card.kind ?? "mcq",
     question: card.question,
     answer: (isMcq || isFlash) ? card.answer : "",
-    distractors: isMcq ? [...(card.distractors ?? [])] : [],
+    distractors: (isMcq || isMulti) ? [...(card.distractors ?? [])] : [],
+    answers: isMulti && card.answers ? [...card.answers] : undefined,
     statements: isTf && card.statements ? card.statements.map((s) => ({ ...s })) : undefined,
     clozeText: isCloze ? card.clozeText : undefined,
     pairs: isMatch && card.pairs ? card.pairs.map((p) => ({ ...p })) : undefined,

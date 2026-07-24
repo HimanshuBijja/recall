@@ -52,3 +52,24 @@ test("drops a malformed source (missing videoId)", () => {
   });
   expect(card!.source).toBeUndefined();
 });
+
+test("multi accepts >=1 answer and >=2 total options", () => {
+  const { card, error } = buildCardFromInput({
+    kind: "multi",
+    question: "Which are transport-layer protocols?",
+    answers: ["TCP", "UDP"],
+    distractors: ["HTTP", "FTP"],
+  });
+  expect(error).toBeUndefined();
+  expect(card).toMatchObject({ kind: "multi", answer: "", answers: ["TCP", "UDP"], distractors: ["HTTP", "FTP"] });
+});
+
+test("multi rejects zero correct answers", () => {
+  const { error } = buildCardFromInput({ kind: "multi", question: "Q", answers: [], distractors: ["a", "b"] });
+  expect(error).toMatch(/at least 1 correct/i);
+});
+
+test("multi rejects fewer than 2 total options", () => {
+  const { error } = buildCardFromInput({ kind: "multi", question: "Q", answers: ["only"], distractors: [] });
+  expect(error).toMatch(/at least 2 options/i);
+});

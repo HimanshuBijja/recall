@@ -13,6 +13,7 @@ interface RawCard {
   question?: unknown;
   answer?: unknown;
   distractors?: unknown;
+  answers?: unknown;
   statements?: unknown;
   clozeText?: unknown;
   text?: unknown;
@@ -80,6 +81,11 @@ function validateCard(row: unknown): ValidatedCard {
     if (typeof r.answer !== "string" || !r.answer.trim()) errors.push("answer missing");
     if (!Array.isArray(r.distractors) || r.distractors.length !== 3)
       errors.push("distractors must be exactly 3");
+  } else if (kind === "multi") {
+    const answers = Array.isArray(r.answers) ? r.answers.filter((a: any) => String(a ?? "").trim()) : [];
+    const distractors = Array.isArray(r.distractors) ? r.distractors.filter((d: any) => String(d ?? "").trim()) : [];
+    if (answers.length < 1) errors.push("multi needs at least 1 correct answer");
+    if (answers.length + distractors.length < 2) errors.push("multi needs at least 2 options total");
   } else if (kind === "flash") {
     if (typeof r.answer !== "string" || !r.answer.trim()) errors.push("answer missing");
   } else if (kind === "cloze") {
@@ -598,9 +604,13 @@ export function ImportView() {
             question: kind === "cloze" ? String(r.raw.question || r.raw.clozeText || "") : String(r.raw.question || ""),
             answer: (kind === "mcq" || kind === "flash") ? String(r.raw.answer || "") : "",
             distractors:
-              kind === "mcq" && Array.isArray(r.raw.distractors)
+              (kind === "mcq" || kind === "multi") && Array.isArray(r.raw.distractors)
                 ? (r.raw.distractors as unknown[]).map(String)
                 : [],
+            answers:
+              kind === "multi" && Array.isArray(r.raw.answers)
+                ? (r.raw.answers as unknown[]).map(String)
+                : undefined,
             statements:
               kind === "tf-sort" && Array.isArray(r.raw.statements)
                 ? (r.raw.statements as Array<{ text: string; isTrue: boolean }>).map((s) => ({
@@ -951,6 +961,7 @@ export function ImportView() {
                             r.raw.kind === "flash" && "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300",
                             r.raw.kind === "cloze" && "bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300",
                             r.raw.kind === "match" && "bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300",
+                            r.raw.kind === "multi" && "bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300",
                             (!r.raw.kind || r.raw.kind === "mcq") && "bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300",
                           ].filter(Boolean).join(" ")}
                         >
@@ -970,6 +981,7 @@ export function ImportView() {
                         {r.raw.kind === "flash" && `→ ${String(r.raw.answer || "—")}`}
                         {r.raw.kind === "cloze" && `→ ${String(r.raw.clozeText || "—")}`}
                         {r.raw.kind === "match" && `${Array.isArray(r.raw.pairs) ? r.raw.pairs.length : 0} pair${(Array.isArray(r.raw.pairs) ? r.raw.pairs.length : 0) === 1 ? "" : "s"}`}
+                        {r.raw.kind === "multi" && `→ ${Array.isArray(r.raw.answers) ? r.raw.answers.length : 0} correct`}
                         {(!r.raw.kind || r.raw.kind === "mcq") && `→ ${String(r.raw.answer || "—")}`}
                       </div>
                       {tagList.length > 0 && (

@@ -1,5 +1,5 @@
-import { expect, test } from "vitest";
-import { draftToCard } from "../src/content/overlay/fields";
+import { expect, test, vi } from "vitest";
+import { draftToCard, renderFields } from "../src/content/overlay/fields";
 
 test("draftToCard builds a POST body with source", () => {
   const body = draftToCard(
@@ -33,7 +33,6 @@ test("draftToCard sets clozeText (not question) for cloze cards", () => {
     undefined,
     undefined,
   );
-  // The /api/cards cloze branch requires body.clozeText; question is derived from it.
   expect(body.clozeText).toBe("The capital is ==Paris==.");
 });
 
@@ -54,4 +53,44 @@ test("draftToCard carries kind-specific fields (tf-sort statements)", () => {
     undefined,
   );
   expect(body).toMatchObject({ kind: "tf-sort", statements: [{ text: "x", isTrue: true }] });
+});
+
+test("renderFields MCQ options list and MCQ-to-Multi promotion", () => {
+  const root = document.createElement("div");
+  document.body.appendChild(root);
+
+  const draft = {
+    kind: "mcq" as const,
+    question: "Which of these are protocols?",
+    answer: "TCP",
+    distractors: ["HTTP", "PNG", "JPEG"],
+    tags: ["network"],
+    explanation: "TCP and HTTP are protocols, others are formats.",
+    hint: "",
+  };
+
+  const onKindChange = vi.fn();
+  const fields = renderFields("mcq", draft, root, root, []);
+
+  // Verify options count
+  const optionRows = root.querySelectorAll(".option-row");
+  expect(optionRows.length).toBe(4);
+
+  // Check correct option toggle button status
+  const toggleBtns = root.querySelectorAll(".toggle-correct-btn");
+  expect(toggleBtns[0].classList.contains("correct")).toBe(true);
+  expect(toggleBtns[1].classList.contains("correct")).toBe(false);
+
+  // Toggle second correct answer (index 1) -> now changes selection in MCQ mode (radio behavior) without promoting
+  const btn1 = toggleBtns[1] as HTMLButtonElement;
+  btn1.click();
+
+  expect(onKindChange).not.toHaveBeenCalled();
+  
+  const updatedToggleBtns = root.querySelectorAll(".toggle-correct-btn");
+  expect(updatedToggleBtns[0].classList.contains("correct")).toBe(false);
+  expect(updatedToggleBtns[1].classList.contains("correct")).toBe(true);
+
+  // Cleanup
+  root.remove();
 });

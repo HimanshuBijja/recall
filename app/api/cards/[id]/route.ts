@@ -23,13 +23,49 @@ export async function PUT(
   if (error) {
     return Response.json({ error }, { status: 400 });
   }
+ 
+  const tags = await readDb<Tag>("tags.json");
+  const tagByName = new Map(tags.map((t) => [t.name.toLowerCase(), t.id]));
+  const tagIdsSet = new Set(tags.map((t) => t.id));
+  const resolvedTagIds: string[] = [];
+  let tagsChanged = false;
+ 
+  for (const tInput of parsedCard!.tags) {
+    const trimmed = tInput.trim();
+    if (!trimmed) continue;
+    if (tagIdsSet.has(trimmed)) {
+      resolvedTagIds.push(trimmed);
+      continue;
+    }
+    const lowerName = trimmed.toLowerCase();
+    const existingId = tagByName.get(lowerName);
+    if (existingId) {
+      resolvedTagIds.push(existingId);
+    } else {
+      const newTag: Tag = {
+        id: crypto.randomUUID(),
+        name: trimmed,
+        parents: [],
+      };
+      tags.push(newTag);
+      tagByName.set(lowerName, newTag.id);
+      tagIdsSet.add(newTag.id);
+      resolvedTagIds.push(newTag.id);
+      tagsChanged = true;
+    }
+  }
+ 
+  if (tagsChanged) {
+    await writeDb("tags.json", tags);
+  }
 
   const merged: Card = {
     ...parsedCard!,
+    tags: resolvedTagIds,
     id: cards[idx].id,
     createdAt: cards[idx].createdAt,
   };
-
+ 
   cards[idx] = merged;
   await writeDb("cards.json", cards);
   return Response.json(cards[idx]);

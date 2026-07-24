@@ -2,6 +2,19 @@
 
 Newest first.
 
+## 2026-07-25 — Modularized Extension Overlay & Fixed AI Changes Diff Bug
+- **Modularized Overlay Codebase**: Extracted CSS styles into `styles.ts` and AI selection / global editor logic into `ai.ts`, reducing the lines of code in `overlay.ts` significantly (from ~1100 to ~150 lines).
+- **Fixed AI Changes Rendering Bug**: Resolved the layout issue where diff overlay blocks did not render or appeared squashed inside option, statement, and pair rows. Applied `display: none` on targets / `.option-row` wrappers to hide them from the document flow completely while modular changes are previewed, allowing the vertical diff container to render at full width.
+
+## 2026-07-24 — Extension UI Revamp, MCQ/Multi Separation, Single-Tag Prompt, Autocomplete Tag Selector, and Inline Ask AI Editor
+- **Segregation of MCQ & Multi:** Kept MCQ and Multi as distinct card types with separate hotkeys and static badges (avoiding conversion data-loss). MCQ uses radio-button correct checkmarks; Multi uses multi-checkbox checkmarks.
+- **Dark Obsidian UI Theme:** Revamped the entire extension UI styling to feature a high-end dark obsidian developer aesthetic (deep charcoal backgrounds `#121214`/`#18181b`, dark zinc borders `#2e2e33`, and premium pure white `#ffffff` primary action highlights and focus indicator lines, replacing all legacy blue colors). SVG strokes and paths inside global AI sparkle buttons target both tags, but apply width/height properties solely on the outer `<svg>` wrapper to ensure the icon is fully visible and doesn't collapse.
+- **Inline Comparison Diff Overlays:** Replaced separate popover tooltip blocks with clean inline comparison blocks that flow directly inside the form layout, temporarily hiding the raw text fields. Displays original text (red, strikethrough) and suggested text (green) stacked vertically under each other. Uses a defensive `insertBefore` or fallback `appendChild` DOM insertion. At the top-right of the diff block, a modern dark pill `[ ✓ ] [ ✗ ]` offers direct keep/revert operations without any cluttered text labels or outer bodies. Added diagnostic log traces to aid draft value comparisons.
+- **Single-Tag Concept Generation:** Updated `lib/gemini.ts` prompts to instruct Gemini to extract a single tag based on the concept/topic taught in the video title (parsing defensively limits output to 1 tag).
+- **Tag Selector Autocomplete UI:** Created a custom Chip TagSelector in `fields.ts` that fetches all tags via `GET_TAGS` message. Auto-suggests existing matching tags, allows creating a new tag inline with enter/click, and displays them as chips with remove buttons.
+- **Inline Ask AI Text Editor:** Implemented an interactive Google Colab-style floating edit system. Selecting text in any input/textarea overlay field reveals a floating "Ask AI" button. Clicking it displays an extremely minimal input box (textarea that auto-grows up to 3 lines) with a circular up-arrow send button. Shows minimal circular accept (✓) / decline (✗) buttons to replace the selected text range.
+- **Global Ask AI Card Editor:** Added a sparkle SVG button in the top-right actions header. Clicking it opens a modern pill-like card prompt container matching the inline selection style (single-row rounded wrapper, auto-growing textarea up to 3 lines, and circular send button). Offers global Decline All / Accept All controls.
+
 ## 2026-07-24 — YouTube capture extension + capture backend, analytics fixes, import upgrades
 Branch: `master` (built by 4 parallel worktree subagents, reviewed + merged).
 

@@ -11,7 +11,7 @@ test("matchShortcut parses modifiers + key", () => {
   expect(matchShortcut(key({ altKey: true, shiftKey: true, key: "f" }), "Alt+Shift+Q")).toBe(false);
 });
 
-test("defaults cover all five kinds", () => {
-  expect(Object.keys(DEFAULT_SETTINGS.kinds).sort()).toEqual(["cloze", "flash", "match", "mcq", "tf-sort"]);
+test("defaults cover all six kinds", () => {
+  expect(Object.keys(DEFAULT_SETTINGS.kinds).sort()).toEqual(["cloze", "flash", "match", "mcq", "multi", "tf-sort"]);
   expect(DEFAULT_SETTINGS.kinds.mcq.shortcut).toBe("Alt+Shift+Q");
 });

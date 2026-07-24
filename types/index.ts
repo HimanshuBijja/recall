@@ -1,7 +1,7 @@
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 export type Confidence = 1 | 2 | 3;
 
-export type CardKind = "mcq" | "tf-sort" | "flash" | "cloze" | "match";
+export type CardKind = "mcq" | "tf-sort" | "flash" | "cloze" | "match" | "multi";
 
 export interface TfStatement {
   text: string;
@@ -28,6 +28,7 @@ export interface CardSource {
 /**
  * A flashcard. Kinds:
  * - "mcq": single correct answer + 3 distractors.
+ * - "multi": multiple correct answers + distractors; scored all-or-nothing.
  * - "tf-sort": user sorts each `statements[]` entry into True/False.
  * - "flash": self-graded swipe card (question/answer).
  * - "cloze": fill in the blank ==clozeText==.
@@ -39,6 +40,8 @@ export interface Card {
   question: string;
   answer: string;
   distractors: string[];
+  /** `multi` only: the correct options (>=1). Wrong options live in `distractors`. */
+  answers?: string[];
   statements?: TfStatement[];
   clozeText?: string;
   pairs?: MatchPair[];
@@ -89,6 +92,15 @@ export interface Group {
   id: string;
   name: string;
   tagIds: string[];
+  createdAt: string;
+  videoId?: string;
+  videoUrl?: string;
+}
+
+export interface Subject {
+  id: string;
+  name: string;
+  groupIds: string[];
   createdAt: string;
 }
 

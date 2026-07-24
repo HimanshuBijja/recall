@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { selectPool } from "@/lib/session-pool";
 import { useSwipe } from "@/hooks/useSwipe";
 import { parseCloze, gradeCloze } from "@/lib/cloze";
+import { gradeMulti } from "@/lib/multi";
 import { Skeleton } from "@/components/Skeleton";
 import { CardFrame } from "@/components/CardFrame";
 
@@ -37,6 +38,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const params = useSearchParams();
   const tagsParam = params.get("tags") ?? "";
   const idsParam = params.get("ids") ?? "";
+  const videoIdParam = params.get("videoId") ?? "";
   const shuffle = params.get("shuffle") !== "false";
   const minDiff = Number(params.get("min") ?? 1);
   const maxDiff = Number(params.get("max") ?? 5);
@@ -64,14 +66,18 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         pool = [];
       }
     } else {
-      const expanded = descendantTagIds(tags, selectedTagIds);
-      pool = selectPool(cards, {
-        ids: idList.length ? idList : undefined,
-        tagIds: selectedTagIds,
-        expanded,
-        minDiff,
-        maxDiff,
-      });
+      if (videoIdParam) {
+        pool = cards.filter((c) => c.source?.videoId === videoIdParam);
+      } else {
+        const expanded = descendantTagIds(tags, selectedTagIds);
+        pool = selectPool(cards, {
+          ids: idList.length ? idList : undefined,
+          tagIds: selectedTagIds,
+          expanded,
+          minDiff,
+          maxDiff,
+        });
+      }
     }
     const ordered = shuffle ? shuffleArr(pool) : pool;
     return ordered.map((card) => {
@@ -80,9 +86,12 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         : [];
       return {
         card,
-        options: (card.kind === "tf-sort" || card.kind === "flash" || card.kind === "cloze" || card.kind === "match")
-          ? []
-          : shuffleArr([card.answer, ...card.distractors]),
+        options:
+          card.kind === "tf-sort" || card.kind === "flash" || card.kind === "cloze" || card.kind === "match"
+            ? []
+            : card.kind === "multi"
+            ? shuffleArr([...(card.answers ?? []), ...card.distractors])
+            : shuffleArr([card.answer, ...card.distractors]),
         statementOrder,
       };
     });
@@ -114,6 +123,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const [matchedPairs, setMatchedPairs] = useState<Set<number>>(new Set());
   const [matchMistakes, setMatchMistakes] = useState(0);
   const [wrongPair, setWrongPair] = useState<[number, number] | null>(null);
+  const [multiPicked, setMultiPicked] = useState<Set<string>>(new Set());
+  const [multiSubmitted, setMultiSubmitted] = useState(false);
   const [leftOrder, setLeftOrder] = useState<number[]>([]);
   const [rightOrder, setRightOrder] = useState<number[]>([]);
 
@@ -140,9 +151,12 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             : [];
           return {
             card,
-            options: (card.kind === "tf-sort" || card.kind === "flash" || card.kind === "cloze" || card.kind === "match")
-              ? []
-              : shuffleArr([card.answer, ...card.distractors]),
+            options:
+              card.kind === "tf-sort" || card.kind === "flash" || card.kind === "cloze" || card.kind === "match"
+                ? []
+                : card.kind === "multi"
+                ? shuffleArr([...(card.answers ?? []), ...card.distractors])
+                : shuffleArr([card.answer, ...card.distractors]),
             statementOrder,
           };
         });
@@ -190,6 +204,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const isFlash = current?.card.kind === "flash";
   const isCloze = current?.card.kind === "cloze";
   const isMatch = current?.card.kind === "match";
+  const isMulti = current?.card.kind === "multi";
+  const multiCorrect = isMulti && gradeMulti(current!.card.answers ?? [], Array.from(multiPicked));
   const tfStatements = isTfSort ? current.card.statements! : [];
   const tfAllAssigned =
     isTfSort && tfStatements.every((_, i) => tfAssignments[i] === true || tfAssignments[i] === false);
@@ -210,7 +226,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const matchAllMatched = isMatch && current?.card.pairs && matchedPairs.size === current.card.pairs.length;
   const matchAllCorrect = isMatch && matchMistakes === 0;
 
-  const answered = isTfSort ? tfSubmitted : isFlash ? flipped : isCloze ? clozeSubmitted : isMatch ? !!matchAllMatched : picked !== null;
+  const answered = isTfSort ? tfSubmitted : isFlash ? flipped : isCloze ? clozeSubmitted : isMatch ? !!matchAllMatched : isMulti ? multiSubmitted : picked !== null;
 
   // Reset per-card state on advance.
   useEffect(() => {
@@ -231,6 +247,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     setMatchedPairs(new Set());
     setMatchMistakes(0);
     setWrongPair(null);
+    setMultiPicked(new Set());
+    setMultiSubmitted(false);
 
     if (current?.card.kind === "match" && current.card.pairs) {
       const n = current.card.pairs.length;
@@ -409,6 +427,31 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             e.preventDefault();
             recordAndAdvance(1, "__skipped__");
           }
+        } else if (isMulti) {
+          if (e.key >= "1" && e.key <= "9") {
+            const i = Number(e.key) - 1;
+            if (i < current.options.length) {
+              e.preventDefault();
+              const opt = current.options[i];
+              setMultiPicked((prev) => {
+                const n = new Set(prev);
+                if (n.has(opt)) n.delete(opt); else n.add(opt);
+                return n;
+              });
+            }
+          } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (multiPicked.size > 0) setMultiSubmitted(true);
+          } else if (e.key.toLowerCase() === "h") {
+            if (current.card.hint) {
+              e.preventDefault();
+              setHintShown((s) => !s);
+            }
+          } else if (e.key.toLowerCase() === "s") {
+            e.preventDefault();
+            if (multiPicked.size > 0) setMultiSubmitted(true);
+            else recordAndAdvance(1, "__skipped__");
+          }
         } else if (e.key >= "1" && e.key <= "4") {
           const i = Number(e.key) - 1;
           if (i < current.options.length) {
@@ -442,6 +485,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             recordAndAdvance(Number(e.key) as Confidence, "", clozeAllCorrect);
           } else if (isMatch) {
             recordAndAdvance(Number(e.key) as Confidence, "", matchAllCorrect);
+          } else if (isMulti) {
+            recordAndAdvance(Number(e.key) as Confidence, "", multiCorrect);
           } else if (picked) {
             recordAndAdvance(Number(e.key) as Confidence, picked);
           }
@@ -450,7 +495,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current, picked, answered, isTfSort, tfAllCorrect, tfAssignments, tfFocus, recordAndAdvance, isFlash, flipped, isCloze, clozeData, clozeInputs, clozeAllCorrect, isMatch, matchAllCorrect]);
+  }, [current, picked, answered, isTfSort, tfAllCorrect, tfAssignments, tfFocus, recordAndAdvance, isFlash, flipped, isCloze, clozeData, clozeInputs, clozeAllCorrect, isMatch, matchAllCorrect, isMulti, multiPicked, multiCorrect]);
 
   if (dueMode && prepared.length === 0) {
     return (
@@ -548,7 +593,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
       {/* Question card */}
       <div
         key={idx}
-        className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 bg-white dark:bg-zinc-900 space-y-5 animate-in fade-in duration-200"
+        className="rounded-xl border border-border p-4 sm:p-6 bg-zinc-950/20 space-y-5 animate-in fade-in duration-200"
       >
         {!isFlash && !isCloze && !isMatch && (
           <h2 className="text-base sm:text-xl font-medium leading-relaxed">
@@ -875,6 +920,66 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
               </button>
             )}
           </div>
+        ) : isMulti ? (
+          <div className="space-y-3">
+            <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">
+              Select all that apply
+            </p>
+            <div className="grid sm:grid-cols-2 gap-2 sm:gap-2.5">
+              {current.options.map((opt, i) => {
+                const isCorrect = (current.card.answers ?? []).includes(opt);
+                const isPicked = multiPicked.has(opt);
+                const showResult = multiSubmitted;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => {
+                      if (multiSubmitted) return;
+                      setMultiPicked((prev) => {
+                        const n = new Set(prev);
+                        if (n.has(opt)) n.delete(opt); else n.add(opt);
+                        return n;
+                      });
+                    }}
+                    disabled={showResult}
+                    className={[
+                      "group text-left px-4 py-3 rounded-lg border transition-all flex items-start gap-3",
+                      !showResult && isPicked && "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 ring-2 ring-indigo-200 dark:ring-indigo-900",
+                      !showResult && !isPicked && "border-zinc-300 dark:border-zinc-700 hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20",
+                      showResult && isCorrect && "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60",
+                      showResult && !isCorrect && isPicked && "border-rose-500 bg-rose-50 dark:bg-rose-950/60",
+                      showResult && !isCorrect && !isPicked && "border-zinc-200 dark:border-zinc-800 opacity-50",
+                    ].filter(Boolean).join(" ")}
+                  >
+                    <span
+                      className={[
+                        "shrink-0 w-6 h-6 inline-flex items-center justify-center rounded border text-xs font-mono font-semibold",
+                        !showResult && isPicked && "bg-indigo-600 border-indigo-600 text-white",
+                        !showResult && !isPicked && "border-zinc-300 dark:border-zinc-600 text-transparent",
+                        showResult && isCorrect && "bg-emerald-600 border-emerald-600 text-white",
+                        showResult && !isCorrect && isPicked && "bg-rose-600 border-rose-600 text-white",
+                        showResult && !isCorrect && !isPicked && "border-zinc-300 dark:border-zinc-700 text-transparent",
+                      ].filter(Boolean).join(" ")}
+                    >
+                      ✓
+                    </span>
+                    <span className="flex-1">{opt}</span>
+                    <kbd className="shrink-0 text-[10px] text-zinc-400 font-mono">{i + 1}</kbd>
+                  </button>
+                );
+              })}
+            </div>
+            {!multiSubmitted && (
+              <button
+                type="button"
+                onClick={() => setMultiSubmitted(true)}
+                disabled={multiPicked.size === 0}
+                className="w-full px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium transition-colors"
+              >
+                Submit ({multiPicked.size} selected)
+              </button>
+            )}
+          </div>
         ) : (
           <div className="grid sm:grid-cols-2 gap-2 sm:gap-2.5">
             {current.options.map((opt, i) => {
@@ -945,6 +1050,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             ? clozeAllCorrect
             : isMatch
             ? matchAllCorrect
+            : isMulti
+            ? multiCorrect
             : picked === current.card.answer;
           const tfCorrectCount = isTfSort
             ? tfStatements.filter((s, i) => tfAssignments[i] === s.isTrue).length
@@ -1012,6 +1119,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                         ? recordAndAdvance(c, "", clozeAllCorrect)
                         : isMatch
                         ? recordAndAdvance(c, "", matchAllCorrect)
+                        : isMulti
+                        ? recordAndAdvance(c, "", multiCorrect)
                         : recordAndAdvance(c, picked!)
                     }
                     disabled={submitting}
@@ -1062,6 +1171,10 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             ) : isMatch ? (
               <span>
                 Tap pairs to match
+              </span>
+            ) : isMulti ? (
+              <span>
+                <Kbd>1</Kbd>–<Kbd>9</Kbd> toggle · <Kbd>Enter</Kbd> submit
               </span>
             ) : (
               <span>

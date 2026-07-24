@@ -42,6 +42,12 @@ export function CardForm({ initial, tags }: Props) {
   const [distractors, setDistractors] = useState<string[]>(
     initial?.distractors ?? ["", "", ""]
   );
+  const [answers, setAnswers] = useState<string[]>(
+    initial?.answers && initial.answers.length > 0 ? initial.answers : ["", ""]
+  );
+  const [multiDistractors, setMultiDistractors] = useState<string[]>(
+    initial?.kind === "multi" ? (initial.distractors ?? []) : [""]
+  );
   const [statements, setStatements] = useState<TfStatement[]>(
     initial?.statements && initial.statements.length > 0
       ? initial.statements
@@ -97,6 +103,11 @@ export function CardForm({ initial, tags }: Props) {
       if (!answer.trim()) e.answer = "Answer is required";
       if (distractors.filter((d) => d.trim()).length !== 3)
         e.distractors = "Exactly 3 distractors required";
+    } else if (kind === "multi") {
+      const filledAnswers = answers.filter((a) => a.trim());
+      const filledDistractors = multiDistractors.filter((d) => d.trim());
+      if (filledAnswers.length < 1) e.answers = "At least 1 correct answer required";
+      else if (filledAnswers.length + filledDistractors.length < 2) e.answers = "At least 2 options total required";
     } else if (kind === "tf-sort") {
       const filled = statements.filter((s) => s.text.trim());
       if (filled.length < 2) e.statements = "At least 2 statements required";
@@ -147,7 +158,14 @@ export function CardForm({ initial, tags }: Props) {
         kind,
         question: kind === "cloze" ? (question.trim() || clozeText.trim()) : question.trim(),
         answer: (kind === "mcq" || kind === "flash") ? answer.trim() : "",
-        distractors: kind === "mcq" ? distractors.map((d) => d.trim()) : [],
+        distractors:
+          kind === "mcq"
+            ? distractors.map((d) => d.trim())
+            : kind === "multi"
+            ? multiDistractors.map((d) => d.trim()).filter(Boolean)
+            : [],
+        answers:
+          kind === "multi" ? answers.map((a) => a.trim()).filter(Boolean) : undefined,
         statements:
           kind === "tf-sort"
             ? statements
@@ -194,6 +212,7 @@ export function CardForm({ initial, tags }: Props) {
         <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-300 dark:border-zinc-700 p-0.5 bg-zinc-50 dark:bg-zinc-900 w-fit">
           {([
             ["mcq", "Multiple choice"],
+            ["multi", "Multiple answers"],
             ["tf-sort", "True / False sort"],
             ["flash", "Flashcard"],
             ["cloze", "Cloze deletion"],
@@ -216,6 +235,7 @@ export function CardForm({ initial, tags }: Props) {
         </div>
         <p className="text-xs text-zinc-500 mt-1.5">
           {kind === "mcq" && "One question, one correct answer, three distractors."}
+          {kind === "multi" && "One question, several correct answers — scored all-or-nothing."}
           {kind === "tf-sort" && "User sorts each statement into True / False — scored all-or-nothing."}
           {kind === "flash" && "Self-graded flip card (question on front, answer on back) with swipe."}
           {kind === "cloze" && "Text with blanks created using ==word== syntax. All blanks must be correct."}
@@ -253,7 +273,7 @@ export function CardForm({ initial, tags }: Props) {
               className={inputCls}
             />
           </Field>
-
+ 
           <Field label="Distractors (3 wrong answers)" error={errors.distractors}>
             <div className="space-y-2">
               <input
@@ -292,6 +312,82 @@ export function CardForm({ initial, tags }: Props) {
                 onKeyDown={advance(5)}
                 className={inputCls}
               />
+            </div>
+          </Field>
+        </>
+      )}
+
+      {kind === "multi" && (
+        <>
+          <Field label="Correct answers (tap + adds more)" error={errors.answers}>
+            <div className="space-y-2">
+              {answers.map((a, i) => (
+                <div key={i} className="flex items-stretch gap-2">
+                  <span className="flex items-center px-2 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-semibold shrink-0">
+                    ✓
+                  </span>
+                  <input
+                    value={a}
+                    onChange={(e) => {
+                      const n = [...answers];
+                      n[i] = e.target.value;
+                      setAnswers(n);
+                    }}
+                    placeholder={`Correct answer ${i + 1}`}
+                    className={inputCls + " flex-1"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { if (answers.length > 1) setAnswers(answers.filter((_, j) => j !== i)); }}
+                    disabled={answers.length <= 1}
+                    className="shrink-0 px-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:text-rose-600 hover:border-rose-300 disabled:opacity-40"
+                    aria-label={`Remove correct answer ${i + 1}`}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setAnswers([...answers, ""])}
+                className="text-xs px-2.5 py-1.5 rounded-md border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-emerald-400 hover:text-emerald-600"
+              >
+                + Add correct answer
+              </button>
+            </div>
+          </Field>
+ 
+          <Field label="Distractors (wrong options)">
+            <div className="space-y-2">
+              {multiDistractors.map((d, i) => (
+                <div key={i} className="flex items-stretch gap-2">
+                  <input
+                    value={d}
+                    onChange={(e) => {
+                      const n = [...multiDistractors];
+                      n[i] = e.target.value;
+                      setMultiDistractors(n);
+                    }}
+                    placeholder={`Distractor ${i + 1}`}
+                    className={inputCls + " flex-1"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMultiDistractors(multiDistractors.filter((_, j) => j !== i))}
+                    className="shrink-0 px-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:text-rose-600 hover:border-rose-300"
+                    aria-label={`Remove distractor ${i + 1}`}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setMultiDistractors([...multiDistractors, ""])}
+                className="text-xs px-2.5 py-1.5 rounded-md border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-indigo-400 hover:text-indigo-600"
+              >
+                + Add distractor
+              </button>
             </div>
           </Field>
         </>

@@ -5,6 +5,7 @@ export interface CardDraft {
   question: string;
   answer: string;
   distractors: string[];
+  answers?: string[];
   statements?: { text: string; isTrue: boolean }[];
   pairs?: { left: string; right: string }[];
   clozeText?: string;

@@ -7,44 +7,137 @@
       * { box-sizing: border-box; }
       body {
         margin: 0;
-        width: 260px;
-        font-family: Roboto, Arial, sans-serif;
-        background: #0f0f0f;
-        color: #f1f1f1;
+        width: 320px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #0f172a;
+        color: #f8fafc;
       }
-      main { padding: 14px 16px; }
-      h1 { font-size: 14px; margin: 0 0 10px; }
+      main { padding: 18px; }
+      h1 {
+        font-size: 11px;
+        font-weight: 700;
+        margin: 0 0 14px;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      #kinds {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
       .kind-row {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 6px 0;
-        border-bottom: 1px solid #262626;
+        gap: 10px;
+        padding: 8px 10px;
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 4px;
+        transition: all 0.15s ease;
       }
-      .kind-row:last-child { border-bottom: none; }
-      .kind-name { font-size: 13px; text-transform: capitalize; }
-      .actions { display: flex; gap: 8px; margin-top: 14px; }
-      button {
+      .kind-row:hover {
+        border-color: #38bdf8;
+      }
+      .kind-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .kind-name {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #f8fafc;
+      }
+      .kind-desc {
+        font-size: 10px;
+        color: #94a3b8;
+        margin-top: 2px;
+      }
+      .capture-btn {
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        font-size: 10px;
+        font-weight: 700;
+        background: #38bdf8;
+        color: #0f172a;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        transition: background 0.15s ease;
+      }
+      .capture-btn:hover { background: #0ea5e9; }
+      .toggle-label {
+        position: relative;
+        display: inline-block;
+        width: 36px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+      .toggle-label input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        transition: .2s;
+        border-radius: 4px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 12px;
+        width: 12px;
+        left: 3px;
+        bottom: 3px;
+        background-color: #94a3b8;
+        transition: .2s;
+        border-radius: 2px;
+      }
+      input:checked + .slider {
+        background-color: #334155;
+        border-color: #38bdf8;
+      }
+      input:checked + .slider:before {
+        transform: translateX(16px);
+        background-color: #38bdf8;
+      }
+      .actions { display: flex; gap: 8px; margin-top: 18px; border-top: 1px solid #334155; padding-top: 14px; }
+      .actions button {
         flex: 1;
         cursor: pointer;
         border: none;
-        border-radius: 6px;
-        padding: 8px 10px;
-        font-size: 12px;
-        font-weight: 600;
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        transition: all 0.15s ease;
       }
-      .open-recall { background: #3ea6ff; color: #000; }
-      .settings { background: #2b2b2b; color: #f1f1f1; border: 1px solid #3f3f3f; }
+      .open-recall { background: #38bdf8; color: #0f172a; }
+      .open-recall:hover { background: #0ea5e9; }
+      .settings { background: #1e293b; color: #f8fafc; border: 1px solid #334155; }
+      .settings:hover { background: #334155; }
     </style>
   </head>
   <body>
     <main>
-      <h1>Show markers by kind</h1>
+      <h1>Capture Card / Show Markers</h1>
       <div id="kinds"></div>
       <div class="actions">
-        <button id="openRecall" class="open-recall" type="button">Open Recall</button>
+        <button id="openRecall" class="open-recall" type="button">Open Dashboard</button>
         <button id="openSettings" class="settings" type="button">Settings</button>
       </div>
+      <button id="attemptVideo" class="attempt-video" type="button" style="background:#1e293b; color:#f8fafc; border:1px solid #38bdf8; display:none; margin-top:8px; width:100%; cursor:pointer; border-radius:4px; padding:8px 12px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; text-align:center; transition:all 0.15s ease;">Attempt Video Questions</button>
     </main>
     <script type="module" src="./popup.ts"></script>
   </body>

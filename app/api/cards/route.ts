@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
-import type { Card } from "@/types";
+import type { Card, Tag, Group } from "@/types";
 
 import { buildCardFromInput } from "./validate";
 
@@ -28,13 +28,69 @@ export async function POST(req: NextRequest) {
   if (error) {
     return Response.json({ error }, { status: 400 });
   }
+
+  const tags = await readDb<Tag>("tags.json");
+  const tagByName = new Map(tags.map((t) => [t.name?.toLowerCase() || "", t.id]));
+  const tagIdsSet = new Set(tags.map((t) => t.id));
+  const resolvedTagIds: string[] = [];
+  let tagsChanged = false;
+
+  for (const tInput of parsedCard!.tags) {
+    const trimmed = tInput.trim();
+    if (!trimmed) continue;
+    if (tagIdsSet.has(trimmed)) {
+      resolvedTagIds.push(trimmed);
+      continue;
+    }
+    const lowerName = trimmed.toLowerCase();
+    const existingId = tagByName.get(lowerName);
+    if (existingId) {
+      resolvedTagIds.push(existingId);
+    } else {
+      const newTag: Tag = {
+        id: crypto.randomUUID(),
+        name: trimmed,
+        parents: [],
+      };
+      tags.push(newTag);
+      tagByName.set(lowerName, newTag.id);
+      tagIdsSet.add(newTag.id);
+      resolvedTagIds.push(newTag.id);
+      tagsChanged = true;
+    }
+  }
+
+  if (tagsChanged) {
+    await writeDb("tags.json", tags);
+  }
+
   const cards = await readDb<Card>("cards.json");
   const card: Card = {
     ...parsedCard!,
+    tags: resolvedTagIds,
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
   };
   cards.push(card);
   await writeDb("cards.json", cards);
+  // Auto-group by video if videoId is present
+  if (card.source?.videoId) {
+    const groups = await readDb<Group>("groups.json");
+    const videoId = card.source.videoId;
+    const groupExists = groups.some((g) => g.videoId === videoId);
+    if (!groupExists) {
+      const newGroup: Group = {
+        id: crypto.randomUUID(),
+        name: card.source.title || "Video Group",
+        tagIds: [],
+        createdAt: new Date().toISOString(),
+        videoId: videoId,
+        videoUrl: card.source.url,
+      };
+      groups.push(newGroup);
+      await writeDb("groups.json", groups);
+    }
+  }
+
   return Response.json(card, { status: 201 });
 }

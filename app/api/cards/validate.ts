@@ -88,6 +88,30 @@ export function buildCardFromInput(input: unknown): { card?: Omit<Card, "id" | "
     };
   }
 
+  if (kind === "multi") {
+    const answers = Array.isArray(body.answers)
+      ? body.answers.map((s) => String(s ?? "").trim()).filter(Boolean)
+      : [];
+    const distractors = Array.isArray(body.distractors)
+      ? body.distractors.map((s) => String(s ?? "").trim()).filter(Boolean)
+      : [];
+    if (answers.length < 1) {
+      return { error: "multi cards need at least 1 correct answer" };
+    }
+    if (answers.length + distractors.length < 2) {
+      return { error: "multi cards need at least 2 options total" };
+    }
+    return {
+      card: {
+        ...baseCard,
+        question: String(body.question).trim(),
+        answer: "",
+        answers,
+        distractors,
+      },
+    };
+  }
+
   if (kind === "tf-sort") {
     const statements = normalizeStatements(body.statements);
     if (statements.length < 2) {

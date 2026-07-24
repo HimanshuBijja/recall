@@ -198,6 +198,18 @@ export function ResultView() {
                         </li>
                       ))}
                     </ul>
+                  ) : card.kind === "multi" && card.answers ? (
+                    <div className="text-xs flex flex-wrap gap-1 mt-1">
+                      <span className="text-zinc-500 mr-1">Correct:</span>
+                      {card.answers.map((a, j) => (
+                        <span
+                          key={j}
+                          className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-medium border border-emerald-200 dark:border-emerald-900"
+                        >
+                          {a}
+                        </span>
+                      ))}
+                    </div>
                   ) : (
                     <div className="text-xs">
                       <span className="text-emerald-600 dark:text-emerald-400">

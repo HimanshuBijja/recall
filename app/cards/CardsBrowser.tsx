@@ -24,6 +24,7 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
   const [exportPayload, setExportPayload] = useState<{
     title: string; filename: string; payload: unknown;
   } | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
@@ -102,10 +103,18 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Cards</h1>
-          <p className="text-sm text-zinc-500">{filtered.length} of {cards.length}</p>
+          <div className="flex items-center gap-3 text-xs tracking-widest text-muted uppercase font-semibold mb-2">
+            <span className="w-6 h-[2px] bg-accent" />
+            Knowledge Archive
+          </div>
+          <h1 className="cinematic-headline text-[5vw] md:text-[3.5vw] sm:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text="CARDS">
+            CARDS
+          </h1>
+          <p className="text-sm text-muted mt-2 uppercase tracking-wider">
+            {filtered.length} of {cards.length} cards listed in library.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {cards.length > 0 && (
@@ -119,19 +128,21 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
               }
               title="Export all cards"
               aria-label="Export all cards"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 whitespace-nowrap"
+              className="inline-flex items-center justify-center px-4 py-2 border border-border hover:bg-zinc-900 text-foreground font-bold text-xs uppercase tracking-widest transition-colors duration-150 rounded-[4px] whitespace-nowrap"
             >
-              <DownloadIcon /> <span className="hidden sm:inline">Export</span>
+              <DownloadIcon /> <span className="ml-1.5 hidden sm:inline">Export</span>
             </button>
           )}
           <Link
             href="/cards/new"
-            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm whitespace-nowrap"
+            className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest transition-colors duration-150 rounded-[4px] whitespace-nowrap"
           >
             + New card
           </Link>
         </div>
       </div>
+
+      <hr className="border-t border-divider my-6" />
 
       {filtered.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
@@ -258,17 +269,18 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                 key={c.id}
                 onClick={() => toggleSelect(c.id)}
                 className={[
-                  "rounded-xl border p-4 bg-white dark:bg-zinc-900 flex flex-col gap-2 cursor-pointer transition-colors",
+                  "rounded-xl border p-4 bg-zinc-950/20 flex flex-col gap-2 cursor-pointer transition-colors relative",
                   sel
                     ? "border-indigo-400 dark:border-indigo-600 ring-2 ring-indigo-200 dark:ring-indigo-900"
                     : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700",
                 ].join(" ")}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap min-w-0">
                     <span
+                      onClick={(e) => { e.stopPropagation(); toggleSelect(c.id); }}
                       className={[
-                        "shrink-0 w-5 h-5 inline-flex items-center justify-center rounded border text-xs",
+                        "shrink-0 w-5 h-5 inline-flex items-center justify-center rounded border text-xs cursor-pointer",
                         sel
                           ? "bg-indigo-600 border-indigo-600 text-white"
                           : "border-zinc-300 dark:border-zinc-700 text-transparent",
@@ -312,16 +324,81 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                         Match
                       </span>
                     )}
-                  </div>
-                  <div className="flex flex-wrap justify-end gap-1">
-                    {c.tags.slice(0, 3).map((tid) => (
+                    {c.kind === "multi" && (
                       <span
-                        key={tid}
-                        className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300"
+                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300"
+                        title="Multiple answers"
                       >
-                        {tagById.get(tid)?.name ?? "?"}
+                        Multi
                       </span>
-                    ))}
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex flex-wrap justify-end gap-1">
+                      {c.tags.slice(0, 3).map((tid) => (
+                        <span
+                          key={tid}
+                          className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300"
+                        >
+                          {tagById.get(tid)?.name ?? "?"}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Actions Menu Trigger */}
+                    <div className="relative">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === c.id ? null : c.id); }}
+                        className="p-1 text-zinc-500 hover:text-indigo-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none cursor-pointer border-0"
+                        aria-label="Actions menu"
+                      >
+                        <span className="font-bold text-sm leading-none block">⋮</span>
+                      </button>
+
+                      {openMenuId === c.id && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }} />
+                          <div className="absolute right-0 top-full mt-1 w-36 rounded-md shadow-lg bg-zinc-900 border border-border py-1 z-20">
+                            <Link
+                              href={`/cards/${c.id}/edit`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-zinc-800 flex items-center gap-2 cursor-pointer border-0 hover:no-underline"
+                            >
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                              Edit
+                            </Link>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMenuId(null);
+                                setExportPayload({
+                                  title: "Export card",
+                                  filename: `card-${c.id.slice(0, 8)}`,
+                                  payload: [exportCard(c, tagById)],
+                                });
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-zinc-800 flex items-center gap-2 cursor-pointer border-0"
+                            >
+                              <DownloadIcon />
+                              Download
+                            </button>
+                            <hr className="border-t border-divider my-1" />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMenuId(null);
+                                del(c.id);
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs text-rose-500 hover:bg-zinc-800 flex items-center gap-2 cursor-pointer border-0"
+                            >
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                              Delete
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="font-medium text-sm flex-1 line-clamp-3">{c.question}</div>
@@ -330,6 +407,7 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                   {c.kind === "flash" && `→ ${c.answer}`}
                   {c.kind === "cloze" && `→ ${(c.clozeText?.match(/==(.+?)==/g)?.length ?? 0)} blank${(c.clozeText?.match(/==(.+?)==/g)?.length ?? 0) === 1 ? "" : "s"}`}
                   {c.kind === "match" && `→ ${(c.pairs?.length ?? 0)} pair${(c.pairs?.length ?? 0) === 1 ? "" : "s"}`}
+                  {c.kind === "multi" && `→ ${(c.answers?.length ?? 0)} correct`}
                   {(!c.kind || c.kind === "mcq") && `→ ${c.answer}`}
                 </div>
                 {c.source?.screenshotUrl && (
@@ -367,35 +445,6 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                     aria-label={c.bookmarked ? "Unbookmark card" : "Bookmark card"}
                   >
                     {c.bookmarked ? "★" : "☆"}
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExportPayload({
-                        title: "Export card",
-                        filename: `card-${c.id.slice(0, 8)}`,
-                        payload: [exportCard(c, tagById)],
-                      });
-                    }}
-                    aria-label="Export card"
-                    title="Export"
-                    className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
-                  >
-                    <DownloadIcon />
-                  </button>
-                  <Link
-                    href={`/cards/${c.id}/edit`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); del(c.id); }}
-                    disabled={deleting === c.id}
-                    className="text-xs text-rose-600 dark:text-rose-400 hover:underline disabled:opacity-50"
-                  >
-                    {deleting === c.id ? "Deleting…" : "Delete"}
                   </button>
                 </div>
               </li>

@@ -5,6 +5,7 @@ import { captureFrame, getPlayerVideo } from "./capture";
 import { renderMarkers } from "./markers";
 import { openOverlay } from "./overlay/overlay";
 import { showToast } from "./toast";
+import { createStatusPill } from "./status";
 
 let settings: Settings | null = null;
 
@@ -42,11 +43,13 @@ async function runCapture(kind: CaptureKind): Promise<void> {
     showToast("Not on a video page", true);
     return;
   }
+  const status = createStatusPill();
+  status.set("capturing");
   let frameDataUrl: string;
   try {
     frameDataUrl = captureFrame(video);
   } catch {
-    showToast("Couldn't capture frame", true);
+    status.set("error", "Couldn't capture frame");
     return;
   }
   const timestamp = video.currentTime;
@@ -63,39 +66,51 @@ async function runCapture(kind: CaptureKind): Promise<void> {
     frameDataUrl,
   };
 
-  const res = await requestDraft(req);
-  if (!res.ok || !res.draft) {
-    showToast(res.error ?? "Draft failed", true);
-    return;
-  }
-
-  const source = { videoId: meta.videoId, url: meta.url, timestamp, channel: meta.channel, title: meta.title };
-  const result = await openOverlay({
-    kind,
-    draft: res.draft,
-    screenshotUrl: res.screenshotUrl,
-    marker: res.marker ?? s.kinds[kind].marker,
-    source,
-    frameDataUrl,
-    onRephrase: async (): Promise<CardDraft> => {
-      const rephrased = await requestDraft(req);
-      return rephrased.draft ?? res.draft!;
-    },
-  });
-
-  if (result.action === "save") {
-    const saveRes = (await chrome.runtime.sendMessage({ type: "SAVE_CARD", card: result.card })) as
-      | { ok: true; card: unknown }
-      | { ok: false; queued: true }
-      | { ok: false; error: string };
-    if (saveRes.ok) {
-      showToast(`✓ Saved ${kind}`);
-      void refreshMarkers();
-    } else if ("queued" in saveRes && saveRes.queued) {
-      showToast("Server offline — queued", true);
-    } else {
-      showToast("Save failed", true);
+  try {
+    status.set("generating");
+    const res = await requestDraft(req);
+    if (!res.ok || !res.draft) {
+      status.set("error", res.error ?? "Draft failed");
+      return;
     }
+
+    status.set("ready");
+    const source = { videoId: meta.videoId, url: meta.url, timestamp, channel: meta.channel, title: meta.title };
+    const result = await openOverlay({
+      kind,
+      draft: res.draft,
+      screenshotUrl: res.screenshotUrl,
+      marker: res.marker ?? s.kinds[kind].marker,
+      source,
+      frameDataUrl,
+      onRephrase: async (): Promise<CardDraft> => {
+        status.set("generating");
+        const rephrased = await requestDraft(req);
+        status.set("ready");
+        return rephrased.draft ?? res.draft!;
+      },
+    });
+
+    if (result.action === "save") {
+      status.set("saving");
+      const saveRes = (await chrome.runtime.sendMessage({ type: "SAVE_CARD", card: result.card })) as
+        | { ok: true; card: unknown }
+        | { ok: false; queued: true }
+        | { ok: false; error: string };
+      if (saveRes.ok) {
+        status.set("saved");
+        void refreshMarkers();
+      } else if ("queued" in saveRes && saveRes.queued) {
+        status.set("queued");
+      } else {
+        const msg = "error" in saveRes ? saveRes.error : "Save failed";
+        status.set("error", msg);
+      }
+    } else {
+      status.remove();
+    }
+  } catch (err) {
+    status.set("error", err instanceof Error ? err.message : "Capture failed");
   }
 }
 
@@ -166,9 +181,10 @@ function showLoadBanner(): void {
   b.textContent = "✓ Recall Capture active";
   b.style.cssText = [
     "position:fixed", "top:12px", "left:50%", "transform:translateX(-50%)",
-    "z-index:2147483647", "padding:8px 16px", "border-radius:8px",
-    "background:#16a34a", "color:#fff", "font:600 13px/1.2 Roboto,Arial,sans-serif",
-    "box-shadow:0 4px 14px rgba(0,0,0,.4)", "pointer-events:none",
+    "z-index:2147483647", "padding:8px 16px", "border-radius:4px",
+    "border:1px solid #334155", "background:#1e293b", "color:#f8fafc",
+    "font:700 11px/1.2 system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+    "text-transform:uppercase", "letter-spacing:0.05em", "pointer-events:none",
   ].join(";");
   (document.body ?? document.documentElement).appendChild(b);
   setTimeout(() => b.remove(), 4000);

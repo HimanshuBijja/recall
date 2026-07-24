@@ -134,9 +134,20 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
 
   return (
     <div className="space-y-4">
-      <section className="space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <h1 className="text-2xl font-bold">Tags</h1>
+      <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+        <div>
+          <div className="flex items-center gap-3 text-xs tracking-widest text-muted uppercase font-semibold mb-2">
+            <span className="w-6 h-[2px] bg-accent" />
+            Taxonomy Engine
+          </div>
+          <h1 className="cinematic-headline text-[5vw] md:text-[3.5vw] sm:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text="TAGS">
+            TAGS
+          </h1>
+          <p className="text-sm text-muted mt-2 uppercase tracking-wider">
+            {tags.length} active tags structured in hierarchy tree.
+          </p>
+        </div>
+        <div>
           {tags.length > 0 && (
             <button
               onClick={() =>
@@ -148,12 +159,15 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
               }
               title="Export all tags"
               aria-label="Export all tags"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800"
+              className="inline-flex items-center justify-center px-4 py-2 border border-border hover:bg-zinc-900 text-foreground font-bold text-xs uppercase tracking-widest transition-colors duration-150 rounded-[4px] whitespace-nowrap"
             >
-              <DownloadIcon /> <span className="hidden sm:inline">Export</span>
+              <DownloadIcon /> <span className="ml-1.5 hidden sm:inline">Export</span>
             </button>
           )}
         </div>
+      </div>
+
+      <hr className="border-t border-divider my-6" />
 
         {visibleTagIds.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
@@ -216,7 +230,7 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
           className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900"
         />
 
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <div className="rounded-xl border border-border bg-zinc-950/20">
           {tags.length === 0 ? (
             <p className="text-sm text-zinc-500 p-4">No tags yet.</p>
           ) : flatFiltered ? (
@@ -297,7 +311,6 @@ export function TagsManager({ initialTags, usage: initialUsage }: Props) {
             </div>
           </div>
         )}
-      </section>
       <ExportDialog
         open={exportPayload !== null}
         title={exportPayload?.title ?? ""}

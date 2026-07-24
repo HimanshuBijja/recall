@@ -14,10 +14,14 @@ export default async function GroupsPage() {
   // shipping all cards to the client.
   const groupCardCounts: Record<string, number> = {};
   for (const g of groups) {
-    const expanded = descendantTagIds(tags, g.tagIds);
-    groupCardCounts[g.id] = cards.filter((c) =>
-      c.tags.some((t) => expanded.has(t))
-    ).length;
+    if (g.videoId) {
+      groupCardCounts[g.id] = cards.filter((c) => c.source?.videoId === g.videoId).length;
+    } else {
+      const expanded = descendantTagIds(tags, g.tagIds);
+      groupCardCounts[g.id] = cards.filter((c) =>
+        c.tags.some((t) => expanded.has(t))
+      ).length;
+    }
   }
 
   return <GroupsManager initialGroups={groups} tags={tags} groupCardCounts={groupCardCounts} />;

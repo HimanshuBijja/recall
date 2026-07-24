@@ -1,6 +1,6 @@
 # 04 — Current State
 
-_Last updated: 2026-07-24_
+_Last updated: 2026-07-25_
 
 ## Branch
 `master`. Everything below is merged and committed (local; **not yet pushed**).
@@ -34,9 +34,16 @@ analytics/import upgrades** (commit `f889715`, built by 4 parallel subagents).
   from unsaved form values. Scheduler reads settings on session save
   (going-forward only). `lib/settings.ts`, `lib/fsrs-preview.ts`.
 - **YouTube capture** (`extension/` MV3 + capture backend): per-kind hotkey
-  captures a video frame → `POST /api/capture` (Gemini drafts a full card + R2
-  stores the frame) → in-page overlay to review/edit → `POST /api/cards` with
-  `Card.source`. Per-kind timeline markers + show/hide filter; full-page options.
+  captures a video frame → `POST /api/capture` (Gemini drafts a card + R2 stores
+  the frame) → in-page overlay to review/edit → `POST /api/cards`. Per-kind
+  timeline markers + filters.
+  * **MCQ & Multi Segregation:** Kept completely separate without conversion switches or data loss. MCQ uses radio-button correct checkmarks; Multi uses multi-checkbox checkmarks.
+  * **Single-Tag Concept Generation:** Gemini prompt in `lib/gemini.ts` extracts exactly 1 tag representing the main topic taught in the video title.
+  * **Extension Tag Selector:** Custom TagSelector chip component in the content overlay fetches tags via `GET_TAGS` and offers autocompletion / dropdown selection on Enter/Tab/Comma/Click or inline tag creation.
+  * **Inline AI Editor:** Google Colab-style floating editing system inside overlay input/textarea fields. Highlights selection with a floating "Ask AI" button. Opens a minimal input box (textarea that grows up to 3 lines) with a circle up-arrow send button. Queries `/api/edit` API route and displays minimal circular accept (✓) / decline (✗) action icons.
+  * **Global AI Editor:** Sparkle SVG button in the top-right of the card overlay. Queries `/api/edit` with the entire card context and user prompt. Replaced separate popover tooltip blocks with clean inline comparison blocks that flow directly inside the form layout, temporarily hiding the raw text fields. Displays original text (red, strikethrough) and suggested text (green) stacked vertically under each other. Uses defensive `insertBefore` or `appendChild` DOM insertion. At the top-right of the diff block, a modern dark pill `[ ✓ ] [ ✗ ]` offers direct keep/revert operations.
+  * **Overlay Code Modularization & Diff Layout Fix:** Split the large `overlay.ts` into `styles.ts` (CSS rules) and `ai.ts` (inline and global AI editing logic). Solved the layout bug where inline modular changes (diff overlays) were not visible or squashed inside horizontal option rows by setting `display: none` on targets / `.option-row` wrappers, allowing the vertical diff container to render at full width.
+  * **UI Theme Revamp:** Refactored popup HTML/CSS, options configuration sheet, content overlays, toast alerts, load banners, and progress pills to match a professional dark obsidian developer layout (backgrounds `#121214`/`#18181b`, borders `#2e2e33`, and premium pure white highlights and focus indicator lines, replacing all legacy blue colors). SVG size properties are placed strictly on outer wrappers to prevent icons collapsing.
   `Card.source` provenance; lazy "Show frame" in Test/Result/Cards. **Extension
   not yet smoke-tested against live Gemini/R2 — user's manual step.**
 - **Analytics**: pure metrics in `lib/analytics.ts`; forecast now local-day
@@ -46,9 +53,9 @@ analytics/import upgrades** (commit `f889715`, built by 4 parallel subagents).
 
 ## Verification (all green as of this update)
 - Recall `npx tsc --noEmit` → clean; `npm run lint` → 0 errors (3 pre-existing
-  warnings); `npx vitest run` → **77 pass** (33 files).
-- Extension `pnpm --dir extension exec tsc --noEmit` → clean; `vitest` → **20
-  pass**; `pnpm --dir extension build` → OK.
+  warnings); `npx vitest run` → **90 pass** (35 files).
+- Extension `pnpm --dir extension exec tsc --noEmit` → clean; `vitest` → **24
+  pass** (8 files); `pnpm build` → OK.
 - Root `tsc`/`eslint`/`vitest` exclude `extension/` + `.claude/` (agent worktrees).
 - `npm run build` not re-run this pass.
 

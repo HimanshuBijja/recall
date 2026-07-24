@@ -31,6 +31,7 @@ export function draftToCard(
   if (draft.kind === "cloze") body.clozeText = draft.clozeText ?? "";
   if (draft.kind === "tf-sort") body.statements = draft.statements ?? [];
   if (draft.kind === "match") body.pairs = draft.pairs ?? [];
+  if (draft.kind === "multi") body.answers = draft.answers ?? [];
   return body;
 }
 
@@ -53,24 +54,44 @@ function el<K extends keyof HTMLElementTagNameMap>(
 }
 
 function textarea(value: string, placeholder: string): HTMLTextAreaElement {
-  const t = el("textarea", { placeholder, rows: "2", style: "width:100%;box-sizing:border-box;" });
+  const t = el("textarea", { placeholder, rows: "2", style: "width:100%;box-sizing:border-box;resize:none;overflow-y:hidden;" });
   t.value = value;
+  const adjust = () => {
+    t.style.height = "auto";
+    t.style.height = `${t.scrollHeight}px`;
+  };
+  t.addEventListener("input", adjust);
+  t.addEventListener("keydown", (e) => {
+    e.stopPropagation();
+  });
+  setTimeout(adjust, 0);
   return t;
 }
 
 function input(value: string, placeholder: string): HTMLInputElement {
   const i = el("input", { type: "text", placeholder, style: "width:100%;box-sizing:border-box;" });
   i.value = value;
+  i.addEventListener("keydown", (e) => {
+    e.stopPropagation();
+  });
   return i;
 }
 
-export function renderFields(kind: CaptureKind, draft: CardDraft, root: HTMLElement): FieldsRoot {
-  root.innerHTML = "";
+export function renderFields(
+  kind: CaptureKind,
+  draft: CardDraft,
+  kindRoot: HTMLElement,
+  metaRoot: HTMLElement,
+  allTags: { id: string; name: string }[] = [],
+): FieldsRoot {
+  kindRoot.innerHTML = "";
+  metaRoot.innerHTML = "";
 
   const questionField = textarea(kind === "cloze" ? (draft.clozeText ?? "") : draft.question, "Question");
-  root.append(el("label", {}, ["Question"]), questionField);
+  questionField.setAttribute("data-field", "question");
+  kindRoot.append(el("label", {}, ["Question"]), questionField);
   if (kind === "cloze") {
-    root.append(el("div", { style: "font-size:11px;opacity:.7;" }, ["Use ==answer== for blanks"]));
+    kindRoot.append(el("div", { style: "font-size:11px;opacity:.7;" }, ["Use ==answer== for blanks"]));
   }
 
   // --- kind-specific body ---
@@ -81,29 +102,130 @@ export function renderFields(kind: CaptureKind, draft: CardDraft, root: HTMLElem
   let statementsContainer: HTMLElement | null = null;
   let pairsContainer: HTMLElement | null = null;
 
-  if (kind === "mcq") {
-    answerField = input(draft.answer, "Correct answer");
-    root.append(el("label", {}, ["Answer"]), answerField);
-    for (let i = 0; i < 3; i++) {
-      const df = input(draft.distractors[i] ?? "", `Distractor ${i + 1}`);
-      distractorFields.push(df);
-      root.append(df);
+  // Options state for MCQ/Multi
+  let initialOptions: { text: string; isCorrect: boolean }[] = [];
+
+  if (kind === "mcq" || kind === "multi") {
+    if (kind === "mcq") {
+      initialOptions.push({ text: draft.answer || "", isCorrect: true });
+      for (const d of draft.distractors || []) {
+        initialOptions.push({ text: d, isCorrect: false });
+      }
+    } else {
+      const correctSet = new Set(draft.answers || []);
+      if (draft.answer && correctSet.size === 0) {
+        correctSet.add(draft.answer);
+      }
+      for (const c of correctSet) {
+        initialOptions.push({ text: c, isCorrect: true });
+      }
+      for (const d of draft.distractors || []) {
+        if (!correctSet.has(d)) {
+          initialOptions.push({ text: d, isCorrect: false });
+        }
+      }
     }
+    while (initialOptions.length < 2) {
+      initialOptions.push({ text: "", isCorrect: false });
+    }
+  }
+
+  const optionsContainer = el("div", { style: "display:flex;flex-direction:column;gap:8px;margin-bottom:8px;" });
+
+  const toggleOption = (idx: number) => {
+    const opt = initialOptions[idx];
+    if (kind === "mcq") {
+      initialOptions.forEach((o, i) => o.isCorrect = (i === idx));
+      renderOptions();
+    } else {
+      opt.isCorrect = !opt.isCorrect;
+      renderOptions();
+    }
+  };
+
+  const renderOptions = () => {
+    optionsContainer.innerHTML = "";
+    initialOptions.forEach((opt, idx) => {
+      const isCorrect = opt.isCorrect;
+      const toggleBtn = el("button", {
+        type: "button",
+        class: `toggle-correct-btn ${isCorrect ? "correct" : ""}`,
+      }, [isCorrect ? "✓" : ""]);
+
+      const textInput = textarea(opt.text, `Option ${idx + 1}`);
+      textInput.setAttribute("data-field", "option");
+      textInput.setAttribute("data-index", String(idx));
+      textInput.style.flex = "1";
+      textInput.addEventListener("input", () => {
+        opt.text = textInput.value;
+      });
+
+      const removeBtn = el("button", {
+        type: "button",
+        style: "background:transparent;color:#B6A596;cursor:pointer;font-size:16px;padding:4px 8px;margin-left:4px;border:none;"
+      }, ["✕"]);
+
+      removeBtn.addEventListener("click", () => {
+        if (initialOptions.length > 2) {
+          initialOptions.splice(idx, 1);
+          renderOptions();
+        }
+      });
+
+      const rowEl = el("div", { class: "option-row" }, [toggleBtn, textInput, removeBtn]);
+      toggleBtn.addEventListener("click", () => toggleOption(idx));
+      optionsContainer.append(rowEl);
+    });
+  };
+
+  if (kind === "mcq" || kind === "multi") {
+    renderOptions();
+    const labelText = kind === "mcq" ? "Options (toggle checkmark to select correct)" : "Options (multiple correct allowed)";
+    const addBtn = el("button", { type: "button", class: "add-btn" }, ["+ Add option"]);
+    addBtn.addEventListener("click", () => {
+      initialOptions.push({ text: "", isCorrect: false });
+      renderOptions();
+    });
+    kindRoot.append(el("label", {}, [labelText]), optionsContainer, addBtn);
   } else if (kind === "flash") {
     answerField = input(draft.answer, "Back");
-    root.append(el("label", {}, ["Answer (back)"]), answerField);
+    answerField.setAttribute("data-field", "answer");
+    kindRoot.append(el("label", {}, ["Answer (back)"]), answerField);
   } else if (kind === "tf-sort") {
-    statementsContainer = el("div", { class: "recall-statements" });
+    statementsContainer = el("div", { class: "recall-statements", style: "display:flex;flex-direction:column;gap:8px;margin-bottom:8px;" });
     const addRow = (text: string, isTrue: boolean) => {
+      const textIndex = statementRows.length;
       const textInput = input(text, "Statement");
-      const trueBtn = el("button", { type: "button" }, [isTrue ? "T" : "F"]);
+      textInput.setAttribute("data-field", "statement");
+      textInput.setAttribute("data-index", String(textIndex));
+      textInput.style.flex = "1";
+      const trueBtn = el("button", {
+        type: "button",
+        style: "padding:6px 12px;background:#1e293b;color:#f8fafc;border:1px solid #334155;font-weight:700;min-width:36px;border-radius:4px;cursor:pointer;transition:all 0.15s ease;"
+      }, [isTrue ? "T" : "F"]);
       const row = { textInput, trueBtn, isTrue };
+      const updateTrueBtnStyle = () => {
+        trueBtn.textContent = row.isTrue ? "T" : "F";
+        if (row.isTrue) {
+          trueBtn.style.background = "#38bdf8";
+          trueBtn.style.color = "#0f172a";
+          trueBtn.style.borderColor = "#38bdf8";
+        } else {
+          trueBtn.style.background = "#1e293b";
+          trueBtn.style.color = "#f8fafc";
+          trueBtn.style.borderColor = "#334155";
+        }
+      };
+      updateTrueBtnStyle();
       trueBtn.addEventListener("click", () => {
         row.isTrue = !row.isTrue;
-        trueBtn.textContent = row.isTrue ? "T" : "F";
+        updateTrueBtnStyle();
       });
-      const removeBtn = el("button", { type: "button" }, ["✕"]);
-      const rowEl = el("div", { style: "display:flex;gap:4px;align-items:center;" }, [
+      const removeBtn = el("button", {
+        type: "button",
+        style: "background:transparent;color:#94a3b8;cursor:pointer;font-size:16px;padding:4px 8px;border:none;"
+      }, ["✕"]);
+      const rowEl = el("div", { class: "option-row" }, [
         trueBtn,
         textInput,
         removeBtn,
@@ -117,17 +239,27 @@ export function renderFields(kind: CaptureKind, draft: CardDraft, root: HTMLElem
     };
     for (const s of draft.statements ?? []) addRow(s.text, s.isTrue);
     if ((draft.statements ?? []).length === 0) addRow("", true);
-    const addBtn = el("button", { type: "button" }, ["+ Add statement"]);
+    const addBtn = el("button", { type: "button", class: "add-btn" }, ["+ Add statement"]);
     addBtn.addEventListener("click", () => addRow("", true));
-    root.append(el("label", {}, ["Statements"]), statementsContainer, addBtn);
+    kindRoot.append(el("label", {}, ["Statements"]), statementsContainer, addBtn);
   } else if (kind === "match") {
-    pairsContainer = el("div", { class: "recall-pairs" });
+    pairsContainer = el("div", { class: "recall-pairs", style: "display:flex;flex-direction:column;gap:8px;margin-bottom:8px;" });
     const addRow = (left: string, right: string) => {
+      const pairIndex = pairRows.length;
       const leftInput = input(left, "Left");
+      leftInput.setAttribute("data-field", "pair-left");
+      leftInput.setAttribute("data-index", String(pairIndex));
+      leftInput.style.flex = "1";
       const rightInput = input(right, "Right");
+      rightInput.setAttribute("data-field", "pair-right");
+      rightInput.setAttribute("data-index", String(pairIndex));
+      rightInput.style.flex = "1";
       const row = { leftInput, rightInput };
-      const removeBtn = el("button", { type: "button" }, ["✕"]);
-      const rowEl = el("div", { style: "display:flex;gap:4px;align-items:center;" }, [
+      const removeBtn = el("button", {
+        type: "button",
+        style: "background:transparent;color:#94a3b8;cursor:pointer;font-size:16px;padding:4px 8px;border:none;"
+      }, ["✕"]);
+      const rowEl = el("div", { class: "option-row" }, [
         leftInput,
         rightInput,
         removeBtn,
@@ -141,41 +273,237 @@ export function renderFields(kind: CaptureKind, draft: CardDraft, root: HTMLElem
     };
     for (const p of draft.pairs ?? []) addRow(p.left, p.right);
     if ((draft.pairs ?? []).length === 0) addRow("", "");
-    const addBtn = el("button", { type: "button" }, ["+ Add pair"]);
+    const addBtn = el("button", { type: "button", class: "add-btn" }, ["+ Add pair"]);
     addBtn.addEventListener("click", () => addRow("", ""));
-    root.append(el("label", {}, ["Pairs"]), pairsContainer, addBtn);
+    kindRoot.append(el("label", {}, ["Pairs"]), pairsContainer, addBtn);
   }
 
-  const tagsField = input(draft.tags.join(", "), "tags, comma, separated");
-  root.append(el("label", {}, ["Tags"]), tagsField);
-  const explanationField = textarea(draft.explanation, "Explanation");
-  root.append(el("label", {}, ["Explanation"]), explanationField);
-  const hintField = textarea(draft.hint, "Hint");
-  root.append(el("label", {}, ["Hint"]), hintField);
+  // Custom Tag Selector
+  const selectedTags: { id?: string; name: string }[] = [];
+  for (const tagStr of draft.tags) {
+    const trimmed = tagStr.trim();
+    if (!trimmed) continue;
+    const existing = allTags.find(
+      (t) => t.id === trimmed || t.name.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (existing) {
+      selectedTags.push({ id: existing.id, name: existing.name });
+    } else {
+      selectedTags.push({ name: trimmed });
+    }
+  }
 
-  return {
-    readValues(): CardDraft {
-      const tags = tagsField.value
-        .split(",")
-        .map((t) => t.trim().toLowerCase())
-        .filter(Boolean);
-      const base: CardDraft = {
-        kind,
-        question: kind === "cloze" ? "" : questionField.value,
-        answer: answerField?.value ?? "",
-        distractors: distractorFields.map((d) => d.value),
-        tags,
-        explanation: explanationField.value,
-        hint: hintField.value,
-      };
-      if (kind === "cloze") base.clozeText = questionField.value;
-      if (kind === "tf-sort") {
-        base.statements = statementRows.map((r) => ({ text: r.textInput.value, isTrue: r.isTrue }));
+  const tagSelectorContainer = el("div", { class: "tag-selector-container" });
+  tagSelectorContainer.setAttribute("data-field", "tags");
+  const chipsContainer = el("div", { style: "display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%;" });
+  tagSelectorContainer.append(chipsContainer);
+
+  const tagInput = el("input", { type: "text", class: "tag-input", placeholder: "Search or create tag..." });
+  chipsContainer.append(tagInput);
+
+  const suggestionsList = el("ul", { class: "tag-suggestions", style: "display:none;" });
+  tagSelectorContainer.append(suggestionsList);
+
+  let query = "";
+  let highlightIdx = 0;
+  let open = false;
+  let suggestions: { id?: string; name: string; isCreate?: boolean }[] = [];
+
+  function getSuggestions() {
+    const q = query.trim().toLowerCase();
+    const takenNames = new Set(selectedTags.map((t) => t.name.toLowerCase()));
+    const available = allTags.filter((t) => !takenNames.has(t.name.toLowerCase()));
+    
+    let filtered: { id?: string; name: string; isCreate?: boolean }[] = [];
+    if (!q) {
+      filtered = available.slice(0, 8);
+    } else {
+      const scored = available
+        .map((t) => {
+          const name = t.name.toLowerCase();
+          let score = 0;
+          if (name === q) score = 1000;
+          else if (name.startsWith(q)) score = 500 - (name.length - q.length);
+          else if (name.includes(q)) score = 200 - name.indexOf(q);
+          return { t, score };
+        })
+        .filter((x) => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8)
+        .map((x) => x.t);
+      
+      filtered = [...scored];
+      const hasExactMatch = selectedTags.some((t) => t.name.toLowerCase() === q) || 
+                            allTags.some((t) => t.name.toLowerCase() === q);
+      if (q && !hasExactMatch) {
+        filtered.push({ name: query.trim(), isCreate: true });
       }
-      if (kind === "match") {
-        base.pairs = pairRows.map((r) => ({ left: r.leftInput.value, right: r.rightInput.value }));
+    }
+    return filtered;
+  }
+
+  function renderChips() {
+    while (chipsContainer.firstChild && chipsContainer.firstChild !== tagInput) {
+      chipsContainer.removeChild(chipsContainer.firstChild);
+    }
+    selectedTags.forEach((t) => {
+      const isNew = !t.id;
+      const chip = el("span", { class: `tag-chip ${isNew ? "new" : ""}` }, [t.name]);
+      if (isNew) {
+        chip.append(el("span", { style: "font-size:9px;opacity:0.7;margin-left:4px;" }, ["new"]));
       }
-      return base;
-    },
-  };
+      const removeBtn = el("button", { type: "button", class: "tag-chip-remove" }, ["×"]);
+      removeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        selectedTags.splice(selectedTags.indexOf(t), 1);
+        renderChips();
+        tagInput.focus();
+      });
+      chip.append(removeBtn);
+      chipsContainer.insertBefore(chip, tagInput);
+    });
+    tagInput.placeholder = selectedTags.length > 0 ? "" : "Search or create tag...";
+  }
+
+  function renderSuggestions() {
+    suggestionsList.innerHTML = "";
+    suggestions = getSuggestions();
+    if (!open || suggestions.length === 0) {
+      suggestionsList.style.display = "none";
+      return;
+    }
+    suggestionsList.style.display = "block";
+    suggestions.forEach((item, idx) => {
+      const li = el("li", {
+        class: `tag-suggestion-item ${idx === highlightIdx ? "highlighted" : ""}`
+      });
+      if (item.isCreate) {
+        li.innerHTML = `<span>+ Create <strong>"${item.name}"</strong> <span style="opacity:0.7;font-size:10px;">(on save)</span></span>`;
+      } else {
+        li.innerHTML = `<span>${item.name}</span>`;
+      }
+      const hint = el("span", { class: "action-hint" });
+      hint.textContent = item.isCreate ? "↵ create" : "↵ select";
+      li.append(hint);
+
+      li.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        pickSuggestion(idx);
+      });
+      li.addEventListener("mouseenter", () => {
+        highlightIdx = idx;
+        renderSuggestions();
+      });
+      suggestionsList.append(li);
+    });
+  }
+
+  function pickSuggestion(idx: number) {
+    if (idx >= 0 && idx < suggestions.length) {
+      const item = suggestions[idx];
+      selectedTags.push({ id: item.id, name: item.name });
+      query = "";
+      tagInput.value = "";
+      highlightIdx = 0;
+      renderChips();
+      renderSuggestions();
+    }
+  }
+
+  tagInput.addEventListener("input", () => {
+    query = tagInput.value;
+    highlightIdx = 0;
+    open = true;
+    renderSuggestions();
+  });
+  tagInput.addEventListener("focus", () => {
+    open = true;
+    renderSuggestions();
+  });
+  tagInput.addEventListener("blur", () => {
+    setTimeout(() => {
+      open = false;
+      renderSuggestions();
+    }, 150);
+  });
+  tagInput.addEventListener("keydown", (e) => {
+    e.stopPropagation();
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      open = true;
+      highlightIdx = (highlightIdx + 1) % Math.max(1, suggestions.length);
+      renderSuggestions();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      open = true;
+      highlightIdx = (highlightIdx - 1 + suggestions.length) % Math.max(1, suggestions.length);
+      renderSuggestions();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (suggestions.length > 0) {
+        pickSuggestion(highlightIdx);
+      }
+    } else if (e.key === "," || e.key === "Tab") {
+      if (query.trim()) {
+        e.preventDefault();
+        if (suggestions.length > 0) {
+          pickSuggestion(highlightIdx);
+        }
+      }
+    } else if (e.key === "Backspace" && query === "") {
+      if (selectedTags.length > 0) {
+        e.preventDefault();
+        selectedTags.pop();
+        renderChips();
+      }
+    } else if (e.key === "Escape") {
+      open = false;
+      renderSuggestions();
+    }
+  });
+
+  tagSelectorContainer.addEventListener("click", () => {
+    tagInput.focus();
+  });
+
+  renderChips();
+  kindRoot.append(el("label", {}, ["Tags"]), tagSelectorContainer);
+
+  // Explanation and Hint fields rendered in the left column (metaRoot)
+  const explanationField = textarea(draft.explanation, "Explanation");
+  explanationField.setAttribute("data-field", "explanation");
+  metaRoot.append(el("label", {}, ["Explanation"]), explanationField);
+  const hintField = textarea(draft.hint, "Hint");
+  hintField.setAttribute("data-field", "hint");
+  metaRoot.append(el("label", {}, ["Hint"]), hintField);
+
+  function readValues(): CardDraft {
+    const tags = selectedTags.map((t) => t.id || t.name);
+    const base: CardDraft = {
+      kind,
+      question: kind === "cloze" ? "" : questionField.value,
+      answer: kind === "flash" ? (answerField?.value ?? "") : "",
+      distractors: [],
+      tags,
+      explanation: explanationField.value,
+      hint: hintField.value,
+    };
+    if (kind === "cloze") base.clozeText = questionField.value;
+    if (kind === "tf-sort") {
+      base.statements = statementRows.map((r) => ({ text: r.textInput.value, isTrue: r.isTrue }));
+    }
+    if (kind === "match") {
+      base.pairs = pairRows.map((r) => ({ left: r.leftInput.value, right: r.rightInput.value }));
+    }
+    if (kind === "mcq" || kind === "multi") {
+      const correct = initialOptions.filter(o => o.isCorrect).map(o => o.text);
+      const distractors = initialOptions.filter(o => !o.isCorrect).map(o => o.text);
+      base.answer = correct[0] ?? "";
+      base.answers = correct;
+      base.distractors = distractors;
+    }
+    return base;
+  }
+
+  return { readValues };
 }

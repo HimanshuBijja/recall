@@ -12,6 +12,7 @@ const MARKER: Record<CardKind, { shape: MarkerShape; color: string }> = {
   cloze: { shape: "triangle", color: "#a855f7" },
   "tf-sort": { shape: "diamond", color: "#10b981" },
   match: { shape: "star", color: "#ec4899" },
+  multi: { shape: "circle", color: "#06b6d4" },
 };
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     // Run both concurrently but don't let an R2 failure discard the
     // already-paid-for Gemini draft — return the draft with no screenshot.
     const [draftRes, uploadRes] = await Promise.allSettled([
-      draftCardFromFrame(body.frameDataUrl, body.kind),
+      draftCardFromFrame(body.frameDataUrl, body.kind, body.title),
       uploadFrame(body.frameDataUrl),
     ]);
     if (uploadRes.status === "rejected") {

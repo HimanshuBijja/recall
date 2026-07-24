@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { Group, Tag } from "@/types";
 import { TagTree } from "@/components/TagTree";
 import { api } from "@/lib/api";
@@ -63,6 +64,15 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
   }
 
   function launchTest(g: Group) {
+    if (g.videoId) {
+      const params = new URLSearchParams();
+      params.set("videoId", g.videoId);
+      params.set("shuffle", "true");
+      params.set("min", "1");
+      params.set("max", "5");
+      router.push(`/test/session?${params.toString()}`);
+      return;
+    }
     if (g.tagIds.length === 0) {
       toast("error", "This group has no tags yet");
       return;
@@ -114,10 +124,18 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Groups</h1>
-          <p className="text-sm text-zinc-500">Saved tag bundles you can quiz on with one click.</p>
+          <div className="flex items-center gap-3 text-xs tracking-widest text-muted uppercase font-semibold mb-2">
+            <span className="w-6 h-[2px] bg-accent" />
+            Revision Protocol
+          </div>
+          <h1 className="cinematic-headline text-[5vw] md:text-[3.5vw] sm:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text="GROUPS">
+            GROUPS
+          </h1>
+          <p className="text-sm text-muted mt-2 uppercase tracking-wider">
+            Saved tag bundles and video chapters you can quiz on with one click.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {groups.length > 0 && (
@@ -131,19 +149,21 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
               }
               title="Export all groups"
               aria-label="Export all groups"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 whitespace-nowrap"
+              className="inline-flex items-center justify-center px-4 py-2 border border-border hover:bg-zinc-900 text-foreground font-bold text-xs uppercase tracking-widest transition-colors duration-150 rounded-[4px] whitespace-nowrap"
             >
-              <DownloadIcon /> <span className="hidden sm:inline">Export</span>
+              <DownloadIcon /> <span className="ml-1.5 hidden sm:inline">Export</span>
             </button>
           )}
           <button
             onClick={() => setEditor({ mode: "new" })}
-            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium whitespace-nowrap"
+            className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest transition-colors duration-150 rounded-[4px] whitespace-nowrap"
           >
             + New group
           </button>
         </div>
       </div>
+
+      <hr className="border-t border-divider my-6" />
 
       {visibleGroups.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
@@ -266,6 +286,15 @@ function DownloadIcon() {
   );
 }
 
+function VideoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polygon points="23 7 16 12 23 17 23 7" />
+      <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+    </svg>
+  );
+}
+
 function GroupCard({
   group, tagById, cardCount, selected, onToggle, onTest, onEdit, onDelete, onExport,
 }: {
@@ -276,21 +305,23 @@ function GroupCard({
 }) {
   const visibleTags = group.tagIds.slice(0, 6);
   const overflow = group.tagIds.length - visibleTags.length;
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <li
-      onClick={onToggle}
       className={[
-        "rounded-xl border p-4 bg-white dark:bg-zinc-900 flex flex-col gap-3 cursor-pointer transition-colors",
+        "rounded-xl border p-4 bg-zinc-950/20 flex flex-col gap-3 transition-colors",
         selected
           ? "border-indigo-400 dark:border-indigo-600 ring-2 ring-indigo-200 dark:ring-indigo-900"
           : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700",
       ].join(" ")}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-start justify-between gap-2 relative">
+        <div className="flex items-center gap-2 min-w-0 w-full">
           <span
+            onClick={(e) => { e.stopPropagation(); onToggle(); }}
             className={[
-              "shrink-0 w-5 h-5 inline-flex items-center justify-center rounded border text-xs",
+              "shrink-0 w-5 h-5 inline-flex items-center justify-center rounded border text-xs cursor-pointer",
               selected
                 ? "bg-indigo-600 border-indigo-600 text-white"
                 : "border-zinc-300 dark:border-zinc-700 text-transparent",
@@ -299,13 +330,55 @@ function GroupCard({
           >
             ✓
           </span>
-          <div className="min-w-0">
-            <h3 className="font-semibold truncate">{group.name}</h3>
+          <Link href={`/groups/${group.id}`} className="min-w-0 hover:no-underline group block w-full text-left">
+            <h3 className="font-semibold truncate group-hover:text-accent transition-colors">{group.name}</h3>
             <p className="text-xs text-zinc-500 mt-0.5">
               {group.tagIds.length} tag{group.tagIds.length === 1 ? "" : "s"} ·{" "}
               {cardCount} card{cardCount === 1 ? "" : "s"}
             </p>
-          </div>
+          </Link>
+        </div>
+
+        {/* Dropdown Container on top right */}
+        <div className="relative shrink-0">
+          <button
+            onClick={(e) => { e.stopPropagation(); setMenuOpen((o) => !o); }}
+            className="p-1 text-zinc-500 hover:text-indigo-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none cursor-pointer border-0"
+            aria-label="Actions menu"
+          >
+            <span className="font-bold text-sm leading-none block">⋮</span>
+          </button>
+
+          {menuOpen && (
+            <>
+              {/* Overlay transparent layer to close on click outside */}
+              <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }} />
+              <div className="absolute right-0 top-full mt-1 w-36 rounded-md shadow-lg bg-zinc-900 border border-border py-1 z-20">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }}
+                  className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-zinc-800 flex items-center gap-2 cursor-pointer border-0"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  Edit
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onExport(); }}
+                  className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-zinc-800 flex items-center gap-2 cursor-pointer border-0"
+                >
+                  <DownloadIcon />
+                  Download
+                </button>
+                <hr className="border-t border-divider my-1" />
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
+                  className="w-full text-left px-3 py-2 text-xs text-rose-500 hover:bg-zinc-800 flex items-center gap-2 cursor-pointer border-0"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  Delete
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -329,36 +402,26 @@ function GroupCard({
         )}
       </div>
 
-      <div className="flex gap-2 mt-auto">
+      <div className="flex gap-2 mt-auto items-center justify-between">
+        {group.videoUrl && (
+          <a
+            href={group.videoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:text-indigo-600 hover:border-indigo-300 dark:hover:border-indigo-800"
+            title="Watch video on YouTube"
+          >
+            <VideoIcon />
+          </a>
+        )}
         <button
           onClick={(e) => { e.stopPropagation(); onTest(); }}
           disabled={cardCount === 0}
           className="flex-1 px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
-          title={cardCount === 0 ? "No cards match this group's tags" : undefined}
+          title={cardCount === 0 ? "No cards match this group" : undefined}
         >
           Test →
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onExport(); }}
-          aria-label="Export group"
-          title="Export"
-          className="inline-flex items-center justify-center px-2.5 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:text-emerald-600 hover:border-emerald-300 dark:hover:border-emerald-800"
-        >
-          <DownloadIcon />
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
-        >
-          Edit
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          aria-label="Delete group"
-          className="px-2 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm text-zinc-500 hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-800"
-          title="Delete"
-        >
-          ✕
         </button>
       </div>
     </li>

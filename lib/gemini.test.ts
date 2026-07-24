@@ -20,3 +20,16 @@ test("parseDraft on garbage returns an empty draft of the kind", () => {
   expect(d.clozeText).toBe("");
   expect(d.tags).toEqual([]);
 });
+
+test("parseDraft reads a fenced JSON multi draft", () => {
+  const raw = "```json\n" + JSON.stringify({
+    question: "Which are transport-layer protocols?", answers: ["TCP", "UDP"],
+    distractors: ["HTTP", "FTP"], tags: ["networking"],
+    explanation: "TCP and UDP are layer 4.", hint: "Connection-oriented vs connectionless",
+  }) + "\n```";
+  const d = parseDraft(raw, "multi");
+  expect(d.kind).toBe("multi");
+  expect(d.answers).toEqual(["TCP", "UDP"]);
+  expect(d.distractors).toEqual(["HTTP", "FTP"]);
+  expect(d.tags).toContain("networking");
+});

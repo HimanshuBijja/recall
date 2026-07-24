@@ -13,6 +13,7 @@ interface BundleCard {
   question?: string;
   answer?: string;
   distractors?: string[];
+  answers?: string[];
   statements?: BundleStatement[];
   clozeText?: string;
   text?: string;
@@ -134,6 +135,17 @@ export async function POST(req: NextRequest) {
         question: item.question || "",
         answer: item.answer,
         distractors: Array.isArray(item.distractors) ? item.distractors.map(String) : [],
+      };
+    } else if (kind === "multi") {
+      const answers = Array.isArray(item.answers) ? item.answers.map(String).map((s) => s.trim()).filter(Boolean) : [];
+      const distractors = Array.isArray(item.distractors) ? item.distractors.map(String).map((s) => s.trim()).filter(Boolean) : [];
+      if (answers.length < 1 || answers.length + distractors.length < 2) continue;
+      card = {
+        ...baseCard,
+        question: item.question || "",
+        answer: "",
+        answers,
+        distractors,
       };
     } else if (kind === "tf-sort") {
       const statements: TfStatement[] = Array.isArray(item.statements)

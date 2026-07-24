@@ -55,3 +55,17 @@ test("export omits source when absent", () => {
   } as Card;
   expect(exportCard(card, new Map()).source).toBeUndefined();
 });
+
+test("exports answers for multi cards and omits them otherwise", () => {
+  const tagById = new Map();
+  const multi = exportCard(
+    { id: "1", kind: "multi", question: "Q", answer: "", answers: ["a", "b"], distractors: ["c"], explanation: "", hint: "", difficulty: 3, tags: [], createdAt: "x" } as Card,
+    tagById,
+  );
+  expect(multi).toMatchObject({ kind: "multi", answers: ["a", "b"], distractors: ["c"], answer: "" });
+  const mcq = exportCard(
+    { id: "2", kind: "mcq", question: "Q", answer: "a", distractors: ["b", "c", "d"], explanation: "", hint: "", difficulty: 3, tags: [], createdAt: "x" } as Card,
+    tagById,
+  );
+  expect(mcq.answers).toBeUndefined();
+});

@@ -1,5 +1,7 @@
 import type { CardDraft, CaptureKind, MarkerShape } from "../../shared/types";
 import { draftToCard, renderFields, type SourceMeta } from "./fields";
+import { overlayStyles } from "./styles";
+import { initAIEditor } from "./ai";
 
 export interface OverlayOptions {
   kind: CaptureKind;
@@ -19,8 +21,9 @@ function removeExisting(): void {
   document.getElementById(HOST_ID)?.remove();
 }
 
-export function openOverlay(opts: OverlayOptions): Promise<OverlayResult> {
+export async function openOverlay(opts: OverlayOptions): Promise<OverlayResult> {
   removeExisting();
+  const allTags = (await chrome.runtime.sendMessage({ type: "GET_TAGS" }).catch(() => [])) as { id: string; name: string }[];
 
   return new Promise((resolve) => {
     const host = document.createElement("div");
@@ -29,19 +32,7 @@ export function openOverlay(opts: OverlayOptions): Promise<OverlayResult> {
     const shadow = host.attachShadow({ mode: "open" });
 
     const style = document.createElement("style");
-    style.textContent = `
-      .backdrop { position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; font-family: Roboto, Arial, sans-serif; }
-      .card { background:#1f1f1f; color:#f1f1f1; width:min(480px,92vw); max-height:88vh; overflow:auto; border-radius:12px; padding:16px; box-shadow:0 10px 40px rgba(0,0,0,.6); }
-      .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:8px; }
-      img.frame { width:100%; border-radius:8px; margin-bottom:8px; }
-      label { display:block; font-size:11px; opacity:.75; margin:8px 0 2px; }
-      textarea, input { background:#2b2b2b; color:#f1f1f1; border:1px solid #3f3f3f; border-radius:6px; padding:6px; font-size:13px; }
-      .actions { display:flex; gap:8px; margin-top:14px; justify-content:flex-end; }
-      button { cursor:pointer; border:none; border-radius:6px; padding:6px 12px; font-size:13px; }
-      .save { background:#3ea6ff; color:#000; font-weight:600; }
-      .cancel { background:#3f3f3f; color:#f1f1f1; }
-      .undo, .rephrase { background:#2b2b2b; color:#f1f1f1; border:1px solid #3f3f3f; }
-    `;
+    style.textContent = overlayStyles;
     shadow.append(style);
 
     const backdrop = document.createElement("div");
@@ -51,37 +42,47 @@ export function openOverlay(opts: OverlayOptions): Promise<OverlayResult> {
     backdrop.append(card);
     shadow.append(backdrop);
 
-    const badge = document.createElement("span");
-    badge.className = "badge";
-    badge.textContent = opts.kind;
-    badge.style.background = opts.marker?.color ?? "#3ea6ff";
-    badge.style.color = "#0f0f0f";
-    card.append(badge);
+    const headerRow = document.createElement("div");
+    headerRow.className = "header-row";
+    card.append(headerRow);
+
+    const kindContainer = document.createElement("div");
+    headerRow.append(kindContainer);
+
+    const cols = document.createElement("div");
+    cols.className = "columns";
+    card.append(cols);
+
+    const leftCol = document.createElement("div");
+    leftCol.className = "left-col";
+    const rightCol = document.createElement("div");
+    rightCol.className = "right-col";
+    cols.append(leftCol, rightCol);
 
     if (opts.frameDataUrl) {
       const img = document.createElement("img");
       img.className = "frame";
       img.src = opts.frameDataUrl;
       img.alt = "Captured frame";
-      card.append(img);
+      leftCol.append(img);
+    } else {
+      leftCol.style.display = "none";
     }
 
-    const fieldsRoot = document.createElement("div");
-    card.append(fieldsRoot);
-
-    let originalDraft = opts.draft;
-    let fields = renderFields(opts.kind, originalDraft, fieldsRoot);
+    const metaFieldsRoot = document.createElement("div");
+    leftCol.append(metaFieldsRoot);
 
     const actions = document.createElement("div");
     actions.className = "actions";
+    const aiBtn = document.createElement("button");
+    aiBtn.className = "global-ai-btn";
+    aiBtn.type = "button";
+    aiBtn.title = "Ask AI to edit entire card";
+    aiBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>`;
     const undoBtn = document.createElement("button");
     undoBtn.className = "undo";
     undoBtn.type = "button";
     undoBtn.textContent = "Undo";
-    const rephraseBtn = document.createElement("button");
-    rephraseBtn.className = "rephrase";
-    rephraseBtn.type = "button";
-    rephraseBtn.textContent = "AI rephrase";
     const cancelBtn = document.createElement("button");
     cancelBtn.className = "cancel";
     cancelBtn.type = "button";
@@ -90,8 +91,18 @@ export function openOverlay(opts: OverlayOptions): Promise<OverlayResult> {
     saveBtn.className = "save";
     saveBtn.type = "button";
     saveBtn.textContent = "Save";
-    actions.append(undoBtn, rephraseBtn, cancelBtn, saveBtn);
-    card.append(actions);
+    actions.append(aiBtn, undoBtn, cancelBtn, saveBtn);
+    headerRow.append(actions);
+
+    const kindFieldsRoot = document.createElement("div");
+    rightCol.append(kindFieldsRoot);
+
+    const badge = document.createElement("span");
+    badge.className = "badge";
+    badge.textContent = opts.kind;
+    kindContainer.append(badge);
+
+    let fields = renderFields(opts.kind, opts.draft, kindFieldsRoot, metaFieldsRoot, allTags);
 
     function cleanup(): void {
       document.removeEventListener("keydown", onKeydown, true);
@@ -111,24 +122,27 @@ export function openOverlay(opts: OverlayOptions): Promise<OverlayResult> {
     }
 
     undoBtn.addEventListener("click", () => {
-      fields = renderFields(opts.kind, originalDraft, fieldsRoot);
-      card.insertBefore(fieldsRoot, actions);
-    });
-
-    rephraseBtn.addEventListener("click", () => {
-      if (!opts.onRephrase) return;
-      rephraseBtn.disabled = true;
-      rephraseBtn.textContent = "Rephrasing…";
-      void opts.onRephrase().then((newDraft) => {
-        originalDraft = newDraft;
-        fields = renderFields(opts.kind, newDraft, fieldsRoot);
-        rephraseBtn.disabled = false;
-        rephraseBtn.textContent = "AI rephrase";
-      });
+      fields = renderFields(opts.kind, opts.draft, kindFieldsRoot, metaFieldsRoot, allTags);
     });
 
     cancelBtn.addEventListener("click", doCancel);
     saveBtn.addEventListener("click", doSave);
+
+    // Initialize AI selections and global edits from modular module
+    initAIEditor({
+      shadow,
+      card,
+      backdrop,
+      opts,
+      allTags,
+      kindFieldsRoot,
+      metaFieldsRoot,
+      aiBtn,
+      getFields: () => fields,
+      setFields: (newFields) => {
+        fields = newFields;
+      },
+    });
 
     function onKeydown(e: KeyboardEvent): void {
       if (e.key === "Escape") {

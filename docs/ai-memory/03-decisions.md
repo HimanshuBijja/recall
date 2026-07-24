@@ -2,6 +2,10 @@
 
 Significant architectural/technical decisions. Newest first.
 
+## 2026-07-25 — Modularized overlay.ts and fixed modular change preview (diffs) layout
+- **Decision 1 — Modularize `overlay.ts`:** Extracted the massive string-based CSS stylesheet to a separate `styles.ts` file, and all Ask AI inline text selection & global card editors, as well as diff rendering preview logic, to `ai.ts`.
+- **Decision 2 — Hide target row wrappers (`display: none`) to prevent squashing:** To solve the layout bug where vertical diff overlays (original pink strikethrough vs suggested green text) were invisible/squashed inside horizontal option rows, statement rows, or pair rows, we set `display: none` on the target's `.option-row` wrapper (or target itself for basic fields) and insert the diff overlay as a sibling of the hidden container. Upon accept or decline, `renderFields` is run, which creates brand new elements with default displays.
+
 ## 2026-07-24 — Capture extension lives in the Recall repo; Gemini drafts; R2 frames
 - **Extension built inside Recall** (`extension/`), not the separate `clipper` project (clipper is reference only). The extension posts to Recall's own API so captured cards flow straight into the FSRS/test/analytics engine. Kept as an isolated pnpm workspace; root tsc/eslint/vitest exclude it.
 - **Gemini (Vertex/`@google/genai`) drafts the full card** from a frame (not just OCR), per the user's choice. **Money guardrail: never call live Gemini/R2 without asking — the user smoke-tests manually.** All automated tests mock `lib/gemini` + `lib/storage`.

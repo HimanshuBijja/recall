@@ -8,10 +8,11 @@ export const DEFAULT_SETTINGS: Settings = {
     cloze: { shortcut: "Alt+Shift+C", marker: { shape: "triangle", color: "#a855f7" }, visible: true },
     "tf-sort": { shortcut: "Alt+Shift+T", marker: { shape: "diamond", color: "#10b981" }, visible: true },
     match: { shortcut: "Alt+Shift+M", marker: { shape: "star", color: "#ec4899" }, visible: true },
+    multi: { shortcut: "Alt+Shift+A", marker: { shape: "circle", color: "#06b6d4" }, visible: true },
   },
 };
 
-export const CAPTURE_KINDS: CaptureKind[] = ["mcq", "flash", "cloze", "tf-sort", "match"];
+export const CAPTURE_KINDS: CaptureKind[] = ["mcq", "multi", "flash", "cloze", "tf-sort", "match"];
 
 export async function loadSettings(): Promise<Settings> {
   const stored = (await chrome.storage.sync.get("settings")).settings as Partial<Settings> | undefined;
