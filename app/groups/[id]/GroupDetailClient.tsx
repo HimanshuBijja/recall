@@ -26,6 +26,11 @@ export function GroupDetailClient({
   const [saving, setSaving] = useState(false);
   const [savingExempt, setSavingExempt] = useState(false);
 
+  const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTagFilter, setSelectedTagFilter] = useState("");
+  const [deletingCards, setDeletingCards] = useState(false);
+
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
   // Compute matching cards for this group
@@ -41,6 +46,68 @@ export function GroupDetailClient({
   }, [group, cards, tags]);
 
   const cardIds = useMemo(() => matchingCards.map((c) => c.id), [matchingCards]);
+
+  const filteredCards = useMemo(() => {
+    return matchingCards.filter((c) => {
+      const q = searchQuery.trim().toLowerCase();
+      const matchesSearch = !q || c.question.toLowerCase().includes(q) || c.answer.toLowerCase().includes(q);
+      const matchesTag = !selectedTagFilter || c.tags.includes(selectedTagFilter);
+      return matchesSearch && matchesTag;
+    });
+  }, [matchingCards, searchQuery, selectedTagFilter]);
+
+  const uniqueTagsInGroup = useMemo(() => {
+    const tIds = new Set<string>();
+    for (const c of matchingCards) {
+      for (const tid of c.tags) {
+        tIds.add(tid);
+      }
+    }
+    return Array.from(tIds).map((tid) => tagById.get(tid)).filter(Boolean) as Tag[];
+  }, [matchingCards, tagById]);
+
+  const allFilteredSelected = filteredCards.length > 0 && filteredCards.every((c) => selectedCardIds.includes(c.id));
+
+  function toggleSelectAllFiltered() {
+    if (allFilteredSelected) {
+      setSelectedCardIds((prev) => {
+        const filteredIds = new Set(filteredCards.map((c) => c.id));
+        return prev.filter((id) => !filteredIds.has(id));
+      });
+    } else {
+      setSelectedCardIds((prev) => {
+        const next = new Set(prev);
+        for (const c of filteredCards) {
+          next.add(c.id);
+        }
+        return Array.from(next);
+      });
+    }
+  }
+
+  function toggleSelectCard(cardId: string) {
+    setSelectedCardIds((prev) =>
+      prev.includes(cardId) ? prev.filter((id) => id !== cardId) : [...prev, cardId]
+    );
+  }
+
+  async function deleteCards(ids: string[]) {
+    if (ids.length === 0) return;
+    const ok = confirm(`Delete ${ids.length} card${ids.length === 1 ? "" : "s"}? This will soft-delete them to the recycle bin.`);
+    if (!ok) return;
+
+    setDeletingCards(true);
+    try {
+      await api.delete("/cards/bulk", { data: { ids } });
+      toast("success", `Deleted ${ids.length} card${ids.length === 1 ? "" : "s"}`);
+      setSelectedCardIds([]);
+      router.refresh();
+    } catch {
+      toast("error", "Failed to delete cards");
+    } finally {
+      setDeletingCards(false);
+    }
+  }
 
   function toggleTag(tid: string) {
     setSelectedTagIds((prev) =>
@@ -220,50 +287,125 @@ export function GroupDetailClient({
             )}
           </div>
 
-          {matchingCards.length === 0 ? (
+          {matchingCards.length > 0 && (
+            <div className="flex flex-wrap items-center gap-3 bg-zinc-900/40 p-3 rounded-[4px] border border-border">
+              {/* Search Bar */}
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search group cards..."
+                className="flex-1 min-w-[200px] px-3 py-1.5 border border-border bg-black/45 text-foreground text-sm rounded-[4px] focus:outline-none focus:border-accent"
+              />
+
+              {/* Tag Filter */}
+              <select
+                value={selectedTagFilter}
+                onChange={(e) => setSelectedTagFilter(e.target.value)}
+                className="px-3 py-1.5 border border-border bg-black/45 text-foreground text-sm rounded-[4px] focus:outline-none focus:border-accent cursor-pointer"
+              >
+                <option value="">All Tags</option>
+                {uniqueTagsInGroup.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 ml-auto">
+                {selectedCardIds.length > 0 && (
+                  <button
+                    type="button"
+                    disabled={deletingCards}
+                    onClick={() => deleteCards(selectedCardIds)}
+                    className="px-3 py-1.5 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 font-bold text-xs uppercase tracking-wider rounded-[4px] transition-colors disabled:opacity-40"
+                  >
+                    Delete Selected ({selectedCardIds.length})
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={deletingCards}
+                  onClick={() => deleteCards(matchingCards.map((c) => c.id))}
+                  className="px-3 py-1.5 border border-rose-500/30 hover:border-rose-500 hover:bg-rose-500/10 text-rose-500 font-bold text-xs uppercase tracking-wider rounded-[4px] transition-colors"
+                >
+                  Delete All Cards
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Select all checkbox for filtered cards */}
+          {filteredCards.length > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-zinc-950/20 border-x border-t border-border rounded-t-[4px]">
+              <input
+                type="checkbox"
+                checked={allFilteredSelected}
+                onChange={toggleSelectAllFiltered}
+                className="w-4 h-4 accent-accent cursor-pointer rounded"
+              />
+              <span className="text-xs text-muted uppercase tracking-wider font-semibold">
+                Select All Filtered ({filteredCards.length})
+              </span>
+            </div>
+          )}
+
+          {filteredCards.length === 0 ? (
             <div className="border border-dashed border-border p-12 text-center text-sm text-muted rounded-[4px] bg-zinc-950/10">
-              No cards are currently matching this group's parameters.
+              {matchingCards.length === 0 
+                ? "No cards are currently matching this group's parameters."
+                : "No cards match the search query and tag filter."}
             </div>
           ) : (
-            <div className="border border-border rounded-[4px] overflow-hidden bg-zinc-950/10 divide-y divide-divider">
-              {matchingCards.map((c) => (
-                <div
-                  key={c.id}
-                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-900/20 transition-colors"
-                >
-                  <div className="space-y-1.5 flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] uppercase font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-border">
-                        {c.kind}
+            <div className="border border-border rounded-b-[4px] overflow-hidden bg-zinc-950/10 divide-y divide-divider">
+              {filteredCards.map((c) => {
+                const isSelected = selectedCardIds.includes(c.id);
+                return (
+                  <div
+                    key={c.id}
+                    className="p-4 flex flex-row items-center gap-4 hover:bg-zinc-900/20 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelectCard(c.id)}
+                      className="w-4 h-4 accent-accent cursor-pointer rounded shrink-0"
+                    />
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] uppercase font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-border">
+                          {c.kind}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-semibold text-foreground truncate max-w-xl">
+                        {c.question}
+                      </h3>
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        {c.tags.map((tid) => {
+                          const t = tagById.get(tid);
+                          return t ? (
+                            <span key={tid} className="text-[9px] font-semibold text-muted">
+                              #{t.name}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-xs text-muted font-mono">
+                        Diff: {c.difficulty}
                       </span>
-                    </div>
-                    <h3 className="text-sm font-semibold text-foreground truncate max-w-xl">
-                      {c.question}
-                    </h3>
-                    <div className="flex flex-wrap gap-1.5 pt-0.5">
-                      {c.tags.map((tid) => {
-                        const t = tagById.get(tid);
-                        return t ? (
-                          <span key={tid} className="text-[9px] font-semibold text-muted">
-                            #{t.name}
-                          </span>
-                        ) : null;
-                      })}
+                      <Link
+                        href={`/test/session?ids=${c.id}`}
+                        className="px-3 py-1.5 border border-border hover:border-accent text-foreground font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 rounded-[4px]"
+                      >
+                        Test →
+                      </Link>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-xs text-muted font-mono">
-                      Diff: {c.difficulty}
-                    </span>
-                    <Link
-                      href={`/test/session?ids=${c.id}`}
-                      className="px-3 py-1.5 border border-border hover:border-accent text-foreground font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 rounded-[4px]"
-                    >
-                      Test →
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
