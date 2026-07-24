@@ -63,16 +63,7 @@ function emptyDraft(kind: CardKind): CardDraft {
     ...(kind === "multi" ? { answers: [] } : {}) };
 }
 
-export function parseDraft(raw: string, kind: CardKind): CardDraft {
-  const fence = /```(?:json)?\s*([\s\S]*?)```/.exec(raw);
-  const jsonText = (fence ? fence[1] : raw).trim();
-  let obj: Record<string, unknown>;
-  try {
-    obj = JSON.parse(jsonText);
-  } catch {
-    const braces = /\{[\s\S]*\}/.exec(jsonText);
-    try { obj = braces ? JSON.parse(braces[0]) : {}; } catch { return emptyDraft(kind); }
-  }
+export function normalizeDraftObject(obj: Record<string, unknown>, kind: CardKind): CardDraft {
   const base = emptyDraft(kind);
   const s = (v: unknown) => (typeof v === "string" ? v : "");
   const arr = (v: unknown) => (Array.isArray(v) ? v : []);
@@ -91,6 +82,57 @@ export function parseDraft(raw: string, kind: CardKind): CardDraft {
     .map((x) => ({ left: s((x as Record<string, unknown>)?.left), right: s((x as Record<string, unknown>)?.right) }))
     .filter((x) => x.left && x.right);
   return base;
+}
+
+function extractJson(raw: string): unknown {
+  const fence = /```(?:json)?\s*([\s\S]*?)```/.exec(raw);
+  const jsonText = (fence ? fence[1] : raw).trim();
+  try {
+    return JSON.parse(jsonText);
+  } catch {
+    const block = /(\[[\s\S]*\]|\{[\s\S]*\})/.exec(jsonText);
+    if (!block) return null;
+    try {
+      return JSON.parse(block[1]);
+    } catch {
+      return null;
+    }
+  }
+}
+
+export function parseDraft(raw: string, kind: CardKind): CardDraft {
+  const parsed = extractJson(raw);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return emptyDraft(kind);
+  return normalizeDraftObject(parsed as Record<string, unknown>, kind);
+}
+
+/** A draft with nothing usable in it — the model returned a stub or a refusal. */
+function hasContent(d: CardDraft): boolean {
+  if (d.kind === "cloze") return Boolean(d.clozeText?.trim());
+  if (d.kind === "tf-sort") return (d.statements ?? []).length >= 2;
+  if (d.kind === "match") return (d.pairs ?? []).length >= 2;
+  if (d.kind === "multi") return Boolean(d.question.trim()) && (d.answers ?? []).length >= 1;
+  return Boolean(d.question.trim() && d.answer.trim());
+}
+
+export function parseDrafts(raw: string, kind: CardKind, max: number): CardDraft[] {
+  const parsed = extractJson(raw);
+  if (!parsed) return [];
+  let list: unknown[];
+  if (Array.isArray(parsed)) {
+    list = parsed;
+  } else if (typeof parsed === "object" && Array.isArray((parsed as { cards?: unknown }).cards)) {
+    list = (parsed as { cards: unknown[] }).cards;
+  } else if (typeof parsed === "object") {
+    list = [parsed];
+  } else {
+    return [];
+  }
+  return list
+    .filter((x): x is Record<string, unknown> => Boolean(x) && typeof x === "object")
+    .map((x) => normalizeDraftObject(x, kind))
+    .filter(hasContent)
+    .slice(0, max);
 }
 
 export async function draftCardFromFrame(
@@ -167,4 +209,39 @@ Return ONLY the updated card draft as a JSON object matching the keys of the ori
   });
   const rawText = res.text ?? "";
   return parseDraft(rawText, draft.kind);
+}
+
+/** Hard ceiling on prompt size so one giant selection can't run up a bill. */
+const MAX_SOURCE_CHARS = 20000;
+
+export async function draftCardsFromText(
+  text: string,
+  kind: CardKind,
+  count: number,
+  pageTitle?: string,
+): Promise<CardDraft[]> {
+  const source = text.slice(0, MAX_SOURCE_CHARS);
+  const prompt = `You are turning a passage of text from a web page into EXACTLY ${count} revision card(s).
+${pageTitle ? `The page title is: "${pageTitle}".` : ""}
+
+SOURCE TEXT:
+"""
+${source}
+"""
+
+RULES:
+- Produce exactly ${count} cards, each testing a DIFFERENT fact or idea from the source text. Do not repeat a fact across cards.
+- Base every card strictly on the source text. Do not invent facts that are not in it.
+- If the source text does not contain enough distinct material for ${count} cards, return as many good cards as it supports rather than padding with filler.
+- The "tags" list of every card MUST contain exactly ONE lowercase string naming the main topic of the source text (1-3 words, e.g. "css grid", "cellular respiration").
+
+${KIND_INSTRUCTIONS[kind]}
+
+Return ONLY a JSON array of ${count} card objects with the keys described above. No prose, no markdown fences.`;
+
+  const res = await client().models.generateContent({
+    model: MODEL,
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+  });
+  return parseDrafts(res.text ?? "", kind, count);
 }
