@@ -207,10 +207,10 @@ export function CardForm({ initial, tags }: Props) {
   }
 
   return (
-    <div className="border border-zinc-800 bg-zinc-900/30 rounded-lg p-6 md:p-8 shadow-xl max-w-2xl">
+    <div className="cinematic-editor-panel max-w-2xl">
       <form onSubmit={submit} className="space-y-6">
         <Field label="Card type">
-          <div className="flex flex-wrap gap-1 rounded border border-zinc-800 p-0.5 bg-zinc-900/40 w-fit">
+          <div className="flex flex-wrap gap-1 rounded-[4px] border border-border p-0.5 bg-zinc-950/20 w-fit">
             {([
               ["mcq", "Multiple choice"],
               ["multi", "Multiple answers"],
@@ -224,17 +224,17 @@ export function CardForm({ initial, tags }: Props) {
                 type="button"
                 onClick={() => setKind(k)}
                 className={[
-                  "px-3 py-1.5 rounded text-[10px] uppercase font-bold tracking-wider transition-colors duration-150",
+                  "px-3 py-1.5 rounded-[4px] text-[10px] uppercase font-bold tracking-wider transition-colors duration-150",
                   kind === k
-                    ? "bg-indigo-600 text-white"
-                    : "text-zinc-400 hover:text-zinc-200",
+                    ? "bg-indigo-600 text-foreground"
+                    : "text-muted hover:text-foreground",
                 ].join(" ")}
               >
                 {label}
               </button>
             ))}
           </div>
-          <p className="text-xs text-zinc-500 mt-1">
+          <p className="text-xs text-muted mt-1">
             {kind === "mcq" && "One question, one correct answer, three distractors."}
             {kind === "multi" && "One question, several correct answers — scored all-or-nothing."}
             {kind === "tf-sort" && "User sorts each statement into True / False — scored all-or-nothing."}
@@ -639,18 +639,18 @@ export function CardForm({ initial, tags }: Props) {
         />
       </Field>
 
-        <div className="flex gap-3 pt-4 border-t border-zinc-800">
+        <div className="flex gap-3 pt-4 border-t border-border">
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider transition-colors duration-150 disabled:opacity-50"
+            className="px-4 py-2 rounded-[4px] bg-indigo-600 hover:bg-indigo-700 text-foreground font-bold text-xs uppercase tracking-wider transition-colors duration-150 disabled:opacity-50"
           >
             {saving ? "Saving…" : initial ? "Save changes" : "Create card"}
           </button>
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-4 py-2 rounded border border-zinc-800 hover:bg-zinc-900 text-zinc-300 font-bold text-xs uppercase tracking-wider transition-colors duration-150"
+            className="px-4 py-2 rounded-[4px] border border-border hover:bg-zinc-900/10 text-muted font-bold text-xs uppercase tracking-wider transition-colors duration-150"
           >
             Cancel
           </button>
@@ -661,7 +661,7 @@ export function CardForm({ initial, tags }: Props) {
 }
 
 const inputCls =
-  "w-full px-3.5 py-2.5 rounded border border-zinc-800 bg-zinc-950 text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm";
+  "w-full px-3.5 py-2.5 rounded-[4px] border border-border bg-black/45 text-foreground placeholder-muted/50 focus:outline-none focus:border-accent transition-colors text-sm";
 
 function Field({
   label,
@@ -674,7 +674,7 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5 cursor-pointer">
-      <span className="text-[10px] uppercase tracking-wider font-mono font-bold text-zinc-400">
+      <span className="text-[10px] uppercase tracking-wider font-mono font-bold text-muted">
         {label}
       </span>
       {children}
