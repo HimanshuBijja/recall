@@ -7,8 +7,9 @@ _Last updated: 2026-07-25_
 Includes: MongoDB migration + Atlas→local mirror, the Flash/Cloze/Match/
 Bookmarks/FSRS feature set (built by the Antigravity/Gemini agent), the
 build/lint hardening pass, the FSRS persistence fix + `/settings` page
-(commit `ed5f25f`), and the **YouTube capture extension + capture backend +
-analytics/import upgrades** (commit `f889715`, built by 4 parallel subagents).
+(commit `ed5f25f`), the **YouTube capture extension + capture backend +
+analytics/import upgrades** (commit `f889715`, built by 4 parallel subagents),
+and the **Web text capture (any site)** feature.
 
 ## Storage
 - **Atlas** = source of truth (`MONGODB_URI`), replica set (transactions +
@@ -43,9 +44,16 @@ analytics/import upgrades** (commit `f889715`, built by 4 parallel subagents).
   * **Inline AI Editor:** Google Colab-style floating editing system inside overlay input/textarea fields. Highlights selection with a floating "Ask AI" button. Opens a minimal input box (textarea that grows up to 3 lines) with a circle up-arrow send button. Queries `/api/edit` API route and displays minimal circular accept (✓) / decline (✗) action icons.
   * **Global AI Editor:** Sparkle SVG button in the top-right of the card overlay. Queries `/api/edit` with the entire card context and user prompt. Replaced separate popover tooltip blocks with clean inline comparison blocks that flow directly inside the form layout, temporarily hiding the raw text fields. Displays original text (red, strikethrough) and suggested text (green) stacked vertically under each other. Uses defensive `insertBefore` or `appendChild` DOM insertion. At the top-right of the diff block, a modern dark pill `[ ✓ ] [ ✗ ]` offers direct keep/revert operations.
   * **Overlay Code Modularization & Diff Layout Fix:** Split the large `overlay.ts` into `styles.ts` (CSS rules) and `ai.ts` (inline and global AI editing logic). Solved the layout bug where inline modular changes (diff overlays) were not visible or squashed inside horizontal option rows by setting `display: none` on targets / `.option-row` wrappers, allowing the vertical diff container to render at full width.
-  * **UI Theme Revamp:** Refactored popup HTML/CSS, options configuration sheet, content overlays, toast alerts, load banners, and progress pills to match a professional dark obsidian developer layout (backgrounds `#121214`/`#18181b`, borders `#2e2e33`, and premium pure white highlights and focus indicator lines, replacing all legacy blue colors). SVG size properties are placed strictly on outer wrappers to prevent icons collapsing.
+  * **UI Theme Revamp:** Refactored popup HTML/CSS, options configuration sheet, content overlays, toast alerts, load banners, and progress pills to match the cinematic editorial theme from `design.md` (backgrounds/cards/sections `#181818`, text `#EBDCC4`, secondary labels `#B6A596`, borders `#4A4441`, and accent highlights `#DC9F85`, replacing all legacy blue and obsidian gray colors). SVG size properties are placed strictly on outer wrappers to prevent icons collapsing.
   `Card.source` provenance; lazy "Show frame" in Test/Result/Cards. **Extension
   not yet smoke-tested against live Gemini/R2 — user's manual step.**
+- **Web text capture** (any site): select text → right-click **Add question** →
+  count + kind modal → `POST /api/generate` (Gemini, no image) → batch overlay
+  listing all N drafts (MCQ/multi in a grid table, other kinds via the existing
+  per-kind renderers, per-card AI editing) → one `SAVE_CARDS` round trip.
+  Cards get a `{ type: "web", url, title, siteName, excerpt, capturedAt }`
+  source; they never auto-create groups and never appear under analytics
+  "By video".
 - **Analytics**: pure metrics in `lib/analytics.ts`; forecast now local-day
   bucketed; new **"By video"** per-source accuracy section.
 - **Import**: alias paste formats (cloze/tf-sort/match), dedupe badges +
@@ -53,9 +61,9 @@ analytics/import upgrades** (commit `f889715`, built by 4 parallel subagents).
 
 ## Verification (all green as of this update)
 - Recall `npx tsc --noEmit` → clean; `npm run lint` → 0 errors (3 pre-existing
-  warnings); `npx vitest run` → **90 pass** (35 files).
-- Extension `pnpm --dir extension exec tsc --noEmit` → clean; `vitest` → **24
-  pass** (8 files); `pnpm build` → OK.
+  warnings); `npx vitest run` → **117 pass** (38 files).
+- Extension `pnpm --dir extension exec tsc --noEmit` → clean; `vitest` → **48
+  pass** (12 files); `pnpm build` → OK.
 - Root `tsc`/`eslint`/`vitest` exclude `extension/` + `.claude/` (agent worktrees).
 - `npm run build` not re-run this pass.
 
@@ -97,6 +105,8 @@ mirror target). Capture backend adds: `GEMINI_API_KEY` + `GEMINI_OCR_MODEL`
   and there's no optimizer fitting them from the `reviews` history yet.
 - Whole-collection replace on every write is O(n); move hot paths to
   per-document ops later.
+- **Web-captured cards have no UI surface that shows their source page** — `/cards`
+  shows the frame for video sources but nothing for web sources yet.
 
 ## Next suggested step
 Push `master`, then deploy to Vercel (with Atlas env vars set) and smoke-test a

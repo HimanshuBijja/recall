@@ -534,6 +534,23 @@ the parsed value in place → `JSON.stringify(_, null, 2)` back into the
 textarea. The text remains the single source of truth for what gets
 imported.
 
+## Extension capture: video vs web
+
+The extension features two completely distinct capture loops:
+
+1. **YouTube Video Capture (`content.js` + `POST /api/capture`):**
+   - Active on `youtube.com/*`.
+   - Alt+Shift+Q/F/C/T/M grabs the video ID, current timestamp, and grabs the `<video>` element's current frame to upload to Cloudflare R2 via the capture API.
+   - Gemini drafts a single question card. A single-card overlay appears in the page shadow DOM to review and save.
+   - Provenance is stored in `source: { type: "video", videoId, url, timestamp, channel, title, screenshotUrl, marker }`.
+
+2. **Web Text Capture (`web.js` + `POST /api/generate`):**
+   - Active on `<all_urls>` (excluding youtube.com).
+   - Selection context menu right-click → "Add question" -> triggers a config modal asking for card count (1-20) and question kind.
+   - Gemini drafts N questions from the selected text, which returns a batch list.
+   - A multi-card overlay opens in the page shadow DOM letting the user expand, edit, or discard individual drafts. MCQ/multi options are rendered in a clean grid-based option table.
+   - Provenance is stored in `source: { type: "web", url, title, siteName, excerpt, capturedAt }`.
+
 ## Theming
 
 - Tailwind v4 `@variant dark (&:where(.dark, .dark *))` toggle in `globals.css`

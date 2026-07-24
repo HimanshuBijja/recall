@@ -1,10 +1,19 @@
 # 02 — Features Log
 
-Newest first.
+## 2026-07-25 — Web text capture (any site)
+- **Web text capture implementation**: Select text on any website → right-click **Add question** → choose how many cards and which kind → Gemini drafts them from the passage → a batch overlay lists all N drafts for editing → Save all.
+- **Files added (extension)**: `src/web/selection.ts`, `src/web/config-modal.ts`, `src/web/index.ts`, `src/content/overlay/batch.ts`, `vite.web.config.ts`, `tests/selection.test.ts`, `tests/config-modal.test.ts`, `tests/batch.test.ts`, `tests/generate-bg.test.ts`.
+- **Files added (Recall)**: `lib/source.ts`, `app/api/generate/route.ts` (+ tests).
+- **Files modified**: `types/index.ts` (CardSource union), `app/api/cards/validate.ts`, `app/api/cards/route.ts`, `lib/gemini.ts`, `extension/manifest.json`, `extension/package.json`, `extension/src/background.ts`, `extension/src/shared/types.ts`, `extension/src/content/overlay/fields.ts`, `extension/src/content/overlay/ai.ts`, `extension/src/content/overlay/styles.ts`.
+- **New API endpoint**: `POST /api/generate` — `{ text, kind, count, pageTitle? }` → `{ ok, drafts: CardDraft[] }`. Count clamped to 1..20, source text to 20k chars.
+- **Schema change**: `CardSource` is now `VideoSource | WebSource`. No migration needed — existing documents have no `type` field and read as `VideoSource`.
+- **New permission**: `contextMenus`. New content script matching `<all_urls>` (excluding youtube.com).
+- **No new env vars, no new packages.**
 
 ## 2026-07-25 — Modularized Extension Overlay & Fixed AI Changes Diff Bug
 - **Modularized Overlay Codebase**: Extracted CSS styles into `styles.ts` and AI selection / global editor logic into `ai.ts`, reducing the lines of code in `overlay.ts` significantly (from ~1100 to ~150 lines).
 - **Fixed AI Changes Rendering Bug**: Resolved the layout issue where diff overlay blocks did not render or appeared squashed inside option, statement, and pair rows. Applied `display: none` on targets / `.option-row` wrappers to hide them from the document flow completely while modular changes are previewed, allowing the vertical diff container to render at full width.
+- **Cinematic Editorial Theme Revamp**: Changed the extension theme (`popup.html`, `options.html`, `styles.ts`, `ai.ts`) from dark navy/blue to the warm earth-toned dark matte editorial aesthetic defined in `design.md` (using matte black `#181818` for backgrounds, cards, settings, and buttons, warm beige `#EBDCC4` for primary texts, muted sage `#B6A596` for secondary labels, and coral-rust accents `#DC9F85`).
 
 ## 2026-07-24 — Extension UI Revamp, MCQ/Multi Separation, Single-Tag Prompt, Autocomplete Tag Selector, and Inline Ask AI Editor
 - **Segregation of MCQ & Multi:** Kept MCQ and Multi as distinct card types with separate hotkeys and static badges (avoiding conversion data-loss). MCQ uses radio-button correct checkmarks; Multi uses multi-checkbox checkmarks.

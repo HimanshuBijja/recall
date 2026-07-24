@@ -2,6 +2,10 @@
 
 Significant architectural/technical decisions. Newest first.
 
+## 2026-07-25 — Web text capture (any site)
+- **`CardSource` is a discriminated union, and the web arm declares the video-only properties as `?: undefined`.** Eight call sites read `card.source?.videoId` directly; declaring `videoId?: undefined` on `WebSource` keeps all of them type-checking, so the union landed without touching analytics, groups, subjects, or exemptions. Use the `isVideoSource` / `isWebSource` guards from `lib/source.ts` anywhere you need to read `timestamp` or `screenshotUrl`.
+- **The MCQ/multi "table" in the batch overlay is a CSS grid, not a `<table>`.** `ai.ts` inserts its diff block as a sibling of the field it replaces; inside a real `<tbody>` that would be a stray `<div>` between `<tr>`s. A grid row gives the same visual structure and leaves the existing pill insertion logic intact.
+
 ## 2026-07-25 — Modularized overlay.ts and fixed modular change preview (diffs) layout
 - **Decision 1 — Modularize `overlay.ts`:** Extracted the massive string-based CSS stylesheet to a separate `styles.ts` file, and all Ask AI inline text selection & global card editors, as well as diff rendering preview logic, to `ai.ts`.
 - **Decision 2 — Hide target row wrappers (`display: none`) to prevent squashing:** To solve the layout bug where vertical diff overlays (original pink strikethrough vs suggested green text) were invisible/squashed inside horizontal option rows, statement rows, or pair rows, we set `display: none` on the target's `.option-row` wrapper (or target itself for basic fields) and insert the diff overlay as a sibling of the hidden container. Upon accept or decline, `renderFields` is run, which creates brand new elements with default displays.
