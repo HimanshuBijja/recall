@@ -148,6 +148,14 @@ export function openBatchOverlay(opts: BatchOverlayOptions): Promise<BatchResult
         const open = body.style.display === "none";
         body.style.display = open ? "" : "none";
         chevron.textContent = open ? "▾" : "▸";
+        if (open) {
+          setTimeout(() => {
+            const tas = Array.from(body.querySelectorAll("textarea"));
+            tas.forEach((ta) => {
+              ta.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+          }, 0);
+        }
       }
 
       chevron.addEventListener("click", (e) => {
@@ -217,5 +225,13 @@ export function openBatchOverlay(opts: BatchOverlayOptions): Promise<BatchResult
     document.addEventListener("keydown", onKeydown, true);
 
     document.body.append(host);
+
+    // Initial resize trigger for the first card which is expanded by default
+    setTimeout(() => {
+      const tas = Array.from(shadow.querySelectorAll("textarea"));
+      tas.forEach((ta) => {
+        ta.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+    }, 50);
   });
 }

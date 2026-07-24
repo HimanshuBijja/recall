@@ -66,7 +66,7 @@ function textarea(value: string, placeholder: string): HTMLTextAreaElement {
   t.value = value;
   const adjust = () => {
     t.style.height = "auto";
-    t.style.height = `${t.scrollHeight}px`;
+    t.style.height = `${t.scrollHeight + 4}px`;
   };
   t.addEventListener("input", adjust);
   t.addEventListener("keydown", (e) => {

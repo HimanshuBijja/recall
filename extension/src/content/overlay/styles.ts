@@ -166,27 +166,33 @@ export const overlayStyles = `
   }
   label {
     display: block;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     color: #B6A596;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin: 8px 0 4px;
+    letter-spacing: 0.08em;
+    margin: 12px 0 6px;
   }
   textarea, input {
-    background: #181818;
+    background: #121212;
     color: #EBDCC4;
-    border: 1px solid #4A4441;
+    border: 1px solid #2e2927;
     border-radius: 4px;
-    padding: 8px 12px;
+    padding: 10px 14px;
     font-size: 13px;
+    line-height: 1.5;
     font-family: inherit;
-    transition: border-color 0.15s ease;
+    transition: all 0.15s ease;
     box-sizing: border-box;
   }
   textarea:focus, input:focus {
     outline: none;
     border-color: #DC9F85;
+    background: #151515;
+    box-shadow: 0 0 0 1px #DC9F85;
+  }
+  textarea {
+    min-height: 38px;
   }
   .actions {
     display: flex;
@@ -220,10 +226,10 @@ export const overlayStyles = `
     background: #2e2927;
   }
   .toggle-correct-btn {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     border-radius: 4px;
-    border: 2px solid #4A4441;
+    border: 1px solid #4A4441;
     background: transparent;
     display: flex;
     align-items: center;
@@ -232,8 +238,12 @@ export const overlayStyles = `
     flex-shrink: 0;
     transition: all 0.15s ease;
     color: transparent;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: bold;
+  }
+  .toggle-correct-btn:hover {
+    border-color: #DC9F85;
+    background: rgba(220, 159, 133, 0.08);
   }
   .toggle-correct-btn.correct {
     border-color: #DC9F85;
@@ -244,10 +254,29 @@ export const overlayStyles = `
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #181818;
-    padding: 8px;
+    background: #121212;
+    padding: 6px 10px;
     border-radius: 4px;
-    border: 1px solid #4A4441;
+    border: 1px solid #2e2927;
+    transition: all 0.15s ease;
+  }
+  .option-row:focus-within {
+    border-color: #DC9F85;
+    background: #151515;
+    box-shadow: 0 0 0 1px #DC9F85;
+  }
+  .option-row textarea, .option-row input {
+    background: transparent !important;
+    border: none !important;
+    padding: 4px 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    flex: 1;
+  }
+  .option-row textarea:focus, .option-row input:focus {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-color: transparent !important;
   }
   .add-btn {
     background: transparent;
@@ -314,10 +343,24 @@ export const overlayStyles = `
   .option-row-table {
     display: grid;
     grid-template-columns: 28px 1fr 72px 32px;
-    align-items: start;
+    align-items: center;
     gap: 8px;
-    padding: 6px 4px;
-    border-bottom: 1px solid #2e2927;
+    padding: 8px 4px;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid #2e2927 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .option-row-table:focus-within {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-bottom-color: #DC9F85 !important;
+  }
+  .option-row-table textarea, .option-row-table input {
+    border-bottom: 1px solid transparent !important;
+  }
+  .option-row-table textarea:focus, .option-row-table input:focus {
+    border-bottom-color: #DC9F85 !important;
   }
   .option-row-table .option-index {
     font-size: 11px;
@@ -340,12 +383,19 @@ export const batchStyles = `
     color: #B6A596;
   }
   .batch-list { display: flex; flex-direction: column; gap: 10px; }
-  .batch-card { border: 1px solid #4A4441; border-radius: 4px; background: #181818; }
+  .batch-card {
+    border: 1px solid #2e2927;
+    border-radius: 6px;
+    background: #181818;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
   .batch-card-head {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 12px 16px;
+    background: #1f1f1f;
     border-bottom: 1px solid #2e2927;
   }
   .batch-chevron {
