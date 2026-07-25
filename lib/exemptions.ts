@@ -37,10 +37,6 @@ export function getCardExemptionMap(
   const map = new Map<string, boolean>();
 
   for (const card of cards) {
-    if (card.exempted === true) {
-      map.set(card.id, true);
-      continue;
-    }
     const matchingGroups: Group[] = [];
     for (const g of groups) {
       if (g.videoId) {

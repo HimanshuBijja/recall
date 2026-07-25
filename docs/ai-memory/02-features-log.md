@@ -1,5 +1,20 @@
 # 02 — Features Log
 
+## 2026-07-25 — Google Authentication Gate & Extension Database Sync
+- **Google Login Gate**: GSI login flow restricts access to `ALLOWED_EMAIL` via Next.js Middleware and secure HttpOnly cookies. Custom login screen at `/login`.
+- **Extension settings & sync**:
+  - Adds API Key and Sync Database options to settings page.
+  - Adds `SYNC_LOCAL_DB` message handler to background script to trigger cloud-to-local database mirror pull over the `/api/sync/local` endpoint.
+  - Automatically appends `X-API-Key` to outgoing extension API calls to bypass login restrictions.
+- **Files added**: `lib/auth-crypto.ts`, `app/login/page.tsx`, `app/api/auth/login/route.ts`, `app/api/auth/logout/route.ts`, `app/api/sync/local/route.ts`, `middleware.ts`.
+- **Files modified**: `components/Nav.tsx`, `extension/src/shared/types.ts`, `extension/src/shared/config.ts`, `extension/src/background.ts`, `extension/src/options/options.html`, `extension/src/options/options.ts`, `.env.local.example`.
+- **New API endpoints**:
+  - `POST /api/auth/login` (verify GSI token and sign JWT session)
+  - `GET /api/auth/logout` (clear session cookie)
+  - `POST /api/sync/local` (copy Atlas collections to local database)
+- **New Env Vars**: `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `ALLOWED_EMAIL`, `RECALL_API_KEY`, `JWT_SECRET`.
+- **No new external packages.**
+
 ## 2026-07-25 — Web text capture (any site)
 - **Web text capture implementation**: Select text on any website → right-click **Add question** → choose how many cards and which kind → Gemini drafts them from the passage → a batch overlay lists all N drafts for editing → Save all.
 - **Files added (extension)**: `src/web/selection.ts`, `src/web/config-modal.ts`, `src/web/index.ts`, `src/content/overlay/batch.ts`, `vite.web.config.ts`, `tests/selection.test.ts`, `tests/config-modal.test.ts`, `tests/batch.test.ts`, `tests/generate-bg.test.ts`.

@@ -64,7 +64,7 @@ export function openBatchOverlay(opts: BatchOverlayOptions): Promise<BatchResult
     count.className = "batch-count";
     heading.append(badge, count);
 
-    if (opts.source.type === "web") {
+    if ("type" in opts.source && opts.source.type === "web") {
       const groupLabel = document.createElement("span");
       groupLabel.style.cssText = "font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#B6A596;margin-left:16px;white-space:nowrap;";
       groupLabel.textContent = "Group:";

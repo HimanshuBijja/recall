@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
     id: crypto.randomUUID(),
     name: body.name.trim(),
     tagIds: Array.isArray(body.tagIds) ? body.tagIds : [],
+    exempted: !!body.exempted,
     createdAt: new Date().toISOString(),
   };
   groups.push(group);

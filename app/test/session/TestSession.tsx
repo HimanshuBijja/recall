@@ -29,8 +29,6 @@ interface PreparedCard {
   card: Card;
   options: string[];
   statementOrder: number[];
-  leftOrder: number[];
-  rightOrder: number[];
 }
 
 const OPTION_LETTERS = ["A", "B", "C", "D"];
@@ -89,23 +87,15 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
       const statementOrder = card.statements
         ? shuffleArr(card.statements.map((_, i) => i))
         : [];
-      const leftOrder = card.pairs
-        ? shuffleArr(card.pairs.map((_, i) => i))
-        : [];
-      const rightOrder = card.pairs
-        ? shuffleArr(card.pairs.map((_, i) => i))
-        : [];
       return {
         card,
         options:
           card.kind === "tf-sort" || card.kind === "flash" || card.kind === "cloze" || card.kind === "match"
             ? []
             : card.kind === "multi"
-            ? shuffleArr([...(card.answers ?? []), ...card.distractors])
-            : shuffleArr([card.answer, ...card.distractors]),
+              ? shuffleArr([...(card.answers ?? []), ...card.distractors])
+              : shuffleArr([card.answer, ...card.distractors]),
         statementOrder,
-        leftOrder,
-        rightOrder,
       };
     });
     // intentionally only on mount
@@ -138,6 +128,9 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const [wrongPair, setWrongPair] = useState<[number, number] | null>(null);
   const [multiPicked, setMultiPicked] = useState<Set<string>>(new Set());
   const [multiSubmitted, setMultiSubmitted] = useState(false);
+  const [leftOrder, setLeftOrder] = useState<number[]>([]);
+  const [rightOrder, setRightOrder] = useState<number[]>([]);
+
   const loadDueBatch = useCallback(
     async (excludeIds: Set<string>) => {
       setLoadingDue(true);
@@ -159,23 +152,15 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
           const statementOrder = card.statements
             ? shuffleArr(card.statements.map((_, i) => i))
             : [];
-          const leftOrder = card.pairs
-            ? shuffleArr(card.pairs.map((_, i) => i))
-            : [];
-          const rightOrder = card.pairs
-            ? shuffleArr(card.pairs.map((_, i) => i))
-            : [];
           return {
             card,
             options:
               card.kind === "tf-sort" || card.kind === "flash" || card.kind === "cloze" || card.kind === "match"
                 ? []
                 : card.kind === "multi"
-                ? shuffleArr([...(card.answers ?? []), ...card.distractors])
-                : shuffleArr([card.answer, ...card.distractors]),
+                  ? shuffleArr([...(card.answers ?? []), ...card.distractors])
+                  : shuffleArr([card.answer, ...card.distractors]),
             statementOrder,
-            leftOrder,
-            rightOrder,
           };
         });
         return preparedBatch;
@@ -267,6 +252,12 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     setWrongPair(null);
     setMultiPicked(new Set());
     setMultiSubmitted(false);
+
+    if (current?.card.kind === "match" && current.card.pairs) {
+      const n = current.card.pairs.length;
+      setLeftOrder(shuffleArr(Array.from({ length: n }, (_, i) => i)));
+      setRightOrder(shuffleArr(Array.from({ length: n }, (_, i) => i)));
+    }
   }, [idx, current]);
 
   // Live timer (stops once answered)
@@ -616,7 +607,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         <CardFrame url={current.card.source?.screenshotUrl} />
 
         {isFlash ? (
-          <div 
+          <div
             {...swipeHandlers}
             onClick={() => !flipped && setFlipped(true)}
             className="cursor-pointer select-none min-h-[220px] flex flex-col justify-between p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/40 relative overflow-hidden transition-transform active:scale-[0.99] duration-150"
@@ -707,7 +698,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             <div className="grid grid-cols-2 gap-4">
               {/* Left Column */}
               <div className="space-y-2">
-                {(current.leftOrder ?? []).map((pairIdx) => {
+                {leftOrder.map((pairIdx) => {
                   const p = current.card.pairs![pairIdx];
                   const isMatched = matchedPairs.has(pairIdx);
                   const isSelected = selectedLeft === pairIdx;
@@ -757,7 +748,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
 
               {/* Right Column */}
               <div className="space-y-2">
-                {(current.rightOrder ?? []).map((pairIdx) => {
+                {rightOrder.map((pairIdx) => {
                   const p = current.card.pairs![pairIdx];
                   const isMatched = matchedPairs.has(pairIdx);
                   const isSelected = selectedRight === pairIdx;
@@ -900,14 +891,14 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                             !tfSubmitted && picked && val
                               ? "bg-emerald-600 text-white"
                               : !tfSubmitted && picked && !val
-                              ? "bg-rose-600 text-white"
-                              : !tfSubmitted
-                              ? "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
-                              : isCorrect
-                              ? "bg-emerald-600 text-white"
-                              : isWrongPick
-                              ? "bg-zinc-300 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
-                              : "text-zinc-400",
+                                ? "bg-rose-600 text-white"
+                                : !tfSubmitted
+                                  ? "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+                                  : isCorrect
+                                    ? "bg-emerald-600 text-white"
+                                    : isWrongPick
+                                      ? "bg-zinc-300 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
+                                      : "text-zinc-400",
                           ].join(" ")}
                           aria-label={val ? "True" : "False"}
                         >
@@ -1006,13 +997,13 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                   className={[
                     "group text-left px-4 py-3 rounded-lg border transition-all flex items-start gap-3",
                     !showResult &&
-                      "border-zinc-300 dark:border-zinc-700 hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20",
+                    "border-zinc-300 dark:border-zinc-700 hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20",
                     showResult && isCorrect &&
-                      "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60",
+                    "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60",
                     showResult && !isCorrect && isPicked &&
-                      "border-rose-500 bg-rose-50 dark:bg-rose-950/60",
+                    "border-rose-500 bg-rose-50 dark:bg-rose-950/60",
                     showResult && !isCorrect && !isPicked &&
-                      "border-zinc-200 dark:border-zinc-800 opacity-50",
+                    "border-zinc-200 dark:border-zinc-800 opacity-50",
                   ].filter(Boolean).join(" ")}
                 >
                   <kbd
@@ -1059,99 +1050,99 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
           const cardCorrect = isTfSort
             ? tfAllCorrect
             : isCloze
-            ? clozeAllCorrect
-            : isMatch
-            ? matchAllCorrect
-            : isMulti
-            ? multiCorrect
-            : picked === current.card.answer;
+              ? clozeAllCorrect
+              : isMatch
+                ? matchAllCorrect
+                : isMulti
+                  ? multiCorrect
+                  : picked === current.card.answer;
           const tfCorrectCount = isTfSort
             ? tfStatements.filter((s, i) => tfAssignments[i] === s.isTrue).length
             : 0;
           const clozeCorrectCount = isCloze
             ? clozeData.answers.filter(
-                (a, i) => (clozeInputs[i] ?? "").trim().toLowerCase() === a.toLowerCase()
-              ).length
+              (a, i) => (clozeInputs[i] ?? "").trim().toLowerCase() === a.toLowerCase()
+            ).length
             : 0;
           return (
-          <div className="space-y-4 pt-2 border-t border-zinc-200 dark:border-zinc-800 animate-in fade-in duration-200">
-            <div className="flex items-center gap-2 text-sm flex-wrap">
-              <span
-                className={
-                  cardCorrect
-                    ? "text-emerald-600 dark:text-emerald-400 font-semibold"
-                    : "text-rose-600 dark:text-rose-400 font-semibold"
-                }
-              >
-                {cardCorrect ? "Correct!" : "Incorrect"}
-              </span>
-              {isTfSort && (
-                <span className="text-zinc-500">
-                  · {tfCorrectCount}/{tfStatements.length} statements sorted right
+            <div className="space-y-4 pt-2 border-t border-zinc-200 dark:border-zinc-800 animate-in fade-in duration-200">
+              <div className="flex items-center gap-2 text-sm flex-wrap">
+                <span
+                  className={
+                    cardCorrect
+                      ? "text-emerald-600 dark:text-emerald-400 font-semibold"
+                      : "text-rose-600 dark:text-rose-400 font-semibold"
+                  }
+                >
+                  {cardCorrect ? "Correct!" : "Incorrect"}
                 </span>
-              )}
-              {isCloze && (
-                <span className="text-zinc-500">
-                  · {clozeCorrectCount}/{clozeData.answers.length} blanks correct
-                </span>
-              )}
-              {isMatch && (
-                <span className="text-zinc-500">
-                  · completed with {matchMistakes} mistake{matchMistakes === 1 ? "" : "s"}
-                </span>
-              )}
-              <span className="text-zinc-500">· answered in {fmtMs(Date.now() - startRef.current)}</span>
-            </div>
+                {isTfSort && (
+                  <span className="text-zinc-500">
+                    · {tfCorrectCount}/{tfStatements.length} statements sorted right
+                  </span>
+                )}
+                {isCloze && (
+                  <span className="text-zinc-500">
+                    · {clozeCorrectCount}/{clozeData.answers.length} blanks correct
+                  </span>
+                )}
+                {isMatch && (
+                  <span className="text-zinc-500">
+                    · completed with {matchMistakes} mistake{matchMistakes === 1 ? "" : "s"}
+                  </span>
+                )}
+                <span className="text-zinc-500">· answered in {fmtMs(Date.now() - startRef.current)}</span>
+              </div>
 
-            {current.card.explanation && (
-              <div>
-                <div className="text-xs uppercase tracking-wide text-zinc-500 mb-1">
-                  Explanation
+              {current.card.explanation && (
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-zinc-500 mb-1">
+                    Explanation
+                  </div>
+                  <p className="text-sm leading-relaxed">{current.card.explanation}</p>
                 </div>
-                <p className="text-sm leading-relaxed">{current.card.explanation}</p>
-              </div>
-            )}
+              )}
 
-            <div>
-              <div className="text-xs uppercase tracking-wide text-zinc-500 mb-2">
-                How confident were you?
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {([
-                  [1, "Not sure", "rose"],
-                  [2, "OK", "amber"],
-                  [3, "Confident", "emerald"],
-                ] as const).map(([c, label, tone]) => (
-                  <button
-                    key={c}
-                    onClick={() =>
-                      isTfSort
-                        ? recordAndAdvance(c, "", tfAllCorrect)
-                        : isCloze
-                        ? recordAndAdvance(c, "", clozeAllCorrect)
-                        : isMatch
-                        ? recordAndAdvance(c, "", matchAllCorrect)
-                        : isMulti
-                        ? recordAndAdvance(c, "", multiCorrect)
-                        : recordAndAdvance(c, picked!)
-                    }
-                    disabled={submitting}
-                    className={[
-                      "px-3 py-2 rounded-lg border text-sm font-medium transition-colors inline-flex items-center justify-center gap-2",
-                      "border-zinc-300 dark:border-zinc-700",
-                      tone === "rose" && "hover:bg-rose-600 hover:text-white hover:border-rose-600",
-                      tone === "amber" && "hover:bg-amber-500 hover:text-white hover:border-amber-500",
-                      tone === "emerald" && "hover:bg-emerald-600 hover:text-white hover:border-emerald-600",
-                      "disabled:opacity-50",
-                    ].filter(Boolean).join(" ")}
-                  >
-                    {label}
-                    <kbd className="px-1 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-mono">{c}</kbd>
-                  </button>
-                ))}
+              <div>
+                <div className="text-xs uppercase tracking-wide text-zinc-500 mb-2">
+                  How confident were you?
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    [1, "Not sure", "rose"],
+                    [2, "OK", "amber"],
+                    [3, "Confident", "emerald"],
+                  ] as const).map(([c, label, tone]) => (
+                    <button
+                      key={c}
+                      onClick={() =>
+                        isTfSort
+                          ? recordAndAdvance(c, "", tfAllCorrect)
+                          : isCloze
+                            ? recordAndAdvance(c, "", clozeAllCorrect)
+                            : isMatch
+                              ? recordAndAdvance(c, "", matchAllCorrect)
+                              : isMulti
+                                ? recordAndAdvance(c, "", multiCorrect)
+                                : recordAndAdvance(c, picked!)
+                      }
+                      disabled={submitting}
+                      className={[
+                        "px-3 py-2 rounded-lg border text-sm font-medium transition-colors inline-flex items-center justify-center gap-2",
+                        "border-zinc-300 dark:border-zinc-700",
+                        tone === "rose" && "hover:bg-rose-600 hover:text-white hover:border-rose-600",
+                        tone === "amber" && "hover:bg-amber-500 hover:text-white hover:border-amber-500",
+                        tone === "emerald" && "hover:bg-emerald-600 hover:text-white hover:border-emerald-600",
+                        "disabled:opacity-50",
+                      ].filter(Boolean).join(" ")}
+                    >
+                      {label}
+                      <kbd className="px-1 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-mono">{c}</kbd>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
           );
         })()}
       </div>

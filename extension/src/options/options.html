@@ -8,8 +8,8 @@
       body {
         margin: 0;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: #0f172a;
-        color: #f8fafc;
+        background: #181818;
+        color: #EBDCC4;
       }
       main {
         max-width: 760px;
@@ -21,18 +21,18 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #f8fafc;
+        color: #EBDCC4;
         margin-bottom: 4px;
       }
       p.sub {
-        color: #94a3b8;
+        color: #B6A596;
         font-size: 13px;
         margin-top: 0;
         margin-bottom: 24px;
       }
       section {
-        background: #1e293b;
-        border: 1px solid #334155;
+        background: #181818;
+        border: 1px solid #4A4441;
         border-radius: 4px;
         padding: 16px 20px;
         margin-bottom: 16px;
@@ -43,22 +43,22 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #94a3b8;
+        color: #B6A596;
         margin-bottom: 8px;
       }
-      input[type="text"], input[type="url"], select {
+      input[type="text"], input[type="url"], input[type="password"], select {
         width: 100%;
-        background: #0f172a;
-        color: #f8fafc;
-        border: 1px solid #334155;
+        background: #181818;
+        color: #EBDCC4;
+        border: 1px solid #4A4441;
         border-radius: 4px;
         padding: 8px 10px;
         font-size: 13px;
         box-sizing: border-box;
       }
-      input[type="text"]:focus, input[type="url"]:focus, select:focus {
+      input[type="text"]:focus, input[type="url"]:focus, input[type="password"]:focus, select:focus {
         outline: none;
-        border-color: #38bdf8;
+        border-color: #DC9F85;
       }
       .kind-row {
         display: grid;
@@ -66,10 +66,10 @@
         gap: 10px;
         align-items: center;
         padding: 12px 0;
-        border-bottom: 1px solid #334155;
+        border-bottom: 1px solid #4A4441;
       }
       .kind-row:last-child { border-bottom: none; }
-      .kind-name { font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 12px; color: #f8fafc; }
+      .kind-name { font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 12px; color: #EBDCC4; }
       .error { color: #fda4af; font-size: 11px; min-height: 14px; margin-top: 2px; }
       button {
         cursor: pointer;
@@ -82,23 +82,111 @@
         letter-spacing: 0.05em;
         transition: all 0.15s ease;
       }
-      .save-all { background: #38bdf8; color: #0f172a; }
-      .save-all:hover { background: #0ea5e9; }
-      .status { margin-left: 12px; font-size: 12px; color: #94a3b8; font-weight: 600; }
+      .save-all { background: #DC9F85; color: #181818; }
+      .save-all:hover { background: #EBDCC4; }
+      .status { margin-left: 12px; font-size: 12px; color: #B6A596; font-weight: 600; }
       input[type="color"] {
         width: 100%;
         height: 32px;
-        border: 1px solid #334155;
+        border: 1px solid #4A4441;
         background: none;
         padding: 2px;
         border-radius: 4px;
         cursor: pointer;
       }
       input[type="checkbox"] {
-        accent-color: #38bdf8;
+        accent-color: #DC9F85;
         width: 16px;
         height: 16px;
         cursor: pointer;
+      }
+      .url-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        border: 1px solid #4A4441;
+        border-radius: 4px;
+        margin-bottom: 8px;
+        background: rgba(24, 24, 24, 0.2);
+      }
+      .url-row.active {
+        border-color: #DC9F85;
+        background: rgba(220, 159, 133, 0.05);
+      }
+      .url-info {
+        display: flex;
+        align-items: center;
+      }
+      .url-text {
+        font-size: 12px;
+        font-family: monospace;
+        color: #EBDCC4;
+        word-break: break-all;
+      }
+      .url-badge {
+        font-size: 8px;
+        background: #DC9F85;
+        color: #181818;
+        padding: 1px 4px;
+        border-radius: 2px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-left: 8px;
+        letter-spacing: 0.05em;
+      }
+      .url-actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      .url-btn {
+        background: rgba(24, 24, 24, 0.4);
+        border: 1px solid #4A4441;
+        color: #B6A596;
+        cursor: pointer;
+        font-size: 9px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        transition: all 0.15s ease;
+      }
+      .url-btn:hover {
+        color: #EBDCC4;
+        border-color: #EBDCC4;
+      }
+      .url-btn.select-btn {
+        color: #DC9F85;
+        border-color: rgba(220, 159, 133, 0.3);
+      }
+      .url-btn.select-btn:hover {
+        background: rgba(220, 159, 133, 0.1);
+        border-color: #DC9F85;
+        color: #EBDCC4;
+      }
+      .url-btn.delete-btn {
+        color: #f59e0b;
+        border-color: rgba(245, 158, 11, 0.2);
+      }
+      .url-btn.delete-btn:hover {
+        background: rgba(245, 158, 11, 0.1);
+        border-color: #f59e0b;
+        color: #EBDCC4;
+      }
+      .url-btn.test-btn {
+        color: #B6A596;
+        border-color: #4A4441;
+      }
+      .url-btn.test-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .add-url-container {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
       }
     </style>
   </head>
@@ -108,12 +196,35 @@
       <p class="sub">Configure per-kind hotkeys, timeline markers, and the Recall server base URL.</p>
 
       <section>
-        <label for="baseUrl">Recall base URL</label>
-        <input id="baseUrl" type="url" placeholder="http://localhost:3000" />
+        <label>RECALL SERVER BASE URLS</label>
+        <p style="font-size: 11px; color: #B6A596; margin-top: 0; margin-bottom: 12px;">
+          Manage server addresses and select the active target. Active server is tested and highlighted.
+        </p>
+        
+        <div class="add-url-container">
+          <input id="newBaseUrl" type="url" placeholder="http://localhost:3000 or https://deployed-app.vercel.app" style="flex: 1;" />
+          <button id="addBaseUrl" type="button" style="background: rgba(24, 24, 24, 0.3); border: 1px solid #4A4441; color: #EBDCC4; font-size: 10px; padding: 0 16px;">Add URL</button>
+        </div>
+
+        <div id="baseUrlsList"></div>
+
+        <label for="apiKey" style="margin-top: 16px;">API Key (RECALL_API_KEY)</label>
+        <input id="apiKey" type="password" placeholder="Enter API Key to authenticate extension requests" />
       </section>
 
       <section>
-        <div class="kind-row" style="font-size:11px;opacity:.6;border-bottom:1px solid #333;">
+        <label>LOCAL DATABASE SYNC</label>
+        <p style="font-size: 11px; color: #B6A596; margin-top: 0; margin-bottom: 12px;">
+          Mirrors and dumps the entire Atlas cloud database to your local database on this laptop.
+        </p>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button id="syncNow" type="button" style="background: rgba(24, 24, 24, 0.3); border: 1px solid #4A4441; color: #EBDCC4;">Sync Now</button>
+          <span id="syncStatus" style="font-size: 11px; color: #B6A596; font-family: monospace;"></span>
+        </div>
+      </section>
+
+      <section>
+        <div class="kind-row" style="font-size:11px;opacity:.6;border-bottom:1px solid #4A4441;">
           <div>Kind</div>
           <div>Shortcut</div>
           <div>Shape</div>

@@ -9,15 +9,15 @@
         margin: 0;
         width: 320px;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: #0f172a;
-        color: #f8fafc;
+        background: #181818;
+        color: #EBDCC4;
       }
       main { padding: 18px; }
       h1 {
         font-size: 11px;
         font-weight: 700;
         margin: 0 0 14px;
-        color: #94a3b8;
+        color: #B6A596;
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
@@ -31,13 +31,13 @@
         align-items: center;
         gap: 10px;
         padding: 8px 10px;
-        background: #1e293b;
-        border: 1px solid #334155;
+        background: #181818;
+        border: 1px solid #4A4441;
         border-radius: 4px;
         transition: all 0.15s ease;
       }
       .kind-row:hover {
-        border-color: #38bdf8;
+        border-color: #DC9F85;
       }
       .kind-info {
         flex: 1;
@@ -49,11 +49,11 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #f8fafc;
+        color: #EBDCC4;
       }
       .kind-desc {
         font-size: 10px;
-        color: #94a3b8;
+        color: #B6A596;
         margin-top: 2px;
       }
       .capture-btn {
@@ -63,13 +63,13 @@
         padding: 5px 10px;
         font-size: 10px;
         font-weight: 700;
-        background: #38bdf8;
-        color: #0f172a;
+        background: #DC9F85;
+        color: #181818;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        transition: background 0.15s ease;
+        transition: all 0.15s ease;
       }
-      .capture-btn:hover { background: #0ea5e9; }
+      .capture-btn:hover { background: #EBDCC4; }
       .toggle-label {
         position: relative;
         display: inline-block;
@@ -86,8 +86,8 @@
         position: absolute;
         cursor: pointer;
         inset: 0;
-        background-color: #1e293b;
-        border: 1px solid #334155;
+        background-color: #181818;
+        border: 1px solid #4A4441;
         transition: .2s;
         border-radius: 4px;
       }
@@ -98,19 +98,19 @@
         width: 12px;
         left: 3px;
         bottom: 3px;
-        background-color: #94a3b8;
+        background-color: #B6A596;
         transition: .2s;
         border-radius: 2px;
       }
       input:checked + .slider {
-        background-color: #334155;
-        border-color: #38bdf8;
+        background-color: #181818;
+        border-color: #DC9F85;
       }
       input:checked + .slider:before {
         transform: translateX(16px);
-        background-color: #38bdf8;
+        background-color: #DC9F85;
       }
-      .actions { display: flex; gap: 8px; margin-top: 18px; border-top: 1px solid #334155; padding-top: 14px; }
+      .actions { display: flex; gap: 8px; margin-top: 18px; border-top: 1px solid #4A4441; padding-top: 14px; }
       .actions button {
         flex: 1;
         cursor: pointer;
@@ -123,10 +123,10 @@
         letter-spacing: 0.05em;
         transition: all 0.15s ease;
       }
-      .open-recall { background: #38bdf8; color: #0f172a; }
-      .open-recall:hover { background: #0ea5e9; }
-      .settings { background: #1e293b; color: #f8fafc; border: 1px solid #334155; }
-      .settings:hover { background: #334155; }
+      .open-recall { background: #DC9F85; color: #181818; }
+      .open-recall:hover { background: #EBDCC4; }
+      .settings { background: #181818; color: #EBDCC4; border: 1px solid #4A4441; }
+      .settings:hover { background: #2e2927; }
     </style>
   </head>
   <body>
@@ -137,7 +137,7 @@
         <button id="openRecall" class="open-recall" type="button">Open Dashboard</button>
         <button id="openSettings" class="settings" type="button">Settings</button>
       </div>
-      <button id="attemptVideo" class="attempt-video" type="button" style="background:#1e293b; color:#f8fafc; border:1px solid #38bdf8; display:none; margin-top:8px; width:100%; cursor:pointer; border-radius:4px; padding:8px 12px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; text-align:center; transition:all 0.15s ease;">Attempt Video Questions</button>
+      <button id="attemptVideo" class="attempt-video" type="button" style="background:#181818; color:#EBDCC4; border:1px solid #DC9F85; display:none; margin-top:8px; width:100%; cursor:pointer; border-radius:4px; padding:8px 12px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; text-align:center; transition:all 0.15s ease;">Attempt Video Questions</button>
     </main>
     <script type="module" src="./popup.ts"></script>
   </body>

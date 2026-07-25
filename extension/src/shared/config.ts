@@ -1,7 +1,9 @@
 import type { Settings, CaptureKind } from "./types";
 
 export const DEFAULT_SETTINGS: Settings = {
-  baseUrl: "http://localhost:3000",
+  baseUrl: "http://localhost:3101",
+  baseUrls: ["http://localhost:3101"],
+  apiKey: "",
   kinds: {
     mcq: { shortcut: "Alt+Shift+Q", marker: { shape: "circle", color: "#f59e0b" }, visible: true },
     flash: { shortcut: "Alt+Shift+F", marker: { shape: "square", color: "#3b82f6" }, visible: true },
@@ -16,8 +18,13 @@ export const CAPTURE_KINDS: CaptureKind[] = ["mcq", "multi", "flash", "cloze", "
 
 export async function loadSettings(): Promise<Settings> {
   const stored = (await chrome.storage.sync.get("settings")).settings as Partial<Settings> | undefined;
+  const activeUrl = stored?.baseUrl ?? DEFAULT_SETTINGS.baseUrl;
+  const baseUrls = stored?.baseUrls ?? [activeUrl];
+  
   return {
-    baseUrl: stored?.baseUrl ?? DEFAULT_SETTINGS.baseUrl,
+    baseUrl: activeUrl,
+    baseUrls: baseUrls.includes(activeUrl) ? baseUrls : [activeUrl, ...baseUrls],
+    apiKey: stored?.apiKey ?? DEFAULT_SETTINGS.apiKey,
     kinds: { ...DEFAULT_SETTINGS.kinds, ...(stored?.kinds ?? {}) },
   };
 }

@@ -58,6 +58,9 @@ and the **Web text capture (any site)** feature.
   bucketed; new **"By video"** per-source accuracy section.
 - **Import**: alias paste formats (cloze/tf-sort/match), dedupe badges +
   skip-duplicates + bulk-tag in the preview.
+- **Google Login Gate**: GSI login flow restricts access to `ALLOWED_EMAILS` (comma-separated list of emails) via root Next.js middleware and secure HttpOnly cookie session. Custom cinematic login interface at `/login`.
+- **Local Mirror Sync**: Added POST endpoint `/api/sync/local` to pull Atlas collections to local DB, callable from the extension settings page with options to trigger mirroring directly via an `X-API-Key` authenticated request.
+- **Extension Settings Upgrades**: Masked API key input (password type) and added options to manage multiple Recall base URLs with active highlights and connection test alerts.
 
 ## Verification (all green as of this update)
 - Recall `npx tsc --noEmit` → clean; `npm run lint` → 0 errors (3 pre-existing

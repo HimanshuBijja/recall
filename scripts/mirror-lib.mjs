@@ -4,7 +4,7 @@
 // overwritten by the mirror.
 import { MongoClient } from "mongodb";
 
-export const COLLECTIONS = ["cards", "tags", "sessions", "groups", "bin"];
+export const COLLECTIONS = ["cards", "tags", "sessions", "groups", "bin", "reviews", "settings", "subjects"];
 
 export function requireEnv() {
   const source = process.env.MONGODB_URI;

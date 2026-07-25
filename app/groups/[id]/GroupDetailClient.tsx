@@ -40,7 +40,6 @@ export function GroupDetailClient({
   const [selectedTagFilter, setSelectedTagFilter] = useState("");
   const [selectedKindFilter, setSelectedKindFilter] = useState("");
   const [deletingCards, setDeletingCards] = useState(false);
-  const [activeMenuCardId, setActiveMenuCardId] = useState<string | null>(null);
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
@@ -411,11 +410,6 @@ export function GroupDetailClient({
                         <span className="text-[10px] uppercase font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-border">
                           {c.kind}
                         </span>
-                        {c.exempted && (
-                          <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded-full bg-amber-950/45 text-amber-500 border border-amber-500/30">
-                            Exempted
-                          </span>
-                        )}
                       </div>
                       <h3 className="text-sm font-semibold text-foreground truncate max-w-xl">
                         {c.question}
@@ -441,65 +435,6 @@ export function GroupDetailClient({
                       >
                         Test →
                       </Link>
-
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveMenuCardId(activeMenuCardId === c.id ? null : c.id);
-                          }}
-                          className="p-1 text-muted hover:text-foreground rounded transition-colors duration-150 flex items-center justify-center"
-                          title="Card Actions"
-                        >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                          </svg>
-                        </button>
-                        
-                        {activeMenuCardId === c.id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-10"
-                              onClick={() => setActiveMenuCardId(null)}
-                            />
-                            <div className="absolute right-0 mt-1 w-36 rounded border border-border bg-zinc-950 shadow-lg z-20 py-1 font-sans text-xs text-left">
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  setActiveMenuCardId(null);
-                                  try {
-                                    await api.put(`/cards/${c.id}`, { ...c, exempted: !c.exempted });
-                                    toast("success", c.exempted ? "Card included in study" : "Card exempted from study");
-                                    router.refresh();
-                                  } catch {
-                                    toast("error", "Failed to update card exemption status");
-                                  }
-                                }}
-                                className="w-full text-left px-3 py-1.5 hover:bg-zinc-900 text-foreground transition-colors duration-150"
-                              >
-                                {c.exempted ? "Include Card" : "Exempt Card"}
-                              </button>
-                              <Link
-                                href={`/cards/${c.id}/edit`}
-                                className="block w-full text-left px-3 py-1.5 hover:bg-zinc-900 text-foreground transition-colors duration-150"
-                              >
-                                Edit Card
-                              </Link>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveMenuCardId(null);
-                                  deleteCards([c.id]);
-                                }}
-                                className="w-full text-left px-3 py-1.5 hover:bg-zinc-900 text-rose-500 transition-colors duration-150"
-                              >
-                                Delete Card
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
                     </div>
                   </div>
                 );

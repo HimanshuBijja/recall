@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { readDb } from "@/lib/db";
-import type { Card, Group, Session, Tag, Review } from "@/types";
+import type { Card, Group, Session, Tag, Review, Subject } from "@/types";
 import { TagTree } from "@/components/TagTree";
 import { GroupQuickLaunch } from "@/components/GroupQuickLaunch";
 import { ExportAllButton } from "@/components/ExportAllButton";
 import { exportBundle } from "@/lib/export";
 import { getReviewsSummary } from "@/lib/due";
 import { buildCardHistory, latestPerCard } from "@/lib/analytics";
+import { filterExemptedCards } from "@/lib/exemptions";
 
 export const dynamic = "force-dynamic";
 
@@ -29,12 +30,15 @@ export default async function Home() {
   const tags = await readDb<Tag>("tags.json");
   const sessions = await readDb<Session>("sessions.json");
   const groups = await readDb<Group>("groups.json");
+  const subjects = await readDb<Subject>("subjects.json");
   const reviews = await readDb<Review>("reviews.json");
 
-  const summary = getReviewsSummary(cards, reviews, new Date());
+  const nonExemptedCards = filterExemptedCards(cards, groups, subjects, tags);
+
+  const summary = getReviewsSummary(nonExemptedCards, reviews, new Date());
 
   // Tag accuracy — uses the LATEST attempt per card so retries reflect improvement.
-  const cardById = new Map(cards.map((c) => [c.id, c]));
+  const cardById = new Map(nonExemptedCards.map((c) => [c.id, c]));
   const cardHistory = buildCardHistory(sessions);
   const latest = latestPerCard(cardHistory);
   const buckets = new Map<string, { total: number; correct: number }>();

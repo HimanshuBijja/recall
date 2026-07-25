@@ -82,7 +82,6 @@ export function buildCardFromInput(input: unknown): { card?: Omit<Card, "id" | "
     difficulty: difficulty as Card["difficulty"],
     tags: Array.isArray(body.tags) ? body.tags.map(String) : [],
     bookmarked: body.bookmarked !== undefined ? Boolean(body.bookmarked) : undefined,
-    exempted: body.exempted !== undefined ? Boolean(body.exempted) : undefined,
     source: normalizeSource(body.source),
   };
 

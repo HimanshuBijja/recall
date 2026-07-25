@@ -26,7 +26,7 @@ try {
 
 console.log("[dev:synced] starting live mirror watcher + next dev...");
 const watcher = run("node", ["scripts/mirror-watch.mjs"]);
-const next = run("npx", ["--no-install", "next", "dev"]);
+const next = run("npx", ["--no-install", "next", "dev", "-p", "3101"]);
 
 function shutdown() {
   watcher.kill();

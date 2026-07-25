@@ -22,7 +22,8 @@ export type BgMessage =
   | { type: "GET_TAGS" }
   | { type: "EDIT_TEXT"; selection?: string; prompt: string; draft?: unknown }
   | { type: "GENERATE_QUESTIONS"; req: GenerateRequest }
-  | { type: "SAVE_CARDS"; cards: unknown[]; groupName?: string };
+  | { type: "SAVE_CARDS"; cards: unknown[]; groupName?: string }
+  | { type: "SYNC_LOCAL_DB" };
 
 export type BgResponse =
   | CaptureResponse
@@ -38,11 +39,23 @@ async function baseUrl(): Promise<string> {
   return settings.baseUrl;
 }
 
+async function fetchWithAuth(url: string, init?: RequestInit): Promise<Response> {
+  const settings = await loadSettings();
+  const headers = new Headers(init?.headers);
+  if (settings.apiKey) {
+    headers.set("X-API-Key", settings.apiKey);
+  }
+  return fetch(url, {
+    ...init,
+    headers,
+  });
+}
+
 async function postCard(base: string, card: unknown): Promise<{ ok: boolean; card?: unknown }> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), 15000);
   try {
-    const res = await fetch(buildCardsUrl(base), {
+    const res = await fetchWithAuth(buildCardsUrl(base), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(card),
@@ -89,7 +102,7 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), 25000); // 25s timeout for AI generation
     try {
-      const res = await fetch(buildCaptureUrl(base), {
+      const res = await fetchWithAuth(buildCaptureUrl(base), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(msg.req),
@@ -121,7 +134,7 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), 10000);
     try {
-      const res = await fetch(`${buildCardsUrl(base)}?videoId=${encodeURIComponent(msg.videoId)}`, {
+      const res = await fetchWithAuth(`${buildCardsUrl(base)}?videoId=${encodeURIComponent(msg.videoId)}`, {
         signal: controller.signal,
       });
       clearTimeout(id);
@@ -137,7 +150,7 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), 10000);
     try {
-      const res = await fetch(`${base}/api/tags`, {
+      const res = await fetchWithAuth(`${base}/api/tags`, {
         signal: controller.signal,
       });
       clearTimeout(id);
@@ -153,7 +166,7 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), 15000);
     try {
-      const res = await fetch(`${base}/api/edit`, {
+      const res = await fetchWithAuth(`${base}/api/edit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ selection: msg.selection, prompt: msg.prompt, draft: msg.draft }),
@@ -176,7 +189,7 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
     // Generating N cards takes materially longer than a single capture.
     const id = setTimeout(() => controller.abort(), 60000);
     try {
-      const res = await fetch(buildGenerateUrl(base), {
+      const res = await fetchWithAuth(buildGenerateUrl(base), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(msg.req),
@@ -214,6 +227,26 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
       }
     }
     return { saved, queued, failed: 0 };
+  }
+
+  if (msg.type === "SYNC_LOCAL_DB") {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 60000);
+    try {
+      const res = await fetchWithAuth(`${base}/api/sync/local`, {
+        method: "POST",
+        signal: controller.signal,
+      });
+      clearTimeout(id);
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        return { ok: false, error: errJson.error || `Sync failed (${res.status})` };
+      }
+      return await res.json();
+    } catch (e) {
+      clearTimeout(id);
+      return { ok: false, error: e instanceof Error ? e.message : "Sync failed" };
+    }
   }
 
   return { ok: false, error: "unknown message" };

@@ -3,16 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3101",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3101",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
     "seed:mongo": "node --env-file=.env.local scripts/seed-mongo.mjs",
     "sync:local": "node --env-file=.env.local scripts/mirror-pull.mjs",
     "mirror:watch": "node --env-file=.env.local scripts/mirror-watch.mjs",
-    "dev:synced": "node --env-file=.env.local scripts/dev-synced.mjs"
+    "dev:synced": "node --env-file=.env.local scripts/dev-synced.mjs",
+    "app:start": "node --env-file=.env.local scripts/mirror-pull.mjs && next start -p 3101"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1094.0",

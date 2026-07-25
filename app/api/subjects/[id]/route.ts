@@ -17,6 +17,7 @@ export async function PUT(
     ...subjects[idx],
     name: body.name?.trim() || subjects[idx].name,
     groupIds: Array.isArray(body.groupIds) ? body.groupIds : subjects[idx].groupIds,
+    exempted: typeof body.exempted === "boolean" ? body.exempted : subjects[idx].exempted,
   };
   await writeDb("subjects.json", subjects);
   return Response.json(subjects[idx]);

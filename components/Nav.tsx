@@ -21,6 +21,7 @@ import {
   Sun,
   Moon,
   BookOpen,
+  LogOut,
 } from "lucide-react";
 
 /* ── Nav data ─────────────────────────────────────────────── */
@@ -256,13 +257,29 @@ function MobileMoreSheet({
             </div>
             <button
               onClick={onToggleTheme}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 w-full"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 w-full mb-4"
             >
               <span className="text-zinc-500 dark:text-zinc-400 w-4 flex items-center justify-center">
                 {dark ? <Sun size={16} /> : <Moon size={16} />}
               </span>
               <span>{dark ? "Light mode" : "Dark mode"}</span>
             </button>
+          </div>
+
+          {/* Logout inside sheet */}
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-zinc-400 mb-2 font-semibold">
+              Session
+            </div>
+            <a
+              href="/api/auth/logout"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 w-full"
+            >
+              <span className="text-red-500 dark:text-red-400 w-4 flex items-center justify-center">
+                <LogOut size={16} />
+              </span>
+              <span>Log out</span>
+            </a>
           </div>
         </div>
       </div>
@@ -279,7 +296,9 @@ export function Nav() {
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
 
   useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
+    setTimeout(() => {
+      setDark(document.documentElement.classList.contains("dark"));
+    }, 0);
   }, []);
 
   const toggleTheme = () => {
@@ -290,6 +309,8 @@ export function Nav() {
   };
 
   const closeDropdowns = () => setOpenDropdown(null);
+
+  if (pathname === "/login") return null;
 
   return (
     <>
@@ -351,13 +372,22 @@ export function Nav() {
             />
           </nav>
 
-          <button
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="hidden sm:inline-flex p-2 rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 shrink-0"
-          >
-            {dark ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
+          <div className="hidden sm:flex items-center gap-1 shrink-0">
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              className="p-2 rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            >
+              {dark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+            <a
+              href="/api/auth/logout"
+              aria-label="Log out"
+              className="p-2 rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-red-600 dark:hover:text-red-400"
+            >
+              <LogOut size={18} />
+            </a>
+          </div>
         </div>
       </header>
 

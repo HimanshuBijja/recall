@@ -9,6 +9,8 @@ export interface KindConfig {
 
 export interface Settings {
   baseUrl: string;
+  baseUrls: string[];
+  apiKey?: string;
   kinds: Record<CaptureKind, KindConfig>;
 }
 

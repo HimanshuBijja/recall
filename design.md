@@ -17,7 +17,7 @@ The style is defined by a 'Cinematic Editorial' aesthetic. It uses 'Clash Grotes
   - Primary Background: `#181818` (Matte Black)
   - Primary Text: `#EBDCC4` (Warm Beige)
   - Secondary Text/Labels: `#B6A596` (Muted Sage)
-  - Primary Button: `#1c1513` (Matte Card Color) with `#4A4441` border
+  - Primary Button: `#181818` with 30% transparency  with `#4A4441` border
   - Borders: `#4A4441` (Warm Charcoal)
   - Dark Details/Dividers: `#2e2927` (Umber Grey)
 - **Effects**:

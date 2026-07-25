@@ -1,6 +1,7 @@
 import { readDb } from "@/lib/db";
-import type { Card, Session, Tag, Review } from "@/types";
+import type { Card, Session, Tag, Review, Group, Subject } from "@/types";
 import { AnalyticsView } from "./AnalyticsView";
+import { filterExemptedCards } from "@/lib/exemptions";
 
 export const dynamic = "force-dynamic";
 
@@ -9,5 +10,10 @@ export default async function AnalyticsPage() {
   const cards = await readDb<Card>("cards.json");
   const tags = await readDb<Tag>("tags.json");
   const reviews = await readDb<Review>("reviews.json");
-  return <AnalyticsView sessions={sessions} cards={cards} tags={tags} reviews={reviews} />;
+  const groups = await readDb<Group>("groups.json");
+  const subjects = await readDb<Subject>("subjects.json");
+
+  const nonExemptedCards = filterExemptedCards(cards, groups, subjects, tags);
+
+  return <AnalyticsView sessions={sessions} cards={nonExemptedCards} tags={tags} reviews={reviews} />;
 }

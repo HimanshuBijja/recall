@@ -77,14 +77,4 @@ describe("spaced repetition card exemptions", () => {
     const filtered = filterExemptedCards(mockCards, groups, [], mockTags);
     expect(filtered.map((c) => c.id)).toEqual(["c4"]);
   });
-
-  it("handles card-level explicit exemptions", () => {
-    const cardsWithExempt: Card[] = [
-      ...mockCards,
-      { id: "c_exempt", question: "Q_ex", answer: "A_ex", distractors: [], tags: [], exempted: true, createdAt: "", difficulty: 1, explanation: "", hint: "" } as Card,
-    ];
-    const map = getCardExemptionMap(cardsWithExempt, [], [], mockTags);
-    expect(map.get("c_exempt")).toBe(true);
-    expect(map.get("c1")).toBe(false);
-  });
 });
