@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { readDb } from "@/lib/db";
 import type { Card, Group, Session, Tag, Review, Subject } from "@/types";
-import { TagTree } from "@/components/TagTree";
 import { GroupQuickLaunch } from "@/components/GroupQuickLaunch";
 import { ExportAllButton } from "@/components/ExportAllButton";
 import { exportBundle } from "@/lib/export";
@@ -62,6 +61,10 @@ export default async function Home() {
 
   const streak = computeStreak(sessions);
 
+  const recentGroups = [...groups]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
+
   return (
     <div className="space-y-6">
       {/* Early Access / Protocol info */}
@@ -109,17 +112,6 @@ export default async function Home() {
               <div className="text-[10px] uppercase tracking-wider text-muted mb-1 font-semibold">Weak Topics</div>
               <div className="text-2xl font-bold font-display text-foreground">{weakTags.length}</div>
             </div>
-          </div>
-
-          {/* Tag Tree Component Box */}
-          <div className="border border-border p-4 bg-zinc-950/20 space-y-3 rounded-[4px]">
-            <div className="flex items-baseline justify-between">
-              <h3 className="text-xs uppercase tracking-wider text-muted font-bold">Tags Index</h3>
-              <Link href="/tags" className="text-xs text-accent hover:underline font-bold uppercase tracking-wider">
-                Manage
-              </Link>
-            </div>
-            <TagTree tags={tags} searchable />
           </div>
         </div>
 
@@ -187,7 +179,7 @@ export default async function Home() {
                   All →
                 </Link>
               </div>
-              <GroupQuickLaunch groups={groups} tags={tags} />
+              <GroupQuickLaunch groups={recentGroups} tags={tags} />
             </div>
           )}
 

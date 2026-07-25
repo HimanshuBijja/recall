@@ -195,7 +195,7 @@ which is the same URL contract any other launch point uses.
   the tag DAG with `descendantTagIds` and matching cards) so the list
   can disable the Test button when nothing would actually run. Don't
   ship the full card list to the client just to recompute this.
-- The dashboard renders a `<GroupQuickLaunch>` panel showing up to 6
+- The dashboard renders a `<GroupQuickLaunch>` panel showing up to 5
   groups as one-click buttons that fire the same `/test/session?tags=…`
   URL. Add new entry points here if you want, but they should all use
   the same query-param contract — there is no group-aware endpoint.
