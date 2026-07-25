@@ -131,7 +131,7 @@ export function SubjectDetailClient({
             Subject Details & Config
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="cinematic-headline text-[5vw] md:text-[3.5vw] sm:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text={subject.name}>
+            <h1 className="cinematic-headline text-[10vw] sm:text-[8vw] md:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text={subject.name}>
               {subject.name}
             </h1>
             {subject.exempted && (

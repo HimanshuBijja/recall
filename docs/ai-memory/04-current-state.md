@@ -9,7 +9,7 @@ Bookmarks/FSRS feature set (built by the Antigravity/Gemini agent), the
 build/lint hardening pass, the FSRS persistence fix + `/settings` page
 (commit `ed5f25f`), the **YouTube capture extension + capture backend +
 analytics/import upgrades** (commit `f889715`, built by 4 parallel subagents),
-and the **Web text capture (any site)** feature.
+the **Web text capture (any site)** feature, and the **Mobile UI and Layout fixes** (solid header/nav backgrounds, responsive 1-column layouts, and filtered deleted tags).
 
 ## Storage
 - **Atlas** = source of truth (`MONGODB_URI`), replica set (transactions +

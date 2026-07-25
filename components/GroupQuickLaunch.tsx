@@ -18,15 +18,15 @@ export function GroupQuickLaunch({ groups, tags }: { groups: Group[]; tags: Tag[
   }
 
   return (
-    <ul className="grid sm:grid-cols-2 gap-2">
+    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {groups.slice(0, 6).map((g) => {
-        const names = g.tagIds
-          .map((tid) => tagById.get(tid)?.name)
-          .filter(Boolean)
+        const activeTagIds = g.tagIds.filter(tid => tagById.has(tid));
+        const names = activeTagIds
+          .map((tid) => tagById.get(tid)!.name)
           .slice(0, 3)
           .join(" · ");
-        const more = Math.max(0, g.tagIds.length - 3);
-        const disabled = g.tagIds.length === 0;
+        const more = Math.max(0, activeTagIds.length - 3);
+        const disabled = activeTagIds.length === 0;
         return (
           <li key={g.id}>
             <button

@@ -109,7 +109,7 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
             <span className="w-6 h-[2px] bg-accent" />
             Knowledge Archive
           </div>
-          <h1 className="cinematic-headline text-[5vw] md:text-[3.5vw] sm:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text="CARDS">
+          <h1 className="cinematic-headline text-[10vw] sm:text-[8vw] md:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text="CARDS">
             CARDS
           </h1>
           <p className="text-sm text-muted mt-2 uppercase tracking-wider">
@@ -253,7 +253,7 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
       </div>
 
       {cards.length === 0 ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[...Array(6)].map((_, i) => (
             <Skeleton key={i} className="h-36" />
           ))}

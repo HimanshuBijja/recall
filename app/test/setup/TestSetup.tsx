@@ -133,7 +133,7 @@ export function TestSetup({ tags, cards }: { tags: Tag[]; cards: Card[] }) {
       </aside>
 
       {/* Mobile sticky action bar — sits above the bottom nav (which is ~44px tall + safe area). */}
-      <div className="lg:hidden fixed inset-x-0 bottom-[calc(2.75rem+env(safe-area-inset-bottom))] z-30 bg-background/95 backdrop-blur border-t border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3">
+      <div className="lg:hidden fixed inset-x-0 bottom-[calc(2.75rem+env(safe-area-inset-bottom))] z-30 bg-background border-t border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3">
         <div className="flex-1">
           <div className="text-[10px] uppercase tracking-wide text-zinc-500">Matching</div>
           <div className="text-xl font-bold leading-none">{matched.length}</div>

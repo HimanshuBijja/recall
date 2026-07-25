@@ -139,7 +139,7 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
             <span className="w-6 h-[2px] bg-accent" />
             Revision Protocol
           </div>
-          <h1 className="cinematic-headline text-[5vw] md:text-[3.5vw] sm:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text="GROUPS">
+          <h1 className="cinematic-headline text-[10vw] sm:text-[8vw] md:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text="GROUPS">
             GROUPS
           </h1>
           <p className="text-sm text-muted mt-2 uppercase tracking-wider">
@@ -253,7 +253,7 @@ export function GroupsManager({ initialGroups, tags, groupCardCounts: initialCou
       ) : visibleGroups.length === 0 ? (
         <p className="text-sm text-zinc-500">No groups match.</p>
       ) : (
-        <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {visibleGroups.map((g) => (
             <GroupCard
               key={g.id}
@@ -322,8 +322,9 @@ function GroupCard({
   onTest: () => void; onEdit: () => void; onDelete: () => void;
   onExport: () => void;
 }) {
-  const visibleTags = group.tagIds.slice(0, 6);
-  const overflow = group.tagIds.length - visibleTags.length;
+  const activeTags = group.tagIds.map(tid => tagById.get(tid)).filter((t): t is Tag => !!t);
+  const visibleTags = activeTags.slice(0, 6);
+  const overflow = activeTags.length - visibleTags.length;
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -409,16 +410,16 @@ function GroupCard({
       </div>
 
       <div className="flex flex-wrap gap-1 min-h-[1.5rem]">
-        {group.tagIds.length === 0 ? (
+        {activeTags.length === 0 ? (
           <span className="text-xs text-zinc-400 italic">No tags in this group</span>
         ) : (
           <>
-            {visibleTags.map((tid) => (
+            {visibleTags.map((tag) => (
               <span
-                key={tid}
+                key={tag.id}
                 className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300"
               >
-                {tagById.get(tid)?.name ?? "(deleted)"}
+                {tag.name}
               </span>
             ))}
             {overflow > 0 && (

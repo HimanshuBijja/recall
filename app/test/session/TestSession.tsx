@@ -928,7 +928,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">
               Select all that apply
             </p>
-            <div className="grid sm:grid-cols-2 gap-2 sm:gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
               {current.options.map((opt, i) => {
                 const isCorrect = (current.card.answers ?? []).includes(opt);
                 const isPicked = multiPicked.has(opt);
@@ -984,7 +984,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             )}
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-2 sm:gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
             {current.options.map((opt, i) => {
               const isCorrect = opt === current.card.answer;
               const isPicked = opt === picked;

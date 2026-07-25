@@ -1,5 +1,13 @@
 # 02 — Features Log
 
+## 2026-07-25 — Mobile UI and Layout Alignment Fixes
+- **Mobile Navigation Overlap Fix**: Replaced transparent `bg-background/80` and `bg-background/95` backdrop-blur styles on the sticky top header, mobile bottom nav, and test setup bottom bar with solid `bg-background` backgrounds to prevent text and page elements from bleeding through and clashing when scrolling on mobile Safari.
+- **Explicit 1-Column Responsive Grids**: Updated options grids, active groups list container, and loading skeletons to explicitly declare `grid-cols-1` alongside `sm:grid-cols-2` and `lg:grid-cols-3` classes, ensuring layout elements stack vertically in a clean single column on mobile viewports instead of shrinking side-by-side.
+- **Subpage Header Scale Adjustments**: Adjusted subpage display headings' mobile font size from a small `text-[5vw]` to `text-[10vw] sm:text-[8vw] md:text-[5vw]` to match the Cinematic Editorial theme guidelines.
+- **Orphan Tag Cleanup in Group Rendering**: Filtered out deleted tags from displaying inside group cards and active group study lists, correctly displaying the "no tags in this group" state when all associated tags are deleted, and preventing misleading overflow (+N) badges.
+- **Files modified**: `components/Nav.tsx`, `components/GroupQuickLaunch.tsx`, `app/groups/GroupsManager.tsx`, `app/analytics/AnalyticsView.tsx`, `app/cards/CardsBrowser.tsx`, `app/tags/TagsManager.tsx`, `app/test/due/DueCardsClient.tsx`, `app/subjects/SubjectsClient.tsx`, `app/subjects/[id]/SubjectDetailClient.tsx`, `app/subjects/[id]/page.tsx`, `app/subjects/new/NewSubjectClient.tsx`, `app/groups/[id]/page.tsx`, `app/groups/[id]/GroupDetailClient.tsx`, `app/test/session/TestSession.tsx`, `app/test/setup/TestSetup.tsx`.
+
+
 ## 2026-07-25 — Google Authentication Gate & Extension Database Sync
 - **Google Login Gate**: GSI login flow restricts access to `ALLOWED_EMAIL` via Next.js Middleware and secure HttpOnly cookies. Custom login screen at `/login`.
 - **Extension settings & sync**:

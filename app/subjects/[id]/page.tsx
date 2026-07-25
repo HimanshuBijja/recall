@@ -19,7 +19,7 @@ export default async function SubjectDetailPage(props: {
           <span className="w-6 h-[2px] bg-accent" />
           404 Not Found
         </div>
-        <h1 className="cinematic-headline text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-2" data-text="ERROR">
+        <h1 className="cinematic-headline text-[10vw] sm:text-[8vw] md:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-2" data-text="ERROR">
           ERROR
         </h1>
         <p className="text-sm text-muted uppercase tracking-wider">

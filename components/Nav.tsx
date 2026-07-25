@@ -315,7 +315,7 @@ export function Nav() {
   return (
     <>
       {/* ── Desktop header ── */}
-      <header className="sticky top-0 z-40 backdrop-blur bg-background/80 border-b border-zinc-200 dark:border-zinc-800">
+      <header className="sticky top-0 z-40 bg-background border-b border-zinc-200 dark:border-zinc-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           <Link
             href="/"
@@ -392,7 +392,7 @@ export function Nav() {
       </header>
 
       {/* ── Mobile bottom nav ── */}
-      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-zinc-200 dark:border-zinc-800 pb-[env(safe-area-inset-bottom)]">
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-background border-t border-zinc-200 dark:border-zinc-800 pb-[env(safe-area-inset-bottom)]">
         <div className="grid grid-cols-5">
           {mobilePrimary.map((l) => {
             if (l.href === "#more") {
