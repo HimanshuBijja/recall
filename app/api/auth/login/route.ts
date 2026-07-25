@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
     const tokenInfo = await res.json();
 
-    const allowedEmailsStr = process.env.ALLOWED_EMAILS || process.env.ALLOWED_EMAIL || "bijjahimanshu05@gmail.com";
+    const allowedEmailsStr = process.env.ALLOWED_EMAILS || process.env.ALLOWED_EMAIL || "";
     const allowedEmails = allowedEmailsStr.split(",").map((email) => email.trim().toLowerCase());
 
     // Verify token info
