@@ -7,6 +7,7 @@ import type { Card, Group, Tag } from "@/types";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { descendantTagIds } from "@/lib/tags";
+import { CardKindBadge } from "@/components/CardKindBadge";
 
 const KIND_LABELS: Record<string, string> = {
   mcq: "Multiple Choice",
@@ -15,6 +16,33 @@ const KIND_LABELS: Record<string, string> = {
   cloze: "Cloze Deletion",
   "tf-sort": "True / False",
   match: "Match Pairs",
+};
+
+export const KIND_CONFIG: Record<string, { label: string; activeClass: string }> = {
+  mcq: {
+    label: "MCQ",
+    activeClass: "bg-indigo-600 border-indigo-600 text-white dark:bg-indigo-950/60 dark:border-indigo-800 dark:text-indigo-300"
+  },
+  flash: {
+    label: "Flash",
+    activeClass: "bg-rose-600 border-rose-600 text-white dark:bg-rose-950/60 dark:border-rose-800 dark:text-rose-300"
+  },
+  match: {
+    label: "Match",
+    activeClass: "bg-purple-600 border-purple-600 text-white dark:bg-purple-950/60 dark:border-purple-800 dark:text-purple-300"
+  },
+  cloze: {
+    label: "Cloze",
+    activeClass: "bg-teal-600 border-teal-600 text-white dark:bg-teal-950/60 dark:border-teal-800 dark:text-teal-300"
+  },
+  multi: {
+    label: "Multi",
+    activeClass: "bg-cyan-600 border-cyan-600 text-white dark:bg-cyan-950/60 dark:border-cyan-800 dark:text-cyan-300"
+  },
+  "tf-sort": {
+    label: "T/F",
+    activeClass: "bg-amber-600 border-amber-600 text-white dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-300"
+  }
 };
 
 export function GroupDetailClient({
@@ -55,7 +83,21 @@ export function GroupDetailClient({
     }
   }, [group, cards, tags]);
 
-  const cardIds = useMemo(() => matchingCards.map((c) => c.id), [matchingCards]);
+  const kindsInGroup = useMemo(() => {
+    const kinds = new Set<string>();
+    for (const c of matchingCards) {
+      kinds.add(c.kind || "mcq");
+    }
+    return Array.from(kinds);
+  }, [matchingCards]);
+
+  const [selectedKinds, setSelectedKinds] = useState<string[]>(["mcq", "multi", "flash", "cloze", "tf-sort", "match"]);
+
+  const testCards = useMemo(() => {
+    return matchingCards.filter((c) => selectedKinds.includes(c.kind || "mcq"));
+  }, [matchingCards, selectedKinds]);
+
+  const testCardIds = useMemo(() => testCards.map((c) => c.id), [testCards]);
 
   const filteredCards = useMemo(() => {
     return matchingCards.filter((c) => {
@@ -174,12 +216,12 @@ export function GroupDetailClient({
   }
 
   function launchTest() {
-    if (cardIds.length === 0) {
-      toast("error", "No cards available in this group");
+    if (testCardIds.length === 0) {
+      toast("error", "No cards available for the selected types");
       return;
     }
     const params = new URLSearchParams();
-    params.set("ids", cardIds.join(","));
+    params.set("ids", testCardIds.join(","));
     params.set("shuffle", "true");
     params.set("min", "1");
     params.set("max", "5");
@@ -228,7 +270,7 @@ export function GroupDetailClient({
           </Link>
           <button
             onClick={launchTest}
-            disabled={matchingCards.length === 0}
+            disabled={testCardIds.length === 0}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed rounded-[4px]"
           >
             Test Group →
@@ -237,6 +279,41 @@ export function GroupDetailClient({
       </div>
 
       <hr className="border-t border-divider my-6" />
+
+      {kindsInGroup.length > 0 && (
+        <div className="flex items-center gap-3 bg-zinc-950/20 border border-border p-3 rounded-[4px] flex-wrap">
+          <span className="text-xs uppercase font-bold tracking-wider text-muted">Test Card Kinds:</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {kindsInGroup.map((k) => {
+              const isSelected = selectedKinds.includes(k);
+              const config = KIND_CONFIG[k] || { label: k.toUpperCase(), activeClass: "bg-indigo-600 border-indigo-600 text-white" };
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => {
+                    setSelectedKinds((prev) =>
+                      prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]
+                    );
+                  }}
+                  className={[
+                    "px-2.5 py-1 rounded-[4px] border text-xs font-semibold uppercase tracking-wider transition-colors",
+                    isSelected
+                      ? config.activeClass
+                      : "border-border bg-black/25 text-muted hover:border-zinc-500 hover:text-foreground",
+                  ].join(" ")}
+                >
+                  {isSelected ? "✓ " : ""}
+                  {config.label}
+                </button>
+              );
+            })}
+          </div>
+          <span className="text-xs font-mono text-muted ml-auto">
+            {testCardIds.length} of {matchingCards.length} cards selected
+          </span>
+        </div>
+      )}
 
       {group.videoUrl && (
         <div className="border border-border p-4 bg-zinc-950/20 rounded-[4px] flex items-center justify-between gap-4 flex-wrap">
@@ -407,9 +484,7 @@ export function GroupDetailClient({
                     />
                     <div className="space-y-1.5 flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] uppercase font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-border">
-                          {c.kind}
-                        </span>
+                        <CardKindBadge kind={c.kind} />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground truncate max-w-xl">
                         {c.question}

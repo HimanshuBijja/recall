@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { exportCard, exportCards } from "@/lib/export";
 import { ExportDialog } from "@/components/ExportDialog";
+import { CardKindBadge } from "@/components/CardKindBadge";
 
 export function BookmarksView({ initialCards, tags }: { initialCards: Card[]; tags: Tag[] }) {
   const router = useRouter();
@@ -102,26 +103,7 @@ export function BookmarksView({ initialCards, tags }: { initialCards: Card[]; ta
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                     D{c.difficulty}
                   </span>
-                  {c.kind === "tf-sort" && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
-                      T/F
-                    </span>
-                  )}
-                  {c.kind === "flash" && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
-                      Flash
-                    </span>
-                  )}
-                  {c.kind === "cloze" && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
-                      Cloze
-                    </span>
-                  )}
-                  {c.kind === "match" && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
-                      Match
-                    </span>
-                  )}
+                  <CardKindBadge kind={c.kind} />
                 </div>
                 <div className="flex flex-wrap justify-end gap-1">
                   {c.tags.slice(0, 3).map((tid) => (

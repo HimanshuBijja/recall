@@ -168,6 +168,10 @@ export async function draftCardFromFrame(
 The video title is: "${videoTitle || "Unknown"}".
 First transcribe all readable text in the image (this is the OCR). Then write the card.
 
+CRITICAL REQUIREMENT FOR ALL CARD TYPES:
+- The entire question text and all options/answers/distractors/statements/pairs shown in the screenshot image must appear fully and completely in the generated card.
+- DO NOT abbreviate, truncate, summarize, omit, or cut short any part of the question text or the options. They must be transcribed in full.
+
 CRITICAL REQUIREMENT FOR QUESTION TEXT:
 - Extract and preserve the EXACT question text from the screenshot VERBATIM (word-for-word).
 - DO NOT rephrase, rewrite, summarize, or alter the question text. Keep it identical to what appears in the image.

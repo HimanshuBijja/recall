@@ -11,6 +11,8 @@ export async function GET(req: NextRequest) {
   const newLimit = Number(searchParams.get("newLimit") ?? 20);
   const excludeStr = searchParams.get("exclude") ?? "";
   const exclude = excludeStr ? excludeStr.split(",") : [];
+  const kindsStr = searchParams.get("kinds") ?? "";
+  const kinds = kindsStr ? kindsStr.split(",") : [];
 
   const cards = await readDb<Card>("cards.json");
   const reviews = await readDb<Review>("reviews.json");
@@ -18,7 +20,10 @@ export async function GET(req: NextRequest) {
   const subjects = await readDb<Subject>("subjects.json");
   const tags = await readDb<Tag>("tags.json");
 
-  const nonExemptedCards = filterExemptedCards(cards, groups, subjects, tags);
+  let nonExemptedCards = filterExemptedCards(cards, groups, subjects, tags);
+  if (kinds.length > 0) {
+    nonExemptedCards = nonExemptedCards.filter((c) => kinds.includes(c.kind || "mcq"));
+  }
 
   const now = new Date();
   const res = selectDue(nonExemptedCards, reviews, now, { newLimit, exclude });

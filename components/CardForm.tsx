@@ -78,7 +78,7 @@ export function CardForm({ initial, tags }: Props) {
   // Refs for Enter-to-advance navigation.
   const qRef = useRef<HTMLTextAreaElement>(null);
   const clozeRef = useRef<HTMLTextAreaElement>(null);
-  const aRef = useRef<HTMLInputElement>(null);
+  const aRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const d0Ref = useRef<HTMLInputElement>(null);
   const d1Ref = useRef<HTMLInputElement>(null);
   const d2Ref = useRef<HTMLInputElement>(null);
@@ -266,7 +266,7 @@ export function CardForm({ initial, tags }: Props) {
         <>
           <Field label="Correct answer" error={errors.answer}>
             <input
-              ref={aRef}
+              ref={aRef as any}
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               onKeyDown={advance(2)}
@@ -472,11 +472,12 @@ export function CardForm({ initial, tags }: Props) {
 
       {kind === "flash" && (
         <Field label="Back (answer)" error={errors.answer}>
-          <input
-            ref={aRef}
+          <textarea
+            ref={aRef as any}
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             onKeyDown={advance(2)}
+            rows={2}
             className={inputCls}
             placeholder="Answer shown on back of card"
           />

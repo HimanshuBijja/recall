@@ -70,7 +70,7 @@ test("CAPTURE forwards to /api/capture and returns response body", async () => {
   });
   expect(res).toEqual(draft);
   expect(fetchMock).toHaveBeenCalledWith(
-    "http://localhost:3000/api/capture",
+    "http://localhost:3101/api/capture",
     expect.objectContaining({ method: "POST" }),
   );
 });

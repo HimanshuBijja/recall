@@ -32,14 +32,14 @@ test("CardForm supports creating a flashcard kind", async () => {
   fireEvent.click(flashcardBtn);
 
   // Expect "Back (answer)" input to be present and "Correct answer" to be gone
-  expect(screen.getByLabelText("Back (answer)", { selector: "input" })).toBeInTheDocument();
+  expect(screen.getByLabelText("Back (answer)", { selector: "textarea" })).toBeInTheDocument();
   expect(screen.queryByLabelText("Correct answer", { selector: "input" })).not.toBeInTheDocument();
 
   // Fill in question and answer
   const questionInput = screen.getByLabelText("Question", { selector: "textarea" });
   fireEvent.change(questionInput, { target: { value: "Flash Question" } });
 
-  const answerInput = screen.getByLabelText("Back (answer)", { selector: "input" });
+  const answerInput = screen.getByLabelText("Back (answer)", { selector: "textarea" });
   fireEvent.change(answerInput, { target: { value: "Flash Answer" } });
 
   // Submit the form

@@ -1,15 +1,12 @@
 # 04 — Current State
 
-_Last updated: 2026-07-25_
+_Last updated: 2026-07-31_
 
 ## Branch
 `master`. Everything below is merged and committed (local; **not yet pushed**).
 Includes: MongoDB migration + Atlas→local mirror, the Flash/Cloze/Match/
-Bookmarks/FSRS feature set (built by the Antigravity/Gemini agent), the
-build/lint hardening pass, the FSRS persistence fix + `/settings` page
-(commit `ed5f25f`), the **YouTube capture extension + capture backend +
-analytics/import upgrades** (commit `f889715`, built by 4 parallel subagents),
-the **Web text capture (any site)** feature, and the **Mobile UI and Layout fixes** (solid header/nav backgrounds, responsive 1-column layouts, and filtered deleted tags).
+Bookmarks/FSRS feature set, the build/lint hardening pass, the FSRS persistence fix + `/settings` page, the **YouTube capture extension + capture backend +
+analytics/import upgrades**, the **Web text capture (any site)** feature, the **Mobile UI and Layout fixes**, the **Extension Multi-line Flashcard & Gemini Prompt Integrity** improvements, and the **Selective card testing filter + unified color kind badges**.
 
 ## Storage
 - **Atlas** = source of truth (`MONGODB_URI`), replica set (transactions +
@@ -64,7 +61,7 @@ the **Web text capture (any site)** feature, and the **Mobile UI and Layout fixe
 
 ## Verification (all green as of this update)
 - Recall `npx tsc --noEmit` → clean; `npm run lint` → 0 errors (3 pre-existing
-  warnings); `npx vitest run` → **117 pass** (38 files).
+  warnings); `npx vitest run` → **118 pass** (38 files).
 - Extension `pnpm --dir extension exec tsc --noEmit` → clean; `vitest` → **48
   pass** (12 files); `pnpm build` → OK.
 - Root `tsc`/`eslint`/`vitest` exclude `extension/` + `.claude/` (agent worktrees).

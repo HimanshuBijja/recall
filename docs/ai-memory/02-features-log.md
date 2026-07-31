@@ -1,5 +1,19 @@
 # 02 — Features Log
 
+## 2026-07-31 — Selective Card Testing & Unified Kind Badges
+- **Unified CardKindBadge**: Created a centralized `<CardKindBadge>` component that renders consistent styling and distinct colors for each card kind (T/F Sort = Amber, Flash = Rose, Cloze = Teal, Match = Purple, Multi = Cyan, MCQ = Indigo) using a clean `rounded` 4px shape.
+- **Selective Group and Subject Testing**: Added card kind filter selection buttons (interactive chips) in group detail and subject detail views to allow users to select specific card kinds for testing.
+- **Selective Spaced Repetition Testing**: Updated the due review API route `/api/reviews/due` to filter by `kinds`. Updated `TestSession` to retrieve and filter due review cards based on the selected kinds.
+- **Real-time Dashboard Due Count Updates**: Migrated the homepage spaced repetition block to a client component `<DueReviewPanel>` that dynamically updates the due card counts and test URL parameters based on selected card kinds.
+- **Files added**: `components/CardKindBadge.tsx`, `components/DueReviewPanel.tsx`.
+- **Files modified**: `app/cards/CardsBrowser.tsx`, `app/bookmarks/BookmarksView.tsx`, `app/groups/[id]/GroupDetailClient.tsx`, `app/subjects/[id]/SubjectDetailClient.tsx`, `app/api/reviews/due/route.ts`, `app/test/session/TestSession.tsx`, `app/test/due/DueCardsClient.tsx`, `app/page.tsx`.
+
+## 2026-07-29 — Multi-line Flashcard Answer and Gemini Prompt Integrity
+- **Multi-line Flashcard Answers**: Changed the flashcard back (answer) input field in both the extension overlay and the main web application's `CardForm` from a single-line text input to a multi-line textarea to support paragraphs, formulas, and multi-line answers.
+- **Gemini Prompt Integrity**: Enhanced the Gemini drafting prompt in `lib/gemini.ts` to instruct the model to transcribe the entire question and all options (answers, distractors, statements, or pairs) from the screenshot verbatim without truncation, summary, abbreviation, or omission.
+- **Test Alignment**: Updated extension unit tests in `extension/tests/background.test.ts` to align the default test port with the actual configured default port (`3101`).
+- **Files modified**: `extension/src/content/overlay/fields.ts`, `components/CardForm.tsx`, `components/__tests__/cardform-flash.test.tsx`, `lib/gemini.ts`, `extension/tests/background.test.ts`.
+
 ## 2026-07-25 — Mobile UI and Layout Alignment Fixes
 - **Mobile Navigation Overlap Fix**: Replaced transparent `bg-background/80` and `bg-background/95` backdrop-blur styles on the sticky top header, mobile bottom nav, and test setup bottom bar with solid `bg-background` backgrounds to prevent text and page elements from bleeding through and clashing when scrolling on mobile Safari.
 - **Explicit 1-Column Responsive Grids**: Updated options grids, active groups list container, and loading skeletons to explicitly declare `grid-cols-1` alongside `sm:grid-cols-2` and `lg:grid-cols-3` classes, ensuring layout elements stack vertically in a clean single column on mobile viewports instead of shrinking side-by-side.

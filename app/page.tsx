@@ -7,6 +7,7 @@ import { exportBundle } from "@/lib/export";
 import { getReviewsSummary } from "@/lib/due";
 import { buildCardHistory, latestPerCard } from "@/lib/analytics";
 import { filterExemptedCards } from "@/lib/exemptions";
+import { DueReviewPanel } from "@/components/DueReviewPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -120,30 +121,7 @@ export default async function Home() {
 
         {/* Right Column (span 6) */}
         <div className="md:col-span-6 space-y-6">
-          {/* Spaced Repetition Panel */}
-          <div className="border border-border p-6 bg-zinc-950/40 space-y-4 rounded-[4px]">
-            <div className="space-y-1">
-              <div className="text-[10px] uppercase tracking-wider text-accent font-bold">Due Review Batch</div>
-              <h2 className="text-lg font-bold uppercase font-display tracking-tight text-foreground flex items-center gap-2">
-                Spaced Repetition
-                {summary.due > 0 && <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />}
-              </h2>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-muted font-mono pt-1">
-                <span>{summary.due} due</span>
-                <span>·</span>
-                <span>{summary.overdue} overdue</span>
-                <span>·</span>
-                <span>{summary.new} new</span>
-              </div>
-            </div>
-
-            <Link
-              href="/test/session?due=1"
-              className="w-full inline-flex items-center justify-center px-4 py-3 bg-accent text-background font-bold text-xs uppercase tracking-widest transition-colors duration-150 hover:bg-opacity-90 rounded-[4px]"
-            >
-              Review Due Cards ({summary.due}) →
-            </Link>
-          </div>
+          <DueReviewPanel nonExemptedCards={nonExemptedCards} reviews={reviews} />
 
           {/* Quick Links Grid */}
           <div className="grid grid-cols-3 gap-2">

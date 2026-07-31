@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/Skeleton";
 import { ExportDialog } from "@/components/ExportDialog";
 import { CardFrame } from "@/components/CardFrame";
 import { exportCard, exportCards } from "@/lib/export";
+import { CardKindBadge } from "@/components/CardKindBadge";
 
 export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tags: Tag[] }) {
   const router = useRouter();
@@ -292,46 +293,7 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                     <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                       D{c.difficulty}
                     </span>
-                    {c.kind === "tf-sort" && (
-                      <span
-                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300"
-                        title="True / False sort"
-                      >
-                        T/F
-                      </span>
-                    )}
-                    {c.kind === "flash" && (
-                      <span
-                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300"
-                        title="Flashcard"
-                      >
-                        Flash
-                      </span>
-                    )}
-                    {c.kind === "cloze" && (
-                      <span
-                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300"
-                        title="Cloze deletion"
-                      >
-                        Cloze
-                      </span>
-                    )}
-                    {c.kind === "match" && (
-                      <span
-                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300"
-                        title="Match pairs"
-                      >
-                        Match
-                      </span>
-                    )}
-                    {c.kind === "multi" && (
-                      <span
-                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300"
-                        title="Multiple answers"
-                      >
-                        Multi
-                      </span>
-                    )}
+                    <CardKindBadge kind={c.kind} />
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">

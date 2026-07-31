@@ -106,7 +106,7 @@ export function renderFields(
   }
 
   // --- kind-specific body ---
-  let answerField: HTMLInputElement | null = null;
+  let answerField: HTMLInputElement | HTMLTextAreaElement | null = null;
   const distractorFields: HTMLInputElement[] = [];
   let statementRows: { textInput: HTMLInputElement; trueBtn: HTMLButtonElement; isTrue: boolean }[] = [];
   let pairRows: { leftInput: HTMLInputElement; rightInput: HTMLInputElement }[] = [];
@@ -227,7 +227,7 @@ export function renderFields(
     });
     kindRoot.append(el("label", {}, [labelText]), optionsContainer, addBtn);
   } else if (kind === "flash") {
-    answerField = input(draft.answer, "Back");
+    answerField = textarea(draft.answer, "Back");
     answerField.setAttribute("data-field", "answer");
     kindRoot.append(el("label", {}, ["Answer (back)"]), answerField);
   } else if (kind === "tf-sort") {

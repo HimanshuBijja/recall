@@ -56,6 +56,12 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
     [idsParam]
   );
 
+  const kindsParam = params.get("kinds") ?? "";
+  const selectedKinds = useMemo(
+    () => kindsParam.split(",").map((s) => s.trim()).filter(Boolean),
+    [kindsParam]
+  );
+
   const initialPrepared: PreparedCard[] = useMemo(() => {
     if (dueMode) return [];
     let pool: Card[];
@@ -64,7 +70,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         const raw = sessionStorage.getItem("retryCards");
         pool = raw ? (JSON.parse(raw) as Card[]) : [];
       } catch {
-        pool = [];
+         pool = [];
       }
     } else {
       if (videoIdParam) {
@@ -81,6 +87,9 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
           maxDiff,
         });
       }
+    }
+    if (selectedKinds.length > 0) {
+      pool = pool.filter((c) => selectedKinds.includes(c.kind || "mcq"));
     }
     const ordered = shuffle ? shuffleArr(pool) : pool;
     return ordered.map((card) => {
@@ -137,16 +146,20 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
       try {
         const excludeStr = Array.from(excludeIds).join(",");
         const res = await api.get<{ dueIds: string[]; newIds: string[] }>(
-          `/reviews/due?newLimit=20&exclude=${excludeStr}`
+          `/reviews/due?newLimit=20&exclude=${excludeStr}&kinds=${kindsParam}`
         );
         const combinedIds = [...res.data.dueIds, ...res.data.newIds].slice(0, 20);
         if (combinedIds.length === 0) {
           return [];
         }
         const cardMap = new Map(cards.map((c) => [c.id, c]));
-        const batchCards = combinedIds
+        let batchCards = combinedIds
           .map((id) => cardMap.get(id))
           .filter((c): c is Card => !!c);
+
+        if (selectedKinds.length > 0) {
+          batchCards = batchCards.filter((c) => selectedKinds.includes(c.kind || "mcq"));
+        }
 
         const preparedBatch = batchCards.map((card) => {
           const statementOrder = card.statements
@@ -171,7 +184,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         setLoadingDue(false);
       }
     },
-    [cards]
+    [cards, selectedKinds, kindsParam]
   );
 
   useEffect(() => {

@@ -4,6 +4,34 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { Card, Review, Tag } from "@/types";
 import { selectDue } from "@/lib/due";
+import { CardKindBadge } from "@/components/CardKindBadge";
+
+const KIND_CONFIG: Record<string, { label: string; activeClass: string }> = {
+  mcq: {
+    label: "MCQ",
+    activeClass: "bg-indigo-600 border-indigo-600 text-white dark:bg-indigo-950/60 dark:border-indigo-800 dark:text-indigo-300"
+  },
+  flash: {
+    label: "Flash",
+    activeClass: "bg-rose-600 border-rose-600 text-white dark:bg-rose-950/60 dark:border-rose-800 dark:text-rose-300"
+  },
+  match: {
+    label: "Match",
+    activeClass: "bg-purple-600 border-purple-600 text-white dark:bg-purple-950/60 dark:border-purple-800 dark:text-purple-300"
+  },
+  cloze: {
+    label: "Cloze",
+    activeClass: "bg-teal-600 border-teal-600 text-white dark:bg-teal-950/60 dark:border-teal-800 dark:text-teal-300"
+  },
+  multi: {
+    label: "Multi",
+    activeClass: "bg-cyan-600 border-cyan-600 text-white dark:bg-cyan-950/60 dark:border-cyan-800 dark:text-cyan-300"
+  },
+  "tf-sort": {
+    label: "T/F",
+    activeClass: "bg-amber-600 border-amber-600 text-white dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-300"
+  }
+};
 
 export function DueCardsClient({
   cards,
@@ -15,7 +43,7 @@ export function DueCardsClient({
   tags: Tag[];
 }) {
   const [query, setQuery] = useState("");
-  const [kindFilter, setKindFilter] = useState("");
+  const [selectedKinds, setSelectedKinds] = useState<string[]>(["mcq", "multi", "flash", "cloze", "tf-sort", "match"]);
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
   const cardById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
@@ -39,7 +67,7 @@ export function DueCardsClient({
 
   const filteredList = useMemo(() => {
     return allDueCardsList.filter(({ card }) => {
-      if (kindFilter && card.kind !== kindFilter) return false;
+      if (!selectedKinds.includes(card.kind || "mcq")) return false;
       if (query) {
         const q = query.toLowerCase();
         if (
@@ -51,7 +79,7 @@ export function DueCardsClient({
       }
       return true;
     });
-  }, [allDueCardsList, query, kindFilter]);
+  }, [allDueCardsList, query, selectedKinds]);
 
   const totalCount = allDueCardsList.length;
 
@@ -70,7 +98,7 @@ export function DueCardsClient({
             All cards scheduled for active recall practice based on FSRS metrics.
           </p>
         </div>
-        {totalCount === 0 ? (
+        {filteredList.length === 0 ? (
           <button
             disabled
             className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white font-bold text-xs uppercase tracking-widest opacity-40 cursor-not-allowed rounded-[4px]"
@@ -79,10 +107,10 @@ export function DueCardsClient({
           </button>
         ) : (
           <Link
-            href="/test/session?due=1"
+            href={`/test/session?due=1&kinds=${selectedKinds.join(",")}`}
             className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest transition-colors duration-150 rounded-[4px]"
           >
-            Review Due Cards ({totalCount}) →
+            Review Due Cards ({filteredList.length}) →
           </Link>
         )}
       </div>
@@ -106,26 +134,43 @@ export function DueCardsClient({
       </div>
 
       {/* Filters row */}
-      <div className="flex flex-col sm:flex-row gap-3 pt-2">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Filter due questions..."
-          className="flex-1 px-3 py-2 border border-border rounded-[4px] bg-transparent text-foreground placeholder-zinc-600 focus:outline-none focus:border-accent"
-        />
-        <select
-          value={kindFilter}
-          onChange={(e) => setKindFilter(e.target.value)}
-          className="px-3 py-2 border border-border rounded-[4px] bg-transparent text-foreground focus:outline-none focus:border-accent"
-        >
-          <option value="">All card kinds</option>
-          <option value="flash">Flashcard</option>
-          <option value="cloze">Cloze deletion</option>
-          <option value="multi">Multiple choices</option>
-          <option value="match">Match pair</option>
-          <option value="tf-sort">True/False Sort</option>
-        </select>
+      <div className="flex flex-col gap-3 pt-2">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Filter due questions..."
+            className="flex-1 px-3 py-2 border border-border rounded-[4px] bg-transparent text-foreground placeholder-zinc-600 focus:outline-none focus:border-accent"
+          />
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-muted mr-1">Filter Kinds:</span>
+          {["mcq", "flash", "match", "cloze", "multi", "tf-sort"].map((k) => {
+            const isSelected = selectedKinds.includes(k);
+            const config = KIND_CONFIG[k] || { label: k.toUpperCase(), activeClass: "bg-indigo-600 border-indigo-600 text-white" };
+            return (
+              <button
+                key={k}
+                type="button"
+                onClick={() => {
+                  setSelectedKinds((prev) =>
+                    prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]
+                  );
+                }}
+                className={[
+                  "px-2.5 py-1 rounded-[4px] border text-xs font-semibold uppercase tracking-wider transition-colors",
+                  isSelected
+                    ? config.activeClass
+                    : "border-border bg-black/25 text-muted hover:border-zinc-500 hover:text-foreground",
+                ].join(" ")}
+              >
+                {isSelected ? "✓ " : ""}
+                {config.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* List */}
@@ -142,9 +187,7 @@ export function DueCardsClient({
             >
               <div className="space-y-1.5 flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] uppercase font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-border">
-                    {card.kind}
-                  </span>
+                  <CardKindBadge kind={card.kind} />
                   {isNew ? (
                     <span className="text-[10px] uppercase font-bold text-accent tracking-wider">
                       New card
