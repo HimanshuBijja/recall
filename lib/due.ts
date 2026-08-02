@@ -4,6 +4,16 @@ import { isDue } from "./srs";
 export interface SelectDueOptions {
   newLimit?: number;
   exclude?: string[];
+  shuffle?: boolean;
+}
+
+function shuffleArr<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 export function selectDue(
@@ -18,16 +28,21 @@ export function selectDue(
   const activeCardIds = new Set(cards.map((c) => c.id));
   const reviewMap = new Map(reviews.map((r) => [r.cardId, r]));
 
-  const dueIds = reviews
+  let dueIds = reviews
     .filter((r) => activeCardIds.has(r.cardId) && !exclude.has(r.cardId) && isDue(r, now))
     .map((r) => r.cardId);
 
+  let newCards = cards.filter((c) => !reviewMap.has(c.id) && !exclude.has(c.id));
+
+  if (options.shuffle) {
+    dueIds = shuffleArr(dueIds);
+    newCards = shuffleArr(newCards);
+  }
+
   const newIds: string[] = [];
-  for (const c of cards) {
+  for (const c of newCards) {
     if (newIds.length >= newLimit) break;
-    if (!reviewMap.has(c.id) && !exclude.has(c.id)) {
-      newIds.push(c.id);
-    }
+    newIds.push(c.id);
   }
 
   return { dueIds, newIds };

@@ -40,6 +40,32 @@ test("selectDue returns correct due and new cards", () => {
   expect(excludedResult.newIds).toEqual([]);
 });
 
+test("selectDue shuffles when shuffle option is true", () => {
+  const now = new Date("2026-01-01T12:00:00Z");
+  const manyCards: Card[] = Array.from({ length: 50 }, (_, i) => ({
+    id: `c${i}`,
+    question: `Q${i}`,
+    answer: "A",
+    distractors: [],
+    explanation: "",
+    hint: "",
+    difficulty: 3,
+    tags: [],
+    createdAt: "",
+  }));
+
+  // No reviews, all are new cards
+  const resultUnshuffled = selectDue(manyCards, [], now, { newLimit: 50, shuffle: false });
+  const resultShuffled = selectDue(manyCards, [], now, { newLimit: 50, shuffle: true });
+
+  expect(resultUnshuffled.newIds).toEqual(manyCards.map((c) => c.id));
+  expect(resultShuffled.newIds.length).toBe(50);
+  // It is statistically guaranteed to have a different order with 50 elements
+  expect(resultShuffled.newIds).not.toEqual(resultUnshuffled.newIds);
+  // But they should contain all the same elements
+  expect(new Set(resultShuffled.newIds)).toEqual(new Set(resultUnshuffled.newIds));
+});
+
 test("getReviewsSummary reports correct counts and forecast shape", () => {
   const now = new Date("2026-01-01T12:00:00Z");
   const reviews: Review[] = [

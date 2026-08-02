@@ -25,7 +25,9 @@ export async function GET(req: NextRequest) {
     nonExemptedCards = nonExemptedCards.filter((c) => kinds.includes(c.kind || "mcq"));
   }
 
+  const shuffle = searchParams.get("shuffle") === "true";
+
   const now = new Date();
-  const res = selectDue(nonExemptedCards, reviews, now, { newLimit, exclude });
+  const res = selectDue(nonExemptedCards, reviews, now, { newLimit, exclude, shuffle });
   return Response.json(res);
 }

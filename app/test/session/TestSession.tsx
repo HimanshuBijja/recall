@@ -146,7 +146,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
       try {
         const excludeStr = Array.from(excludeIds).join(",");
         const res = await api.get<{ dueIds: string[]; newIds: string[] }>(
-          `/reviews/due?newLimit=20&exclude=${excludeStr}&kinds=${kindsParam}`
+          `/reviews/due?newLimit=20&exclude=${excludeStr}&kinds=${kindsParam}&shuffle=${shuffle}`
         );
         const combinedIds = [...res.data.dueIds, ...res.data.newIds].slice(0, 20);
         if (combinedIds.length === 0) {
@@ -184,7 +184,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         setLoadingDue(false);
       }
     },
-    [cards, selectedKinds, kindsParam]
+    [cards, selectedKinds, kindsParam, shuffle]
   );
 
   useEffect(() => {
