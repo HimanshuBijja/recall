@@ -612,7 +612,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         className="rounded-xl border border-border p-4 sm:p-6 bg-zinc-950/20 space-y-5 animate-in fade-in duration-200"
       >
         {!isFlash && !isCloze && !isMatch && (
-          <h2 className="text-base sm:text-xl font-medium leading-relaxed">
+          <h2 className="text-base sm:text-xl font-medium leading-relaxed whitespace-pre-wrap">
             {current.card.question}
           </h2>
         )}
@@ -644,7 +644,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             {!flipped ? (
               <div className="flex-1 flex flex-col justify-center items-center text-center space-y-4">
                 <span className="text-sm text-zinc-500 font-medium">Question (Front)</span>
-                <p className="text-lg sm:text-xl font-medium leading-relaxed">
+                <p className="text-lg sm:text-xl font-medium leading-relaxed whitespace-pre-wrap">
                   {current.card.question}
                 </p>
                 <div className="text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-1 rounded">
@@ -655,14 +655,14 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
               <div className="flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-3">
                   <span className="text-sm text-zinc-500 font-medium">Answer (Back)</span>
-                  <p className="text-lg sm:text-xl font-medium leading-relaxed text-indigo-600 dark:text-indigo-400">
+                  <p className="text-lg sm:text-xl font-medium leading-relaxed text-indigo-600 dark:text-indigo-400 whitespace-pre-wrap">
                     {current.card.answer}
                   </p>
                 </div>
                 {current.card.explanation && (
                   <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800">
                     <span className="text-xs uppercase tracking-wider text-zinc-400">Explanation</span>
-                    <p className="text-sm leading-relaxed mt-1 text-zinc-700 dark:text-zinc-300">
+                    <p className="text-sm leading-relaxed mt-1 text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">
                       {current.card.explanation}
                     </p>
                   </div>
