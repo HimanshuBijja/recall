@@ -67,7 +67,8 @@ test("GET /api/reviews/due returns lists of due and new cards", async () => {
 
   const data = await res.json();
   expect(data.dueIds).toContain("card-due-1");
-  expect(data.newIds).toContain("card-new-1");
+  expect(data.dueIds).toContain("card-new-1");
+  expect(data.newIds).toEqual([]);
 });
 
 test("GET /api/reviews/summary returns forecast array", async () => {

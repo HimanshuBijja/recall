@@ -22,44 +22,40 @@ export function selectDue(
   now: Date,
   options: SelectDueOptions = {}
 ): { dueIds: string[]; newIds: string[] } {
-  const newLimit = options.newLimit ?? 20;
   const exclude = new Set(options.exclude ?? []);
 
   const activeCardIds = new Set(cards.map((c) => c.id));
   const reviewMap = new Map(reviews.map((r) => [r.cardId, r]));
 
-  let dueIds = reviews
+  let dueReviewIds = reviews
     .filter((r) => activeCardIds.has(r.cardId) && !exclude.has(r.cardId) && isDue(r, now))
     .map((r) => r.cardId);
 
-  let newCards = cards.filter((c) => !reviewMap.has(c.id) && !exclude.has(c.id));
+  let unreviewedCards = cards.filter((c) => !reviewMap.has(c.id) && !exclude.has(c.id));
 
   if (options.shuffle) {
-    dueIds = shuffleArr(dueIds);
-    newCards = shuffleArr(newCards);
+    dueReviewIds = shuffleArr(dueReviewIds);
+    unreviewedCards = shuffleArr(unreviewedCards);
   }
 
-  const newIds: string[] = [];
-  for (const c of newCards) {
-    if (newIds.length >= newLimit) break;
-    newIds.push(c.id);
-  }
+  const combinedDueIds = [...dueReviewIds, ...unreviewedCards.map((c) => c.id)];
 
-  return { dueIds, newIds };
+  return { dueIds: combinedDueIds, newIds: [] };
 }
 
 export function getReviewsSummary(cards: Card[], reviews: Review[], now: Date) {
   const activeCardIds = new Set(cards.map((c) => c.id));
   const activeReviews = reviews.filter((r) => activeCardIds.has(r.cardId));
 
-  const due = activeReviews.filter((r) => new Date(r.dueAt).getTime() <= now.getTime()).length;
+  const reviewedCardIds = new Set(reviews.map((r) => r.cardId));
+  const newCount = cards.filter((c) => !reviewedCardIds.has(c.id)).length;
+
+  const dueReviewsCount = activeReviews.filter((r) => new Date(r.dueAt).getTime() <= now.getTime()).length;
+  const due = dueReviewsCount + newCount;
 
   const overdue = activeReviews.filter(
     (r) => new Date(r.dueAt).getTime() <= now.getTime() && r.lastReviewedAt !== null
   ).length;
-
-  const reviewedCardIds = new Set(reviews.map((r) => r.cardId));
-  const newCount = cards.filter((c) => !reviewedCardIds.has(c.id)).length;
 
   const forecast: { date: string; count: number }[] = [];
 
@@ -79,8 +75,10 @@ export function getReviewsSummary(cards: Card[], reviews: Review[], now: Date) {
       return i === 0 ? rDay <= dayStr : rDay === dayStr;
     }).length;
 
-    forecast.push({ date: dayStr, count });
+    const totalCount = i === 0 ? count + newCount : count;
+
+    forecast.push({ date: dayStr, count: totalCount });
   }
 
-  return { due, overdue, new: newCount, forecast };
+  return { due, overdue, new: 0, forecast };
 }

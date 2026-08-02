@@ -31,12 +31,13 @@ test("selectDue returns correct due and new cards", () => {
     },
   ];
 
-  const result = selectDue(mockCards, reviews, now, { newLimit: 1 });
-  expect(result.dueIds).toEqual(["c1"]);
-  expect(result.newIds).toEqual(["c3"]);
+  const result = selectDue(mockCards, reviews, now);
+  expect(result.dueIds).toEqual(["c1", "c3"]);
+  expect(result.newIds).toEqual([]);
 
   // Test exclude option
   const excludedResult = selectDue(mockCards, reviews, now, { exclude: ["c3"] });
+  expect(excludedResult.dueIds).toEqual(["c1"]);
   expect(excludedResult.newIds).toEqual([]);
 });
 
@@ -55,15 +56,15 @@ test("selectDue shuffles when shuffle option is true", () => {
   }));
 
   // No reviews, all are new cards
-  const resultUnshuffled = selectDue(manyCards, [], now, { newLimit: 50, shuffle: false });
-  const resultShuffled = selectDue(manyCards, [], now, { newLimit: 50, shuffle: true });
+  const resultUnshuffled = selectDue(manyCards, [], now, { shuffle: false });
+  const resultShuffled = selectDue(manyCards, [], now, { shuffle: true });
 
-  expect(resultUnshuffled.newIds).toEqual(manyCards.map((c) => c.id));
-  expect(resultShuffled.newIds.length).toBe(50);
+  expect(resultUnshuffled.dueIds).toEqual(manyCards.map((c) => c.id));
+  expect(resultShuffled.dueIds.length).toBe(50);
   // It is statistically guaranteed to have a different order with 50 elements
-  expect(resultShuffled.newIds).not.toEqual(resultUnshuffled.newIds);
+  expect(resultShuffled.dueIds).not.toEqual(resultUnshuffled.dueIds);
   // But they should contain all the same elements
-  expect(new Set(resultShuffled.newIds)).toEqual(new Set(resultUnshuffled.newIds));
+  expect(new Set(resultShuffled.dueIds)).toEqual(new Set(resultUnshuffled.dueIds));
 });
 
 test("getReviewsSummary reports correct counts and forecast shape", () => {
@@ -79,11 +80,11 @@ test("getReviewsSummary reports correct counts and forecast shape", () => {
   ];
 
   const summary = getReviewsSummary(mockCards, reviews, now);
-  expect(summary.due).toBe(1);
+  expect(summary.due).toBe(3); // c1 (due review) + c2 & c3 (new cards)
   expect(summary.overdue).toBe(1);
-  expect(summary.new).toBe(2);
+  expect(summary.new).toBe(0);
   expect(summary.forecast.length).toBe(14);
-  expect(summary.forecast[0].count).toBe(1);
+  expect(summary.forecast[0].count).toBe(3);
 });
 
 test("forecast buckets a due-today review once, by local day", () => {

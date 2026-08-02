@@ -47,8 +47,9 @@ export function DueCardsClient({
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
   const cardById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
+  const reviewMap = useMemo(() => new Map(reviews.map((r) => [r.cardId, r])), [reviews]);
 
-  const { dueIds, newIds } = useMemo(() => {
+  const { dueIds } = useMemo(() => {
     return selectDue(cards, reviews, new Date());
   }, [cards, reviews]);
 
@@ -56,14 +57,13 @@ export function DueCardsClient({
     const list: { card: Card; isNew: boolean }[] = [];
     dueIds.forEach((id) => {
       const card = cardById.get(id);
-      if (card) list.push({ card, isNew: false });
-    });
-    newIds.forEach((id) => {
-      const card = cardById.get(id);
-      if (card) list.push({ card, isNew: true });
+      if (card) {
+        const isNew = !reviewMap.has(id);
+        list.push({ card, isNew });
+      }
     });
     return list;
-  }, [dueIds, newIds, cardById]);
+  }, [dueIds, reviewMap, cardById]);
 
   const filteredList = useMemo(() => {
     return allDueCardsList.filter(({ card }) => {
@@ -124,12 +124,12 @@ export function DueCardsClient({
           <div className="text-2xl font-bold font-display text-accent">{totalCount}</div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-muted font-semibold">Overdue / Scheduled</div>
-          <div className="text-2xl font-bold font-display text-foreground">{dueIds.length}</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted font-semibold">Overdue (Reviewed)</div>
+          <div className="text-2xl font-bold font-display text-foreground">{allDueCardsList.filter((item) => !item.isNew).length}</div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-muted font-semibold">New Cards Today</div>
-          <div className="text-2xl font-bold font-display text-foreground">{newIds.length}</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted font-semibold">Unreviewed (New)</div>
+          <div className="text-2xl font-bold font-display text-foreground">{allDueCardsList.filter((item) => item.isNew).length}</div>
         </div>
       </div>
 

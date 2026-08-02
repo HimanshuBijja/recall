@@ -75,8 +75,6 @@ export function DueReviewPanel({
           <span>{summary.due} due</span>
           <span>·</span>
           <span>{summary.overdue} overdue</span>
-          <span>·</span>
-          <span>{summary.new} new</span>
         </div>
       </div>
 
