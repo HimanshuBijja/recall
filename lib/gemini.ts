@@ -168,6 +168,9 @@ export async function draftCardFromFrame(
 The video title is: "${videoTitle || "Unknown"}".
 First transcribe all readable text in the image (this is the OCR). Then write the card.
 
+CRITICAL REQUIREMENT FOR MARKDOWN FORMATTING:
+- You are encouraged to use GitHub Flavored Markdown (GFM) inside the "question", "answer", "explanation", and "hint" fields (such as bold text, bullet lists, inline code, code blocks, headers, or tables) to structure the contents for rich and beautiful rendering.
+
 CRITICAL REQUIREMENT FOR ALL CARD TYPES:
 - The entire question text and all options/answers/distractors/statements/pairs shown in the screenshot image must appear fully and completely in the generated card.
 - DO NOT abbreviate, truncate, summarize, omit, or cut short any part of the question text or the options. They must be transcribed in full.
@@ -260,6 +263,7 @@ RULES:
 - Suggest a clean, concise, descriptive group name (usually 2-5 words) representing the topic of this passage (e.g. "DBMS Schema Architecture", "Responsive CSS Grid", "Photosynthesis Stages").
 - Produce exactly ${count} cards, each testing a DIFFERENT fact or idea from the source text. Do not repeat a fact across cards.
 - Base every card strictly on the source text. Do not invent facts that are not in it.
+- You are encouraged to use GitHub Flavored Markdown (GFM) inside the "question", "answer", "explanation", and "hint" fields (such as bold text, bullet lists, inline code, code blocks, headers, or tables) to structure the contents for rich and beautiful rendering.
 - If the source text does not contain enough distinct material for ${count} cards, return as many good cards as it supports rather than padding with filler.
 - The "tags" list of every card MUST contain exactly ONE lowercase string naming the main topic of the source text (1-3 words, e.g. "css grid", "cellular respiration").
 

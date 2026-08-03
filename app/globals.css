@@ -127,3 +127,94 @@ li:hover, tr:hover, .hover\:bg-zinc-100:hover, .dark\:hover\:bg-zinc-800:hover {
   border-radius: 4px !important;
   padding: 24px !important;
 }
+
+/* --- Markdown Rendering Styles --- */
+.prose-markdown p {
+  margin-bottom: 0.75rem;
+}
+.prose-markdown p:last-child {
+  margin-bottom: 0;
+}
+.prose-markdown strong {
+  font-weight: 700;
+  color: var(--foreground);
+}
+.prose-markdown em {
+  font-style: italic;
+}
+.prose-markdown ul {
+  list-style-type: disc;
+  margin-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.prose-markdown ol {
+  list-style-type: decimal;
+  margin-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.prose-markdown li {
+  margin-bottom: 0.25rem;
+}
+.prose-markdown li > p {
+  margin-bottom: 0;
+  display: inline;
+}
+.prose-markdown code {
+  font-family: monospace;
+  font-size: 0.85em;
+  background-color: #121212 !important;
+  padding: 0.15rem 0.3rem;
+  border-radius: 2px !important;
+  border: 1px solid #4A4441 !important;
+  color: #DC9F85 !important;
+}
+.prose-markdown pre {
+  background-color: #121212 !important;
+  border: 1px solid #4A4441 !important;
+  border-radius: 4px !important;
+  padding: 0.75rem;
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+}
+.prose-markdown pre code {
+  background-color: transparent !important;
+  padding: 0;
+  border-radius: 0 !important;
+  border: none !important;
+  color: inherit !important;
+}
+.prose-markdown blockquote {
+  border-left: 3px solid #DC9F85 !important;
+  padding-left: 0.75rem;
+  color: #B6A596 !important;
+  font-style: italic;
+  margin-bottom: 0.75rem;
+}
+.prose-markdown h1,
+.prose-markdown h2,
+.prose-markdown h3,
+.prose-markdown h4 {
+  font-weight: 700;
+  color: var(--foreground);
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+.prose-markdown h1 { font-size: 1.5em; }
+.prose-markdown h2 { font-size: 1.3em; }
+.prose-markdown h3 { font-size: 1.1em; }
+.prose-markdown h4 { font-size: 1em; }
+.prose-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.75rem;
+}
+.prose-markdown th,
+.prose-markdown td {
+  border: 1px solid #4A4441 !important;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+.prose-markdown th {
+  background-color: #1c1513 !important;
+  font-weight: 700;
+}

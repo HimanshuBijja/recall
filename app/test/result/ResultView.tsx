@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Card, Session, Tag } from "@/types";
 import { parseCloze } from "@/lib/cloze";
 import { CardFrame } from "@/components/CardFrame";
+import { Markdown } from "@/components/Markdown";
 
 interface Snap {
   session: Session;
@@ -154,7 +155,9 @@ export function ResultView() {
                   key={r.cardId + ":" + i}
                   className="border-l-2 border-rose-500 pl-3 space-y-1"
                 >
-                  <div className="text-sm font-medium">{card.question}</div>
+                  <div className="text-sm font-medium">
+                    <Markdown text={card.question} />
+                  </div>
                   {card.kind === "tf-sort" && card.statements ? (
                     <ul className="text-xs space-y-0.5 mt-1">
                       {card.statements.map((s, j) => (
@@ -212,13 +215,17 @@ export function ResultView() {
                     </div>
                   ) : (
                     <div className="text-xs">
-                      <span className="text-emerald-600 dark:text-emerald-400">
-                        {card.kind === "flash" ? "Answer: " : "Correct: "} {card.answer}
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold block mb-1">
+                        {card.kind === "flash" ? "Answer: " : "Correct: "}
                       </span>
+                      <Markdown text={card.answer} />
                     </div>
                   )}
                   {card.explanation && (
-                    <div className="text-xs text-zinc-500">{card.explanation}</div>
+                    <div className="text-xs text-zinc-500 mt-1">
+                      <span className="text-xs uppercase tracking-wider text-zinc-400 font-semibold block mb-1">Explanation</span>
+                      <Markdown text={card.explanation} />
+                    </div>
                   )}
                   <CardFrame url={card.source?.screenshotUrl} urls={card.referenceImages} />
                   <div className="flex flex-wrap gap-1 pt-1">

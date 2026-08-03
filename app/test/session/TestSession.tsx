@@ -11,6 +11,7 @@ import { parseCloze, gradeCloze } from "@/lib/cloze";
 import { gradeMulti } from "@/lib/multi";
 import { Skeleton } from "@/components/Skeleton";
 import { CardFrame } from "@/components/CardFrame";
+import { Markdown } from "@/components/Markdown";
 
 function shuffleArr<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -612,9 +613,9 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         className="rounded-xl border border-border p-4 sm:p-6 bg-zinc-950/20 space-y-5 animate-in fade-in duration-200"
       >
         {!isFlash && !isCloze && !isMatch && (
-          <h2 className="text-base sm:text-xl font-medium leading-relaxed whitespace-pre-wrap">
-            {current.card.question}
-          </h2>
+          <div className="text-base sm:text-xl font-medium leading-relaxed">
+            <Markdown text={current.card.question} />
+          </div>
         )}
 
         <CardFrame url={current.card.source?.screenshotUrl} urls={current.card.referenceImages} />
@@ -644,9 +645,9 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             {!flipped ? (
               <div className="flex-1 flex flex-col justify-center items-center text-center space-y-4">
                 <span className="text-sm text-zinc-500 font-medium">Question (Front)</span>
-                <p className="text-lg sm:text-xl font-medium leading-relaxed whitespace-pre-wrap">
-                  {current.card.question}
-                </p>
+                <div className="text-lg sm:text-xl font-medium leading-relaxed text-center w-full">
+                  <Markdown text={current.card.question} />
+                </div>
                 <div className="text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-1 rounded">
                   Tap card or press <kbd className="font-mono">Space</kbd> to flip
                 </div>
@@ -655,16 +656,16 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
               <div className="flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-3">
                   <span className="text-sm text-zinc-500 font-medium">Answer (Back)</span>
-                  <p className="text-lg sm:text-xl font-medium leading-relaxed text-indigo-600 dark:text-indigo-400 whitespace-pre-wrap">
-                    {current.card.answer}
-                  </p>
+                  <div className="text-lg sm:text-xl font-medium leading-relaxed text-indigo-600 dark:text-indigo-400">
+                    <Markdown text={current.card.answer} />
+                  </div>
                 </div>
                 {current.card.explanation && (
                   <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800">
-                    <span className="text-xs uppercase tracking-wider text-zinc-400">Explanation</span>
-                    <p className="text-sm leading-relaxed mt-1 text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">
-                      {current.card.explanation}
-                    </p>
+                    <span className="text-xs uppercase tracking-wider text-zinc-400 font-semibold block mb-1">Explanation</span>
+                    <div className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                      <Markdown text={current.card.explanation} />
+                    </div>
                   </div>
                 )}
 
