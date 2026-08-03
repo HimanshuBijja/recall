@@ -372,9 +372,9 @@ export function CardsBrowser({ initialCards, tags }: { initialCards: Card[]; tag
                   {c.kind === "multi" && `→ ${(c.answers?.length ?? 0)} correct`}
                   {(!c.kind || c.kind === "mcq") && `→ ${c.answer}`}
                 </div>
-                {c.source?.screenshotUrl && (
+                {(c.source?.screenshotUrl || (c.referenceImages && c.referenceImages.length > 0)) && (
                   <div onClick={(e) => e.stopPropagation()}>
-                    <CardFrame url={c.source.screenshotUrl} />
+                    <CardFrame url={c.source?.screenshotUrl} urls={c.referenceImages} />
                   </div>
                 )}
                 <div className="flex justify-end gap-3 pt-1 items-center">

@@ -23,7 +23,8 @@ export type BgMessage =
   | { type: "EDIT_TEXT"; selection?: string; prompt: string; draft?: unknown }
   | { type: "GENERATE_QUESTIONS"; req: GenerateRequest }
   | { type: "SAVE_CARDS"; cards: unknown[]; groupName?: string }
-  | { type: "SYNC_LOCAL_DB" };
+  | { type: "SYNC_LOCAL_DB" }
+  | { type: "UPLOAD_IMAGE"; fileDataUrl: string };
 
 export type BgResponse =
   | CaptureResponse
@@ -246,6 +247,27 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
     } catch (e) {
       clearTimeout(id);
       return { ok: false, error: e instanceof Error ? e.message : "Sync failed" };
+    }
+  }
+
+  if (msg.type === "UPLOAD_IMAGE") {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 20000);
+    try {
+      const res = await fetchWithAuth(`${base}/api/upload`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileDataUrl: msg.fileDataUrl }),
+        signal: controller.signal,
+      });
+      clearTimeout(id);
+      if (!res.ok) {
+        return { ok: false, error: `Upload failed (${res.status})` };
+      }
+      return await res.json();
+    } catch (e) {
+      clearTimeout(id);
+      return { ok: false, error: e instanceof Error ? e.message : "Upload failed" };
     }
   }
 

@@ -36,6 +36,7 @@ export interface CardDraft {
   explanation: string;
   hint: string;
   tags: string[];
+  referenceImages?: string[];
 }
 
 export interface CaptureRequest {

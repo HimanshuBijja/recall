@@ -40,6 +40,9 @@ export function draftToCard(
   if (draft.kind === "tf-sort") body.statements = draft.statements ?? [];
   if (draft.kind === "match") body.pairs = draft.pairs ?? [];
   if (draft.kind === "multi") body.answers = draft.answers ?? [];
+  if (draft.referenceImages && draft.referenceImages.length > 0) {
+    body.referenceImages = draft.referenceImages;
+  }
   return body;
 }
 
@@ -516,6 +519,134 @@ export function renderFields(
   hintField.setAttribute("data-field", "hint");
   metaRoot.append(el("label", {}, ["Hint"]), hintField);
 
+  // Reference Images array
+  const referenceImages: string[] = draft.referenceImages ?? [];
+  const imagesContainer = el("div", { class: "reference-images-container", style: "margin-top:12px;" });
+  metaRoot.append(imagesContainer);
+
+  function renderImages() {
+    imagesContainer.innerHTML = "";
+    imagesContainer.append(el("label", {}, ["Reference Images"]));
+
+    const grid = el("div", {
+      style: "display:grid;grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));gap:8px;margin-bottom:8px;"
+    });
+
+    referenceImages.forEach((imgUrl, imgIdx) => {
+      const thumb = el("div", {
+        style: "position:relative;width:64px;height:64px;border:1px solid #4a4441;border-radius:4px;overflow:hidden;background:#121212;"
+      });
+
+      const img = el("img", {
+        src: imgUrl,
+        style: "width:100%;height:100%;object-fit:cover;"
+      });
+
+      const delBtn = el("button", {
+        type: "button",
+        style: "position:absolute;top:2px;right:2px;background:rgba(24,24,24,0.7);color:#EBDCC4;border:none;border-radius:2px;width:16px;height:16px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"
+      }, ["✕"]);
+
+      delBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        referenceImages.splice(imgIdx, 1);
+        renderImages();
+      });
+
+      thumb.append(img, delBtn);
+      grid.append(thumb);
+    });
+
+    const uploadZone = el("div", {
+      class: "image-upload-zone",
+      style: "border:1px dashed #4a4441;border-radius:4px;padding:12px;text-align:center;cursor:pointer;background:#121212;color:#B6A596;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:4px;"
+    });
+
+    const statusText = el("span", {}, ["📷 Click/Drop or Paste (Ctrl+V)"]);
+    uploadZone.append(statusText);
+
+    const fileInput = el("input", {
+      type: "file",
+      accept: "image/*",
+      style: "display:none;"
+    });
+    uploadZone.append(fileInput);
+
+    uploadZone.addEventListener("click", () => fileInput.click());
+
+    async function handleFile(file: File) {
+      statusText.textContent = "Compressing...";
+      try {
+        const compressedDataUrl = await compressImageToLimit(file);
+        statusText.textContent = "Uploading...";
+        const res = await chrome.runtime.sendMessage({
+          type: "UPLOAD_IMAGE",
+          fileDataUrl: compressedDataUrl
+        });
+        if (res && res.url) {
+          referenceImages.push(res.url);
+          statusText.textContent = "📷 Click/Drop or Paste (Ctrl+V)";
+          renderImages();
+        } else {
+          statusText.textContent = "Upload failed!";
+          setTimeout(() => { statusText.textContent = "📷 Click/Drop or Paste (Ctrl+V)"; }, 2000);
+        }
+      } catch (err) {
+        console.error(err);
+        statusText.textContent = "Error!";
+        setTimeout(() => { statusText.textContent = "📷 Click/Drop or Paste (Ctrl+V)"; }, 2000);
+      }
+    }
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files?.[0];
+      if (file) handleFile(file);
+    });
+
+    grid.append(uploadZone);
+    imagesContainer.append(grid);
+  }
+
+  renderImages();
+
+  // Listen to paste events inside the fields elements to capture image clips
+  const onPaste = async (e: ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.indexOf("image") !== -1) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          const statusSpan = imagesContainer.querySelector(".image-upload-zone span");
+          if (statusSpan) statusSpan.textContent = "Compressing...";
+          try {
+            const compressedDataUrl = await compressImageToLimit(file);
+            if (statusSpan) statusSpan.textContent = "Uploading...";
+            const res = await chrome.runtime.sendMessage({
+              type: "UPLOAD_IMAGE",
+              fileDataUrl: compressedDataUrl
+            });
+            if (res && res.url) {
+              referenceImages.push(res.url);
+              renderImages();
+            } else {
+              if (statusSpan) statusSpan.textContent = "Upload failed!";
+              setTimeout(() => { if (statusSpan) statusSpan.textContent = "📷 Click/Drop or Paste (Ctrl+V)"; }, 2000);
+            }
+          } catch (err) {
+            console.error(err);
+            if (statusSpan) statusSpan.textContent = "Error!";
+            setTimeout(() => { if (statusSpan) statusSpan.textContent = "📷 Click/Drop or Paste (Ctrl+V)"; }, 2000);
+          }
+        }
+      }
+    }
+  };
+
+  kindRoot.addEventListener("paste", onPaste);
+  metaRoot.addEventListener("paste", onPaste);
+
   function readValues(): CardDraft {
     const tags = selectedTags.map((t) => t.id || t.name);
     const base: CardDraft = {
@@ -526,6 +657,7 @@ export function renderFields(
       tags,
       explanation: explanationField.value,
       hint: hintField.value,
+      referenceImages,
     };
     if (kind === "cloze") base.clozeText = questionField.value;
     if (kind === "tf-sort") {
@@ -545,4 +677,58 @@ export function renderFields(
   }
 
   return { readValues };
+}
+
+async function compressImageToLimit(file: File, maxSizeBytes = 100 * 1024): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        let quality = 0.9;
+        
+        const attemptCompress = () => {
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error("Compression failed"));
+              return;
+            }
+            if (blob.size <= maxSizeBytes || quality <= 0.2) {
+              const fileReader = new FileReader();
+              fileReader.onloadend = () => {
+                resolve(fileReader.result as string);
+              };
+              fileReader.onerror = () => reject(new Error("Failed to read compressed blob"));
+              fileReader.readAsDataURL(blob);
+            } else {
+              if (quality > 0.4) {
+                quality -= 0.1;
+              } else {
+                width = Math.round(width * 0.85);
+                height = Math.round(height * 0.85);
+                canvas.width = width;
+                canvas.height = height;
+                ctx?.drawImage(img, 0, 0, width, height);
+                quality = 0.7; 
+              }
+              attemptCompress();
+            }
+          }, "image/jpeg", quality);
+        };
+        attemptCompress();
+      };
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
 }

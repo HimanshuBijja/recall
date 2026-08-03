@@ -76,6 +76,7 @@ export interface Card {
   tags: string[];
   createdAt: string;
   source?: CardSource;
+  referenceImages?: string[];
 }
 
 export interface Tag {

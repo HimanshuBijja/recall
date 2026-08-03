@@ -220,7 +220,7 @@ export function ResultView() {
                   {card.explanation && (
                     <div className="text-xs text-zinc-500">{card.explanation}</div>
                   )}
-                  <CardFrame url={card.source?.screenshotUrl} />
+                  <CardFrame url={card.source?.screenshotUrl} urls={card.referenceImages} />
                   <div className="flex flex-wrap gap-1 pt-1">
                     {card.tags.slice(0, 4).map((tid) => (
                       <span
