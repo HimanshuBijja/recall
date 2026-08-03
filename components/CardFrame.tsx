@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
 
-export function CardFrame({ url, urls = [] }: { url?: string; urls?: string[] }) {
+export function CardFrame({ url, urls }: { url?: string; urls?: string[] }) {
   const [shown, setShown] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
 
-  const images = [url, ...urls].filter((u): u is string => typeof u === "string" && !!u);
+  const urlsArray = Array.isArray(urls) ? urls : [];
+  const images = [url, ...urlsArray].filter((u): u is string => typeof u === "string" && !!u);
 
   if (images.length === 0) return null;
 
