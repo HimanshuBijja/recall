@@ -83,6 +83,7 @@ export function buildCardFromInput(input: unknown): { card?: Omit<Card, "id" | "
     tags: Array.isArray(body.tags) ? body.tags.map(String) : [],
     bookmarked: body.bookmarked !== undefined ? Boolean(body.bookmarked) : undefined,
     source: normalizeSource(body.source),
+    referenceImages: Array.isArray(body.referenceImages) ? body.referenceImages.map(String) : undefined,
   };
 
   if (kind === "mcq") {

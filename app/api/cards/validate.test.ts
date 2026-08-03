@@ -45,6 +45,14 @@ test("omits source when absent", () => {
   expect(card!.source).toBeUndefined();
 });
 
+test("passes through referenceImages when present", () => {
+  const { card } = buildCardFromInput({
+    kind: "flash", question: "Q", answer: "A",
+    referenceImages: ["https://r2/img1.png", "https://r2/img2.png"]
+  });
+  expect(card!.referenceImages).toEqual(["https://r2/img1.png", "https://r2/img2.png"]);
+});
+
 test("drops a malformed source (missing videoId)", () => {
   const { card } = buildCardFromInput({
     kind: "flash", question: "Q", answer: "A",
