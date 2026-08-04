@@ -1,5 +1,9 @@
 # 02 — Features Log
 
+## 2026-08-04 — Extension Capture Timeout Increase
+- **Extension Capture Timeout Increase**: Increased the video frame capture (`CAPTURE` message) timeout in `extension/src/background.ts` from 25 seconds to 45 seconds. This provides extra headroom for compiling route handlers locally (during dev server cold starts) and running Gemini OCR processes.
+- **Files modified**: `extension/src/background.ts`.
+
 ## 2026-08-04 — Test Session Explanation Markdown Rendering Fix
 - **Explanation Markdown Rendering**: Replaced the plain paragraph `<p>` rendering of card explanations in the post-answer view of `TestSession.tsx` with the project's `<Markdown />` component. This enables proper Markdown formatting (bold, italic, lists, etc.) for explanations during review sessions.
 - **Files modified**: `app/test/session/TestSession.tsx`.

@@ -101,7 +101,7 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
 
   if (msg.type === "CAPTURE") {
     const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 25000); // 25s timeout for AI generation
+    const id = setTimeout(() => controller.abort(), 45000); // 45s timeout for AI generation
     try {
       const res = await fetchWithAuth(buildCaptureUrl(base), {
         method: "POST",
@@ -117,7 +117,7 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
       const isAbort = e instanceof Error && e.name === "AbortError";
       return {
         ok: false,
-        error: isAbort ? "AI request timed out (25s)" : (e instanceof Error ? e.message : "capture failed")
+        error: isAbort ? "AI request timed out (45s)" : (e instanceof Error ? e.message : "capture failed")
       };
     }
   }
