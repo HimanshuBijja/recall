@@ -165,7 +165,7 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
 
   if (msg.type === "EDIT_TEXT") {
     const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 15000);
+    const id = setTimeout(() => controller.abort(), 45000); // 45s timeout for AI editing
     try {
       const res = await fetchWithAuth(`${base}/api/edit`, {
         method: "POST",
@@ -181,7 +181,11 @@ export async function handleMessage(msg: BgMessage): Promise<BgResponse> {
       return await res.json();
     } catch (e) {
       clearTimeout(id);
-      return { ok: false, error: e instanceof Error ? e.message : "Request failed" };
+      const isAbort = e instanceof Error && e.name === "AbortError";
+      return {
+        ok: false,
+        error: isAbort ? "AI request timed out (45s)" : (e instanceof Error ? e.message : "Request failed"),
+      };
     }
   }
 

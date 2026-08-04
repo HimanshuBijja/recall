@@ -1,5 +1,11 @@
 # 02 — Features Log
 
+## 2026-08-04 — Chatbot AI Editor Timeout & Typecheck Fixes
+- **Extension Chatbot Timeout Fix**: Increased the `EDIT_TEXT` message timeout in `extension/src/background.ts` from 15 seconds to 45 seconds to accommodate slower LLM response generation times. Handled timeout abort errors gracefully with a clear `"AI request timed out (45s)"` message instead of browser-native `"signal is aborted without reason"` DOMExceptions.
+- **TypeScript Iteration compilation Fix**: Corrected a compilation error in `extension/src/content/overlay/fields.ts` where looping through a `DataTransferItemList` with `for...of` failed without downlevelIteration support; replaced it with a standard index-based `for` loop.
+- **Vitest Environment Leak Fix**: Prevented asynchronous `setTimeout` calls in `extension/src/content/overlay/batch.ts` from firing after test teardown by tracking and clearing all active timers in the overlay `cleanup()` method, and added defensive try/catch blocks around event dispatching.
+- **Files modified**: `extension/src/background.ts`, `extension/src/content/overlay/fields.ts`, `extension/src/content/overlay/batch.ts`.
+
 ## 2026-07-31 — Selective Card Testing & Unified Kind Badges
 - **Unified CardKindBadge**: Created a centralized `<CardKindBadge>` component that renders consistent styling and distinct colors for each card kind (T/F Sort = Amber, Flash = Rose, Cloze = Teal, Match = Purple, Multi = Cyan, MCQ = Indigo) using a clean `rounded` 4px shape.
 - **Selective Group and Subject Testing**: Added card kind filter selection buttons (interactive chips) in group detail and subject detail views to allow users to select specific card kinds for testing.

@@ -32,6 +32,7 @@ function summarize(draft: CardDraft): string {
 export function openBatchOverlay(opts: BatchOverlayOptions): Promise<BatchResult> {
   document.getElementById(HOST_ID)?.remove();
   const allTags = opts.allTags ?? [];
+  const activeTimeouts: any[] = [];
 
   return new Promise((resolve) => {
     const host = document.createElement("div");
@@ -171,12 +172,15 @@ export function openBatchOverlay(opts: BatchOverlayOptions): Promise<BatchResult
         body.style.display = open ? "" : "none";
         chevron.textContent = open ? "▾" : "▸";
         if (open) {
-          setTimeout(() => {
+          const tId = setTimeout(() => {
             const tas = Array.from(body.querySelectorAll("textarea"));
             tas.forEach((ta) => {
-              ta.dispatchEvent(new Event("input", { bubbles: true }));
+              try {
+                ta.dispatchEvent(new Event("input", { bubbles: true }));
+              } catch {}
             });
           }, 0);
+          activeTimeouts.push(tId);
         }
       }
 
@@ -215,6 +219,7 @@ export function openBatchOverlay(opts: BatchOverlayOptions): Promise<BatchResult
     refreshCount();
 
     function cleanup(): void {
+      activeTimeouts.forEach((tId) => clearTimeout(tId));
       document.removeEventListener("keydown", onKeydown, true);
       host.remove();
     }
@@ -249,11 +254,14 @@ export function openBatchOverlay(opts: BatchOverlayOptions): Promise<BatchResult
     document.body.append(host);
 
     // Initial resize trigger for the first card which is expanded by default
-    setTimeout(() => {
+    const initTimer = setTimeout(() => {
       const tas = Array.from(shadow.querySelectorAll("textarea"));
       tas.forEach((ta) => {
-        ta.dispatchEvent(new Event("input", { bubbles: true }));
+        try {
+          ta.dispatchEvent(new Event("input", { bubbles: true }));
+        } catch {}
       });
     }, 50);
+    activeTimeouts.push(initTimer);
   });
 }
