@@ -6,7 +6,7 @@ _Last updated: 2026-08-04_
 `master`. Everything below is merged and committed (local; **not yet pushed**).
 Includes: MongoDB migration + Atlas→local mirror, the Flash/Cloze/Match/
 Bookmarks/FSRS feature set, the build/lint hardening pass, the FSRS persistence fix + `/settings` page, the **YouTube capture extension + capture backend +
-analytics/import upgrades**, the **Web text capture (any site)** feature, the **Mobile UI and Layout fixes**, the **Extension Multi-line Flashcard & Gemini Prompt Integrity** improvements, the **Selective card testing filter + unified color kind badges**, and the **Extension Chatbot Timeout & Typecheck Fixes**.
+analytics/import upgrades**, the **Web text capture (any site)** feature, the **Mobile UI and Layout fixes**, the **Extension Multi-line Flashcard & Gemini Prompt Integrity** improvements, the **Selective card testing filter + unified color kind badges**, the **Extension Chatbot Timeout & Typecheck Fixes**, and the **Test Session Explanation Markdown Rendering Fix**.
 
 ## Storage
 - **Atlas** = source of truth (`MONGODB_URI`), replica set (transactions +

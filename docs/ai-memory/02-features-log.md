@@ -1,5 +1,9 @@
 # 02 — Features Log
 
+## 2026-08-04 — Test Session Explanation Markdown Rendering Fix
+- **Explanation Markdown Rendering**: Replaced the plain paragraph `<p>` rendering of card explanations in the post-answer view of `TestSession.tsx` with the project's `<Markdown />` component. This enables proper Markdown formatting (bold, italic, lists, etc.) for explanations during review sessions.
+- **Files modified**: `app/test/session/TestSession.tsx`.
+
 ## 2026-08-04 — Chatbot AI Editor Timeout & Typecheck Fixes
 - **Extension Chatbot Timeout Fix**: Increased the `EDIT_TEXT` message timeout in `extension/src/background.ts` from 15 seconds to 45 seconds to accommodate slower LLM response generation times. Handled timeout abort errors gracefully with a clear `"AI request timed out (45s)"` message instead of browser-native `"signal is aborted without reason"` DOMExceptions.
 - **TypeScript Iteration compilation Fix**: Corrected a compilation error in `extension/src/content/overlay/fields.ts` where looping through a `DataTransferItemList` with `for...of` failed without downlevelIteration support; replaced it with a standard index-based `for` loop.

@@ -1113,7 +1113,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                   <div className="text-xs uppercase tracking-wide text-zinc-500 mb-1">
                     Explanation
                   </div>
-                  <p className="text-sm leading-relaxed">{current.card.explanation}</p>
+                  <Markdown text={current.card.explanation} className="text-sm leading-relaxed" />
                 </div>
               )}
 
