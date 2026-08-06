@@ -169,7 +169,9 @@ The video title is: "${videoTitle || "Unknown"}".
 First transcribe all readable text in the image (this is the OCR). Then write the card.
 
 CRITICAL REQUIREMENT FOR MATHEMATICAL NOTATION:
-- DO NOT wrap math variables, formulas, or expressions in LaTeX dollar signs (e.g., do not write $R$ or $[X]^+$). Instead, use standard plain text, Markdown bold/italic, or Unicode superscripts/subscripts (like X⁺, X*, [X]⁺, or Yᵢ) to render mathematical notation cleanly.
+- DO NOT wrap math variables, formulas, or expressions in LaTeX dollar signs (e.g., do not write $R$ or $[X]^+$).
+- DO NOT use LaTeX subscript/superscript notations (such as x_i, x_{i}, or x^2).
+- Instead, write subscripts and superscripts using native Unicode characters (e.g., write Yᵢ, X₁, X⁺, or x²) or standard HTML tags (e.g., <sub>i</sub> or <sup>2</sup>) to render mathematical notation cleanly.
 
 CRITICAL REQUIREMENT FOR STRUCTURED LISTS:
 - Avoid writing definitions, formulas, or multi-part explanations as a single paragraph. You MUST structure them using bullet points, numbered lists, and bold keywords to make them visually spaced out and easy to digest at a glance.
@@ -243,7 +245,9 @@ The user wants you to edit the entire card based on this instruction:
 
 Make the edits requested. Preserve all other fields exactly as they are unless instructed to change them.
 - If you add or modify the explanation, write it in a simple, kid-friendly, easy-to-understand tone.
-- DO NOT wrap math variables, formulas, or expressions in LaTeX dollar signs (e.g., do not write $R$ or $[X]^+$). Instead, use standard plain text, Markdown bold/italic, or Unicode superscripts/subscripts (like X⁺, X*, [X]⁺, or Yᵢ) to render mathematical notation cleanly.
+- DO NOT wrap math variables, formulas, or expressions in LaTeX dollar signs (e.g., do not write $R$ or $[X]^+$).
+- DO NOT use LaTeX subscript/superscript notations (such as x_i, x_{i}, or x^2).
+- Instead, write subscripts and superscripts using native Unicode characters (e.g., write Yᵢ, X₁, X⁺, or x²) or standard HTML tags (e.g., <sub>i</sub> or <sup>2</sup>) to render mathematical notation cleanly.
 - Avoid writing definitions, formulas, or multi-part explanations as a single paragraph. You MUST structure them using bullet points, numbered lists, and bold keywords to make them visually spaced out and easy to digest at a glance.
 - You are encouraged to format code snippets, lists, tables, or bold text inside the card fields using GFM markdown.
 Return ONLY the updated card draft as a JSON object matching the keys of the original draft. Do NOT include markdown code blocks, prose, or explanations.`;
@@ -279,7 +283,9 @@ RULES:
 - Suggest a clean, concise, descriptive group name (usually 2-5 words) representing the topic of this passage (e.g. "DBMS Schema Architecture", "Responsive CSS Grid", "Photosynthesis Stages").
 - Produce exactly ${count} cards, each testing a DIFFERENT fact or idea from the source text. Do not repeat a fact across cards.
 - Base every card strictly on the source text. Do not invent facts that are not in it.
-- DO NOT wrap math variables, formulas, or expressions in LaTeX dollar signs (e.g., do not write $R$ or $[X]^+$). Instead, use standard plain text, Markdown bold/italic, or Unicode superscripts/subscripts (like X⁺, X*, [X]⁺, or Yᵢ) to render mathematical notation cleanly.
+- DO NOT wrap math variables, formulas, or expressions in LaTeX dollar signs (e.g., do not write $R$ or $[X]^+$).
+- DO NOT use LaTeX subscript/superscript notations (such as x_i, x_{i}, or x^2).
+- Instead, write subscripts and superscripts using native Unicode characters (e.g., write Yᵢ, X₁, X⁺, or x²) or standard HTML tags (e.g., <sub>i</sub> or <sup>2</sup>) to render mathematical notation cleanly.
 - Avoid writing definitions, formulas, or multi-part explanations as a single paragraph. You MUST structure them using bullet points, numbered lists, and bold keywords to make them visually spaced out and easy to digest at a glance.
 - If the source text contains tables, maps, lists, or code snippets, you are encouraged to format them inside the "question" or "answer" fields using GFM markdown.
 - The "explanation" field of every card must be written in an easy-to-understand, kid-friendly tone (explaining the concept simply, as if to a child, using step-by-step logic or analogies).

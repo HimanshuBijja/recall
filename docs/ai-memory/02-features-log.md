@@ -1,5 +1,9 @@
 # 02 — Features Log
 
+## 2026-08-06 — Explicit Unicode/HTML Subscript Prompts in Gemini
+- **Subscript/Superscript Prompt Restrictions**: Updated card generation and editing prompts in `lib/gemini.ts` to explicitly forbid LaTeX subscripts/superscripts (such as `x_i`, `x_{i}`, or `x^2`) and guide the model to output native Unicode characters or standard HTML tags (`<sub>` / `<sup>`) for subscripts/superscripts.
+- **Files modified**: `lib/gemini.ts`.
+
 ## 2026-08-04 — Extension Capture Timeout Increase
 - **Extension Capture Timeout Increase**: Increased the video frame capture (`CAPTURE` message) timeout in `extension/src/background.ts` from 25 seconds to 45 seconds. This provides extra headroom for compiling route handlers locally (during dev server cold starts) and running Gemini OCR processes.
 - **Files modified**: `extension/src/background.ts`.
