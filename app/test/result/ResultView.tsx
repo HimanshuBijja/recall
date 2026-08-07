@@ -195,9 +195,9 @@ export function ResultView() {
                     <ul className="text-xs space-y-1 mt-1 bg-zinc-50 dark:bg-zinc-950/40 p-2 rounded border border-zinc-200 dark:border-zinc-800">
                       {card.pairs.map((p, j) => (
                         <li key={j} className="flex gap-2 items-center">
-                          <span className="font-medium text-zinc-700 dark:text-zinc-300">{p.left}</span>
+                          <Markdown text={p.left} className="font-medium text-zinc-700 dark:text-zinc-300 inline-block" />
                           <span className="text-zinc-400">→</span>
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">{p.right}</span>
+                          <Markdown text={p.right} className="text-emerald-600 dark:text-emerald-400 font-medium inline-block" />
                         </li>
                       ))}
                     </ul>

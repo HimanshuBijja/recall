@@ -754,7 +754,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                         !isMatched && !isSelected && !isWrong && "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200",
                       ].filter(Boolean).join(" ")}
                     >
-                      {p.left}
+                      <Markdown text={p.left} />
                     </button>
                   );
                 })}
@@ -804,7 +804,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                         !isMatched && !isSelected && !isWrong && "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200",
                       ].filter(Boolean).join(" ")}
                     >
-                      {p.right}
+                      <Markdown text={p.right} />
                     </button>
                   );
                 })}

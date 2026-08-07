@@ -1,5 +1,9 @@
 # 02 — Features Log
 
+## 2026-08-07 — Match Card Pairs Markdown Rendering Fix
+- **Match Card Markdown Rendering**: Replaced plain text rendering of left and right match pairs in `TestSession.tsx` and `ResultView.tsx` with the project's `<Markdown />` component. This enables proper markdown parsing (including headers, bold emphasis, list bullets, or markdown tables) for match option items in both testing sessions and session results.
+- **Files modified**: `app/test/session/TestSession.tsx`, `app/test/result/ResultView.tsx`.
+
 ## 2026-08-06 — Explicit Unicode/HTML Subscript Prompts in Gemini
 - **Subscript/Superscript Prompt Restrictions**: Updated card generation and editing prompts in `lib/gemini.ts` to explicitly forbid LaTeX subscripts/superscripts (such as `x_i`, `x_{i}`, or `x^2`) and guide the model to output native Unicode characters or standard HTML tags (`<sub>` / `<sup>`) for subscripts/superscripts.
 - **Files modified**: `lib/gemini.ts`.
