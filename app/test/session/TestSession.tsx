@@ -817,14 +817,14 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
               {clozeData.segments.map((seg, j) => {
                 const hasInput = j < clozeData.answers.length;
                 if (!hasInput) {
-                  return <span key={j}>{seg}</span>;
+                  return <Markdown key={j} text={seg} inline />;
                 }
                 const correctVal = clozeData.answers[j];
                 const userVal = clozeInputs[j] ?? "";
                 const isCorrect = userVal.trim().toLowerCase() === correctVal.toLowerCase();
                 return (
                   <span key={j} className="inline-flex items-baseline gap-1 flex-wrap">
-                    <span>{seg}</span>
+                    <Markdown text={seg} inline />
                     <input
                       type="text"
                       disabled={clozeSubmitted}
@@ -886,7 +886,9 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                     isFocused && "border-indigo-500 ring-2 ring-indigo-200 dark:ring-indigo-900",
                   ].filter(Boolean).join(" ")}
                 >
-                  <span className="flex-1 text-sm leading-relaxed">{s.text}</span>
+                  <div className="flex-1 text-sm leading-relaxed">
+                    <Markdown text={s.text} inline />
+                  </div>
                   <div className="inline-flex rounded-lg border border-zinc-300 dark:border-zinc-700 p-0.5 shrink-0 bg-white dark:bg-zinc-900">
                     {([true, false] as const).map((val) => {
                       const picked = assigned === val;
@@ -980,7 +982,9 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                     >
                       ✓
                     </span>
-                    <span className="flex-1">{opt}</span>
+                    <div className="flex-1">
+                      <Markdown text={opt} />
+                    </div>
                     <kbd className="shrink-0 text-[10px] text-zinc-400 font-mono">{i + 1}</kbd>
                   </button>
                 );
@@ -1031,7 +1035,9 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
                   >
                     {OPTION_LETTERS[i]}
                   </kbd>
-                  <span className="flex-1">{opt}</span>
+                  <div className="flex-1">
+                    <Markdown text={opt} />
+                  </div>
                   {showResult && isCorrect && <span className="text-emerald-600 dark:text-emerald-400">✓</span>}
                   {showResult && !isCorrect && isPicked && <span className="text-rose-600 dark:text-rose-400">✗</span>}
                 </button>

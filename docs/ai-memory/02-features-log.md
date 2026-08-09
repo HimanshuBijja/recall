@@ -1,5 +1,11 @@
 # 02 — Features Log
 
+## 2026-08-09 — Markdown Option Rendering Fix for all Card Types
+- **Markdown Rendering in Options and Statements**: Extended the `<Markdown />` component to support an `inline` prop using `marked.parseInline` to parse text as inline markdown inside `span` elements without introducing block-level layout breaks.
+- **Card-Kind Session Rendering Upgrades**: Updated `TestSession.tsx` to render multi-select options, single-select MCQ options, true/false statement texts, and cloze segments using the `<Markdown />` component.
+- **Card-Kind Result Rendering Upgrades**: Updated `ResultView.tsx` to render correct answers for multi-select, statement texts for true/false cards, and segments/answers for cloze cards using the inline `<Markdown />` component.
+- **Files modified**: `components/Markdown.tsx`, `app/test/session/TestSession.tsx`, `app/test/result/ResultView.tsx`.
+
 ## 2026-08-07 — Match Card Pairs Markdown Rendering Fix
 - **Match Card Markdown Rendering**: Replaced plain text rendering of left and right match pairs in `TestSession.tsx` and `ResultView.tsx` with the project's `<Markdown />` component. This enables proper markdown parsing (including headers, bold emphasis, list bullets, or markdown tables) for match option items in both testing sessions and session results.
 - **Files modified**: `app/test/session/TestSession.tsx`, `app/test/result/ResultView.tsx`.

@@ -171,7 +171,9 @@ export function ResultView() {
                           >
                             {s.isTrue ? "T" : "F"}
                           </span>
-                          <span className="text-zinc-600 dark:text-zinc-400">{s.text}</span>
+                          <span className="text-zinc-600 dark:text-zinc-400">
+                            <Markdown text={s.text} inline />
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -181,10 +183,10 @@ export function ResultView() {
                         const { segments, answers } = parseCloze(card.clozeText!);
                         return segments.map((seg, j) => (
                           <span key={j}>
-                            {seg}
+                            <Markdown text={seg} inline />
                             {j < answers.length && (
                               <span className="inline-block px-1 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-semibold mx-0.5 border border-emerald-200 dark:border-emerald-900">
-                                {answers[j]}
+                                <Markdown text={answers[j]} inline />
                               </span>
                             )}
                           </span>
@@ -209,7 +211,7 @@ export function ResultView() {
                           key={j}
                           className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-medium border border-emerald-200 dark:border-emerald-900"
                         >
-                          {a}
+                          <Markdown text={a} inline />
                         </span>
                       ))}
                     </div>
