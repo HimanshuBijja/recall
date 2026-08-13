@@ -6,7 +6,7 @@ _Last updated: 2026-08-13_
 `master`. Everything below is merged and committed (local; **not yet pushed**).
 Includes: MongoDB migration + Atlas→local mirror, the Flash/Cloze/Match/
 Bookmarks/FSRS feature set, the build/lint hardening pass, the FSRS persistence fix + `/settings` page, the **YouTube capture extension + capture backend +
-analytics/import upgrades**, the **Web text capture (any site)** feature, the **Mobile UI and Layout fixes**, the **Extension Multi-line Flashcard & Gemini Prompt Integrity** improvements, the **Selective card testing filter + unified color kind badges**, the **Extension Chatbot Timeout & Typecheck Fixes**, the **Test Session Explanation Markdown Rendering Fix**, the **Extension Capture Timeout Increase**, the **Subscript/Superscript Prompt Restrictions**, the **Match Card Pairs Markdown Rendering Fix**, the **Markdown Option Rendering Fix for all Card Types**, and the **Subject/Group-specific FSRS due queues + empty group soft-delete protection and Subject detail layout styling + group search bar upgrades**.
+analytics/import upgrades**, the **Web text capture (any site)** feature, the **Mobile UI and Layout fixes**, the **Extension Multi-line Flashcard & Gemini Prompt Integrity** improvements, the **Selective card testing filter + unified color kind badges**, the **Extension Chatbot Timeout & Typecheck Fixes**, the **Test Session Explanation Markdown Rendering Fix**, the **Extension Capture Timeout Increase**, the **Subscript/Superscript Prompt Restrictions**, the **Match Card Pairs Markdown Rendering Fix**, the **Markdown Option Rendering Fix for all Card Types**, the **Subject/Group-specific FSRS due queues + empty group soft-delete protection and Subject detail layout styling + group search bar upgrades**, and the **Video Frame Capture Compression** upgrade.
 
 ## Storage
 - **Atlas** = source of truth (`MONGODB_URI`), replica set (transactions +
@@ -35,6 +35,7 @@ analytics/import upgrades**, the **Web text capture (any site)** feature, the **
   captures a video frame → `POST /api/capture` (Gemini drafts a card + R2 stores
   the frame) → in-page overlay to review/edit → `POST /api/cards`. Per-kind
   timeline markers + filters.
+  * **Video Frame Capture Compression**: Captured video frames are saved as compressed JPEGs (70% quality) instead of uncompressed PNGs, reducing R2 storage size by ~90% and speeding up extension uploads.
   * **MCQ & Multi Segregation:** Kept completely separate without conversion switches or data loss. MCQ uses radio-button correct checkmarks; Multi uses multi-checkbox checkmarks.
   * **Single-Tag Concept Generation:** Gemini prompt in `lib/gemini.ts` extracts exactly 1 tag representing the main topic taught in the video title.
   * **Extension Tag Selector:** Custom TagSelector chip component in the content overlay fetches tags via `GET_TAGS` and offers autocompletion / dropdown selection on Enter/Tab/Comma/Click or inline tag creation.

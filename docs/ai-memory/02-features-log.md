@@ -1,5 +1,10 @@
 # 02 — Features Log
 
+## 2026-08-13 — Video Frame Capture Compression
+- **Video Frame Capture Compression**: Changed the video frame capture output inside the Chrome extension from a lossless PNG format to a compressed JPEG format (70% quality).
+- **Network and Storage Savings**: Reduces capture frame payload sizes by 80% to 90% (e.g. from ~3MB to ~250KB per frame), saving network upload bandwidth and Cloudflare R2 storage usage.
+- **Files modified**: [capture.ts](file:///d:/code/personal_projects/recall/extension/src/content/capture.ts).
+
 ## 2026-08-13 — Subject Detail Layout & Search Upgrades
 - **Subject detail layout restructuring**: Stacks the FSRS review/settings panels at the top (spanning full width) and renders active groups as horizontal rows spanning the entire screen.
 - **Horizontal Group rows**: Active groups now display as list items where each group name, type, and card count is side-by-side with a "View Cards →" button.

@@ -13,5 +13,5 @@ export function captureFrame(video: HTMLVideoElement): string {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("no 2d context");
   ctx.drawImage(video, 0, 0, w, h);
-  return canvas.toDataURL("image/png");
+  return canvas.toDataURL("image/jpeg", 0.7);
 }
