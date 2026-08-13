@@ -1,5 +1,11 @@
 # 02 — Features Log
 
+## 2026-08-13 — Subject Detail Layout & Search Upgrades
+- **Subject detail layout restructuring**: Stacks the FSRS review/settings panels at the top (spanning full width) and renders active groups as horizontal rows spanning the entire screen.
+- **Horizontal Group rows**: Active groups now display as list items where each group name, type, and card count is side-by-side with a "View Cards →" button.
+- **Searchable Group selectors**: Added real-time group search/filtering inputs inside group selection lists in both `NewSubjectClient.tsx` (creating subjects) and `SubjectDetailClient.tsx` (managing subjects).
+- **Files modified**: [SubjectDetailClient.tsx](file:///d:/code/personal_projects/recall/app/subjects/[id]/SubjectDetailClient.tsx), [NewSubjectClient.tsx](file:///d:/code/personal_projects/recall/app/subjects/new/NewSubjectClient.tsx).
+
 ## 2026-08-13 — Subject and Group FSRS (Filtered Due Queues) & Empty Group Soft-delete Protection
 - **Subject and Group FSRS (Filtered Due Queues)**: Added support for FSRS due review queues to Subject and Group detail pages. Users can see specifically how many cards are due in a given group or subject.
 - **Empty Group Soft-delete Protection**: Restricted the auto-delete cleanup on card/tag deletion so that auto-created YouTube video and web page groups are not automatically deleted when they contain zero tags.

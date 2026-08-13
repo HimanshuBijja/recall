@@ -58,6 +58,13 @@ export function SubjectDetailClient({
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savingExempt, setSavingExempt] = useState(false);
+  const [groupQuery, setGroupQuery] = useState("");
+
+  const filteredGroups = useMemo(() => {
+    const q = groupQuery.trim().toLowerCase();
+    if (!q) return groups;
+    return groups.filter((g) => g.name.toLowerCase().includes(q));
+  }, [groups, groupQuery]);
 
   const groupById = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
 
@@ -257,52 +264,9 @@ export function SubjectDetailClient({
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-        {/* Left pane: Active Groups (span 7) */}
-        <div className="md:col-span-7 space-y-6">
-          <div className="border border-border p-5 bg-zinc-950/20 rounded-[4px] space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xs uppercase font-bold tracking-wider text-muted">
-                Active Chapters / Groups
-              </h2>
-              <button
-                onClick={() => {
-                  setSelectedGroupIds(subject.groupIds);
-                  setIsEditing((prev) => !prev);
-                }}
-                className="text-xs text-accent hover:underline font-bold uppercase tracking-wider"
-              >
-                {isEditing ? "Hide Manager" : "Manage Groups"}
-              </button>
-            </div>
-
-            {currentGroups.length === 0 ? (
-              <p className="text-sm text-muted italic">
-                No chapters are currently linked to this subject. Link some using the Group Manager link.
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {currentGroups.map((g) => {
-                  const groupCardLen = groupCards.get(g.id)?.length || 0;
-                  return (
-                    <div
-                      key={g.id}
-                      className="border border-border p-3 rounded-[4px] bg-background/50 space-y-1.5"
-                    >
-                      <div className="text-sm font-semibold">{g.name}</div>
-                      <div className="text-[10px] text-muted font-mono">
-                        {groupCardLen} card{groupCardLen === 1 ? "" : "s"} · {g.videoId ? "YouTube Video" : g.webUrl ? "Web Page" : "Tags"}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right pane: Subject Settings & Group Manager panel (span 5) or Due Review panel */}
-        <div className="md:col-span-5 space-y-6">
+      <div className="space-y-6">
+        {/* Top pane: Subject Settings or Due Review Panel (spanning full width) */}
+        <div>
           {isEditing ? (
             <div className="border border-border p-5 bg-zinc-950/40 rounded-[4px] space-y-4">
               <div>
@@ -338,36 +302,51 @@ export function SubjectDetailClient({
               {groups.length === 0 ? (
                 <p className="text-xs text-muted italic">No study groups exist in database.</p>
               ) : (
-                <div className="space-y-2 max-h-64 overflow-y-auto p-1 border border-border bg-background/30 rounded-[4px]">
-                  {groups.map((g) => {
-                    const isSelected = selectedGroupIds.includes(g.id);
-                    return (
-                      <button
-                        key={g.id}
-                        type="button"
-                        onClick={() => toggleGroup(g.id)}
-                        className={[
-                          "w-full flex items-center justify-between p-2.5 border text-left rounded-[4px] transition-colors text-xs",
-                          isSelected
-                            ? "border-accent bg-zinc-900"
-                            : "border-border hover:bg-zinc-900/30",
-                        ].join(" ")}
-                      >
-                        <span className="font-semibold truncate max-w-[180px]">{g.name}</span>
-                        <div
-                          className={[
-                            "w-3.5 h-3.5 rounded-[4px] border flex items-center justify-center text-[9px] shrink-0",
-                            isSelected
-                              ? "border-accent bg-accent text-background font-bold"
-                              : "border-border",
-                          ].join(" ")}
-                        >
-                          {isSelected && "✓"}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                <>
+                  <input
+                    type="text"
+                    value={groupQuery}
+                    onChange={(e) => setGroupQuery(e.target.value)}
+                    placeholder="Search groups..."
+                    className="w-full px-3 py-1.5 border border-border rounded-[4px] bg-black/25 text-foreground text-sm focus:outline-none focus:border-accent"
+                  />
+                  <div className="space-y-2 max-h-64 overflow-y-auto p-1 border border-border bg-background/30 rounded-[4px]">
+                    {filteredGroups.length === 0 ? (
+                      <div className="text-center text-xs text-muted py-4 font-mono">
+                        No groups match.
+                      </div>
+                    ) : (
+                      filteredGroups.map((g) => {
+                        const isSelected = selectedGroupIds.includes(g.id);
+                        return (
+                          <button
+                            key={g.id}
+                            type="button"
+                            onClick={() => toggleGroup(g.id)}
+                            className={[
+                              "w-full flex items-center justify-between p-2.5 border text-left rounded-[4px] transition-colors text-xs",
+                              isSelected
+                                ? "border-accent bg-zinc-900"
+                                : "border-border hover:bg-zinc-900/30",
+                            ].join(" ")}
+                          >
+                            <span className="font-semibold truncate max-w-[180px]">{g.name}</span>
+                            <div
+                              className={[
+                                "w-3.5 h-3.5 rounded-[4px] border flex items-center justify-center text-[9px] shrink-0",
+                                isSelected
+                                  ? "border-accent bg-accent text-background font-bold"
+                                  : "border-border",
+                              ].join(" ")}
+                            >
+                              {isSelected && "✓"}
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </>
               )}
 
               <div className="flex gap-2 pt-2 border-t border-divider">
@@ -397,6 +376,60 @@ export function SubjectDetailClient({
               reviews={reviews}
               subjectId={subject.id}
             />
+          )}
+        </div>
+
+        {/* Bottom pane: Active Chapters / Groups (spanning full width) */}
+        <div className="border border-border p-5 bg-zinc-950/20 rounded-[4px] space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xs uppercase font-bold tracking-wider text-muted">
+              Active Chapters / Groups
+            </h2>
+            <button
+              onClick={() => {
+                setSelectedGroupIds(subject.groupIds);
+                setIsEditing((prev) => !prev);
+              }}
+              className="text-xs text-accent hover:underline font-bold uppercase tracking-wider"
+            >
+              {isEditing ? "Hide Settings" : "Manage Subject"}
+            </button>
+          </div>
+
+          {currentGroups.length === 0 ? (
+            <p className="text-sm text-muted italic">
+              No chapters are currently linked to this subject. Link some using the Manage Subject link.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {currentGroups.map((g) => {
+                const groupCardLen = groupCards.get(g.id)?.length || 0;
+                return (
+                  <div
+                    key={g.id}
+                    className="border border-border p-4 rounded-[4px] bg-background/50 flex items-center justify-between gap-4 transition-colors hover:border-zinc-500"
+                  >
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="text-sm font-semibold truncate">{g.name}</div>
+                      <div className="text-[10px] text-muted font-mono uppercase tracking-wider">
+                        {g.videoId ? "YouTube Video" : g.webUrl ? "Web Page" : `${g.tagIds.length} tags`}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                      <span className="text-xs text-muted font-mono">
+                        {groupCardLen} card{groupCardLen === 1 ? "" : "s"}
+                      </span>
+                      <Link
+                        href={`/groups/${g.id}`}
+                        className="px-3 py-1.5 border border-border hover:border-accent hover:bg-zinc-900/40 text-foreground font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 rounded-[4px]"
+                      >
+                        View Cards →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>

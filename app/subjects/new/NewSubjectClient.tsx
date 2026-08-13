@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { Group } from "@/types";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
@@ -14,6 +14,13 @@ export function NewSubjectClient({ groups }: { groups: Group[] }) {
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
   const [exempted, setExempted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [groupQuery, setGroupQuery] = useState("");
+
+  const filteredGroups = useMemo(() => {
+    const q = groupQuery.trim().toLowerCase();
+    if (!q) return groups;
+    return groups.filter((g) => g.name.toLowerCase().includes(q));
+  }, [groups, groupQuery]);
 
   function toggleGroup(gid: string) {
     setSelectedGroupIds((prev) =>
@@ -90,8 +97,15 @@ export function NewSubjectClient({ groups }: { groups: Group[] }) {
         </div>
 
         <div className="space-y-3">
-          <div className="text-xs uppercase font-bold tracking-wider text-muted">
-            Select Study Groups
+          <div className="flex items-center justify-between">
+            <div className="text-xs uppercase font-bold tracking-wider text-muted">
+              Select Study Groups
+            </div>
+            {groups.length > 0 && (
+              <span className="text-xs text-muted font-mono">
+                {selectedGroupIds.length} selected
+              </span>
+            )}
           </div>
           {groups.length === 0 ? (
             <div className="text-sm text-muted italic">
@@ -102,41 +116,56 @@ export function NewSubjectClient({ groups }: { groups: Group[] }) {
               .
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto p-1 border border-border bg-zinc-950/10 rounded-[4px]">
-              {groups.map((g) => {
-                const isSelected = selectedGroupIds.includes(g.id);
-                return (
-                  <button
-                    key={g.id}
-                    type="button"
-                    onClick={() => toggleGroup(g.id)}
-                    className={[
-                      "flex items-center justify-between p-3 border text-left rounded-[4px] transition-colors",
-                      isSelected
-                        ? "border-accent bg-zinc-900"
-                        : "border-border hover:bg-zinc-900/40",
-                    ].join(" ")}
-                  >
-                    <div>
-                      <div className="text-sm font-semibold">{g.name}</div>
-                      <div className="text-[10px] text-muted font-mono mt-0.5">
-                        {g.videoId ? "YouTube Video Group" : g.webUrl ? "Web Page Group" : `${g.tagIds.length} tags`}
-                      </div>
-                    </div>
-                    <div
-                      className={[
-                        "w-4 h-4 rounded-[4px] border flex items-center justify-center text-[10px]",
-                        isSelected
-                          ? "border-accent bg-accent text-background font-bold"
-                          : "border-border",
-                      ].join(" ")}
-                    >
-                      {isSelected && "✓"}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            <>
+              <input
+                type="text"
+                value={groupQuery}
+                onChange={(e) => setGroupQuery(e.target.value)}
+                placeholder="Search groups..."
+                className="w-full px-3 py-1.5 border border-border rounded-[4px] bg-black/25 text-foreground text-sm focus:outline-none focus:border-accent"
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto p-1 border border-border bg-zinc-950/10 rounded-[4px]">
+                {filteredGroups.length === 0 ? (
+                  <div className="col-span-2 text-center text-xs text-muted py-4">
+                    No groups match.
+                  </div>
+                ) : (
+                  filteredGroups.map((g) => {
+                    const isSelected = selectedGroupIds.includes(g.id);
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => toggleGroup(g.id)}
+                        className={[
+                          "flex items-center justify-between p-3 border text-left rounded-[4px] transition-colors",
+                          isSelected
+                            ? "border-accent bg-zinc-900"
+                            : "border-border hover:bg-zinc-900/40",
+                        ].join(" ")}
+                      >
+                        <div>
+                          <div className="text-sm font-semibold">{g.name}</div>
+                          <div className="text-[10px] text-muted font-mono mt-0.5">
+                            {g.videoId ? "YouTube Video Group" : g.webUrl ? "Web Page Group" : `${g.tagIds.length} tags`}
+                          </div>
+                        </div>
+                        <div
+                          className={[
+                            "w-4 h-4 rounded-[4px] border flex items-center justify-center text-[10px]",
+                            isSelected
+                              ? "border-accent bg-accent text-background font-bold"
+                              : "border-border",
+                          ].join(" ")}
+                        >
+                          {isSelected && "✓"}
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </>
           )}
         </div>
 
