@@ -1,5 +1,5 @@
 import { readDb } from "@/lib/db";
-import type { Card, Group, Tag } from "@/types";
+import type { Card, Group, Tag, Review } from "@/types";
 import { GroupDetailClient } from "./GroupDetailClient";
 import Link from "next/link";
 
@@ -37,12 +37,14 @@ export default async function GroupDetailPage(props: {
 
   const tags = await readDb<Tag>("tags.json");
   const cards = await readDb<Card>("cards.json");
+  const reviews = await readDb<Review>("reviews.json");
 
   return (
     <GroupDetailClient
       group={group}
       tags={tags}
       cards={cards}
+      reviews={reviews}
     />
   );
 }

@@ -35,9 +35,13 @@ const KIND_CONFIG: Record<string, { label: string; activeClass: string }> = {
 export function DueReviewPanel({
   nonExemptedCards,
   reviews,
+  groupId,
+  subjectId,
 }: {
   nonExemptedCards: Card[];
   reviews: Review[];
+  groupId?: string;
+  subjectId?: string;
 }) {
   const [selectedKinds, setSelectedKinds] = useState<string[]>(["mcq", "multi", "flash", "cloze", "tf-sort", "match"]);
 
@@ -107,7 +111,9 @@ export function DueReviewPanel({
       )}
 
       <Link
-        href={`/test/session?due=1&kinds=${selectedKinds.join(",")}`}
+        href={`/test/session?due=1&kinds=${selectedKinds.join(",")}${
+          groupId ? `&groupId=${groupId}` : subjectId ? `&subjectId=${subjectId}` : ""
+        }`}
         className={`w-full inline-flex items-center justify-center px-4 py-3 bg-accent text-background font-bold text-xs uppercase tracking-widest transition-colors duration-150 hover:bg-opacity-90 rounded-[4px] ${
           summary.due === 0 ? "opacity-40 cursor-not-allowed pointer-events-none" : ""
         }`}

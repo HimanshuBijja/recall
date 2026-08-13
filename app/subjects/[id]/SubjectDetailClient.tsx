@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import type { Card, Group, Subject, Tag } from "@/types";
+import type { Card, Group, Subject, Tag, Review } from "@/types";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { descendantTagIds } from "@/lib/tags";
+import { DueReviewPanel } from "@/components/DueReviewPanel";
 
 export const KIND_CONFIG: Record<string, { label: string; activeClass: string }> = {
   mcq: {
@@ -40,11 +41,13 @@ export function SubjectDetailClient({
   groups,
   tags,
   cards,
+  reviews,
 }: {
   subject: Subject;
   groups: Group[];
   tags: Tag[];
   cards: Card[];
+  reviews: Review[];
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -73,7 +76,7 @@ export function SubjectDetailClient({
   }, [groups, cards, tags]);
 
   // Current subject stats
-  const { currentGroups, cardCount, cardIds, subjectCards } = useMemo(() => {
+  const { currentGroups, cardCount, subjectCards } = useMemo(() => {
     const subGroups = subject.groupIds.map((gid) => groupById.get(gid)).filter(Boolean) as Group[];
     const allCards = new Map<string, Card>();
     for (const sg of subGroups) {
@@ -298,9 +301,9 @@ export function SubjectDetailClient({
           </div>
         </div>
 
-        {/* Right pane: Subject Settings & Group Manager panel (span 5) */}
+        {/* Right pane: Subject Settings & Group Manager panel (span 5) or Due Review panel */}
         <div className="md:col-span-5 space-y-6">
-          {isEditing && (
+          {isEditing ? (
             <div className="border border-border p-5 bg-zinc-950/40 rounded-[4px] space-y-4">
               <div>
                 <h3 className="text-xs uppercase font-bold tracking-wider text-muted mb-1">
@@ -322,8 +325,6 @@ export function SubjectDetailClient({
                   className="w-full px-3 py-2 border border-border rounded-[4px] bg-transparent text-foreground focus:outline-none focus:border-accent"
                 />
               </div>
-
-
 
               <div className="pt-2 border-t border-divider">
                 <h4 className="text-[10px] uppercase font-bold tracking-wide text-muted mb-1">
@@ -390,6 +391,12 @@ export function SubjectDetailClient({
                 </button>
               </div>
             </div>
+          ) : (
+            <DueReviewPanel
+              nonExemptedCards={subjectCards}
+              reviews={reviews}
+              subjectId={subject.id}
+            />
           )}
         </div>
       </div>

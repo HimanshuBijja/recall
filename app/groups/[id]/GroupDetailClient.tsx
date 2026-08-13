@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import type { Card, Group, Tag } from "@/types";
+import type { Card, Group, Tag, Review } from "@/types";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { descendantTagIds } from "@/lib/tags";
 import { CardKindBadge } from "@/components/CardKindBadge";
+import { DueReviewPanel } from "@/components/DueReviewPanel";
 
 const KIND_LABELS: Record<string, string> = {
   mcq: "Multiple Choice",
@@ -49,10 +50,12 @@ export function GroupDetailClient({
   group: initialGroup,
   tags,
   cards,
+  reviews,
 }: {
   group: Group;
   tags: Tag[];
   cards: Card[];
+  reviews: Review[];
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -364,8 +367,8 @@ export function GroupDetailClient({
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-        {/* Left column: Cards list (span 8 or full depending on editing state) */}
-        <div className={!group.videoId && !group.webUrl && isEditing ? "md:col-span-8 space-y-4" : "md:col-span-12 space-y-4"}>
+        {/* Left column: Cards list (span 8) */}
+        <div className="md:col-span-8 space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xs uppercase font-bold tracking-wider text-muted">
               Cards in this group
@@ -518,9 +521,9 @@ export function GroupDetailClient({
           )}
         </div>
 
-        {/* Right column: Manage Tags config panel (span 4) */}
-        {!group.videoId && !group.webUrl && isEditing && (
-          <div className="md:col-span-4 space-y-4">
+        {/* Right column: Manage Tags config panel (span 4) or Due Review panel */}
+        <div className="md:col-span-4 space-y-4">
+          {!group.videoId && !group.webUrl && isEditing ? (
             <div className="border border-border p-5 bg-zinc-950/40 rounded-[4px] space-y-4">
               <div>
                 <h3 className="text-xs uppercase font-bold tracking-wider text-muted mb-1">
@@ -585,8 +588,14 @@ export function GroupDetailClient({
                 </button>
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <DueReviewPanel
+              nonExemptedCards={matchingCards}
+              reviews={reviews}
+              groupId={group.id}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,13 @@
 # 02 — Features Log
 
+## 2026-08-13 — Subject and Group FSRS (Filtered Due Queues) & Empty Group Soft-delete Protection
+- **Subject and Group FSRS (Filtered Due Queues)**: Added support for FSRS due review queues to Subject and Group detail pages. Users can see specifically how many cards are due in a given group or subject.
+- **Empty Group Soft-delete Protection**: Restricted the auto-delete cleanup on card/tag deletion so that auto-created YouTube video and web page groups are not automatically deleted when they contain zero tags.
+- **Due API Route Scoping**: Updated `/api/reviews/due` to accept optional `groupId` and `subjectId` query parameters, and resolve scoped card lists using `resolveGroupCards` and `resolveSubjectCards`.
+- **Test Session Scoping**: Updated `TestSession.tsx` to read `groupId` and `subjectId` query parameters and forward them to the `/api/reviews/due` endpoint inside `loadDueBatch`.
+- **UI Integration**: Added `<DueReviewPanel>` to [GroupDetailClient.tsx](file:///d:/code/personal_projects/recall/app/groups/[id]/GroupDetailClient.tsx) and [SubjectDetailClient.tsx](file:///d:/code/personal_projects/recall/app/subjects/[id]/SubjectDetailClient.tsx) on the right side when the panels are not in editing mode.
+- **Files modified**: [due.ts](file:///d:/code/personal_projects/recall/lib/due.ts), [route.ts](file:///d:/code/personal_projects/recall/app/api/reviews/due/route.ts), [TestSession.tsx](file:///d:/code/personal_projects/recall/app/test/session/TestSession.tsx), [DueReviewPanel.tsx](file:///d:/code/personal_projects/recall/components/DueReviewPanel.tsx), [page.tsx](file:///d:/code/personal_projects/recall/app/groups/[id]/page.tsx), [GroupDetailClient.tsx](file:///d:/code/personal_projects/recall/app/groups/[id]/GroupDetailClient.tsx), [page.tsx](file:///d:/code/personal_projects/recall/app/subjects/[id]/page.tsx), [SubjectDetailClient.tsx](file:///d:/code/personal_projects/recall/app/subjects/[id]/SubjectDetailClient.tsx), [route.ts](file:///d:/code/personal_projects/recall/app/api/cards/[id]/route.ts), [route.ts](file:///d:/code/personal_projects/recall/app/api/tags/[id]/route.ts).
+
 ## 2026-08-09 — Markdown Option Rendering Fix for all Card Types
 - **Markdown Rendering in Options and Statements**: Extended the `<Markdown />` component to support an `inline` prop using `marked.parseInline` to parse text as inline markdown inside `span` elements without introducing block-level layout breaks.
 - **Card-Kind Session Rendering Upgrades**: Updated `TestSession.tsx` to render multi-select options, single-select MCQ options, true/false statement texts, and cloze segments using the `<Markdown />` component.

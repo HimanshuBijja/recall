@@ -59,7 +59,9 @@ export async function DELETE(
   const updatedGroups = groups.map((g) =>
     g.tagIds.includes(id) ? { ...g, tagIds: g.tagIds.filter((t) => t !== id) } : g
   );
-  const emptyGroups = updatedGroups.filter((g) => g.tagIds.length === 0);
+  const emptyGroups = updatedGroups.filter(
+    (g) => g.tagIds.length === 0 && !g.videoId && !g.webUrl
+  );
   for (const g of emptyGroups) {
     bin.push({
       id: g.id,
@@ -69,7 +71,10 @@ export async function DELETE(
       deletedAt: now,
     });
   }
-  await writeDb("groups.json", updatedGroups.filter((g) => g.tagIds.length > 0));
+  await writeDb(
+    "groups.json",
+    updatedGroups.filter((g) => g.tagIds.length > 0 || !!g.videoId || !!g.webUrl)
+  );
   await writeDb("bin.json", bin);
 
   return Response.json({ ok: true });

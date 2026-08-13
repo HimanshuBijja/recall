@@ -46,6 +46,8 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
   const maxDiff = Number(params.get("max") ?? 5);
   const retryMode = params.get("retry") === "1";
   const dueMode = params.get("due") === "1";
+  const groupIdParam = params.get("groupId") ?? "";
+  const subjectIdParam = params.get("subjectId") ?? "";
 
   const selectedTagIds = useMemo(
     () => tagsParam.split(",").map((s) => s.trim()).filter(Boolean),
@@ -146,9 +148,13 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
       setLoadingDue(true);
       try {
         const excludeStr = Array.from(excludeIds).join(",");
-        const res = await api.get<{ dueIds: string[]; newIds: string[] }>(
-          `/reviews/due?newLimit=20&exclude=${excludeStr}&kinds=${kindsParam}&shuffle=${shuffle}`
-        );
+        let url = `/reviews/due?newLimit=20&exclude=${excludeStr}&kinds=${kindsParam}&shuffle=${shuffle}`;
+        if (groupIdParam) {
+          url += `&groupId=${groupIdParam}`;
+        } else if (subjectIdParam) {
+          url += `&subjectId=${subjectIdParam}`;
+        }
+        const res = await api.get<{ dueIds: string[]; newIds: string[] }>(url);
         const combinedIds = [...res.data.dueIds, ...res.data.newIds].slice(0, 20);
         if (combinedIds.length === 0) {
           return [];
@@ -185,7 +191,7 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
         setLoadingDue(false);
       }
     },
-    [cards, selectedKinds, kindsParam, shuffle]
+    [cards, selectedKinds, kindsParam, shuffle, groupIdParam, subjectIdParam]
   );
 
   useEffect(() => {

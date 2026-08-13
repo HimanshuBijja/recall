@@ -1,5 +1,5 @@
 import { readDb } from "@/lib/db";
-import type { Card, Group, Subject, Tag } from "@/types";
+import type { Card, Group, Subject, Tag, Review } from "@/types";
 import { SubjectDetailClient } from "./SubjectDetailClient";
 import Link from "next/link";
 
@@ -38,6 +38,7 @@ export default async function SubjectDetailPage(props: {
   const groups = await readDb<Group>("groups.json");
   const tags = await readDb<Tag>("tags.json");
   const cards = await readDb<Card>("cards.json");
+  const reviews = await readDb<Review>("reviews.json");
 
   return (
     <SubjectDetailClient
@@ -45,6 +46,7 @@ export default async function SubjectDetailPage(props: {
       groups={groups}
       tags={tags}
       cards={cards}
+      reviews={reviews}
     />
   );
 }

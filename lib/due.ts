@@ -1,5 +1,6 @@
-import type { Card, Review } from "@/types";
+import type { Card, Review, Group, Subject, Tag } from "@/types";
 import { isDue } from "./srs";
+import { descendantTagIds } from "./tags";
 
 export interface SelectDueOptions {
   newLimit?: number;
@@ -81,4 +82,33 @@ export function getReviewsSummary(cards: Card[], reviews: Review[], now: Date) {
   }
 
   return { due, overdue, new: 0, forecast };
+}
+
+export function resolveGroupCards(group: Group, cards: Card[], tags: Tag[]): Card[] {
+  if (group.videoId) {
+    return cards.filter((c) => c.source?.videoId === group.videoId);
+  } else if (group.webUrl) {
+    return cards.filter((c) => c.source?.type === "web" && c.source.url === group.webUrl);
+  } else {
+    const expanded = descendantTagIds(tags, group.tagIds);
+    return cards.filter((c) => c.tags.some((t) => expanded.has(t)));
+  }
+}
+
+export function resolveSubjectCards(
+  subject: Subject,
+  groups: Group[],
+  cards: Card[],
+  tags: Tag[]
+): Card[] {
+  const groupById = new Map(groups.map((g) => [g.id, g]));
+  const subGroups = subject.groupIds.map((gid) => groupById.get(gid)).filter((g): g is Group => !!g);
+  const allCards = new Map<string, Card>();
+  for (const sg of subGroups) {
+    const sgCards = resolveGroupCards(sg, cards, tags);
+    for (const c of sgCards) {
+      allCards.set(c.id, c);
+    }
+  }
+  return Array.from(allCards.values());
 }
