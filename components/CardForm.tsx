@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import type { Card, CardKind, Tag, TfStatement, MatchPair } from "@/types";
@@ -12,6 +12,54 @@ interface Props {
   initial?: Card;
   tags: Tag[];
 }
+
+interface AutoResizeTextareaProps
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  value: string;
+}
+
+const AutoResizeTextarea = React.forwardRef<
+  HTMLTextAreaElement,
+  AutoResizeTextareaProps
+>(({ value, onChange, className, ...props }, ref) => {
+  const localRef = useRef<HTMLTextAreaElement>(null);
+  useImperativeHandle(ref, () => localRef.current!);
+
+  const adjustHeight = () => {
+    const textarea = localRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight + 4}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustHeight();
+  }, [value]);
+
+  useEffect(() => {
+    adjustHeight();
+    window.addEventListener("resize", adjustHeight);
+    return () => {
+      window.removeEventListener("resize", adjustHeight);
+    };
+  }, []);
+
+  return (
+    <textarea
+      ref={localRef}
+      value={value}
+      onChange={(e) => {
+        onChange?.(e);
+        adjustHeight();
+      }}
+      className={className}
+      style={{ resize: "none", overflowY: "hidden", ...props.style }}
+      {...props}
+    />
+  );
+});
+AutoResizeTextarea.displayName = "AutoResizeTextarea";
 
 /**
  * Custom onKeyDown that advances focus to the next field on Enter.
@@ -39,15 +87,38 @@ export function CardForm({ initial, tags }: Props) {
   const [kind, setKind] = useState<CardKind>(initial?.kind ?? "mcq");
   const [question, setQuestion] = useState(initial?.question ?? "");
   const [answer, setAnswer] = useState(initial?.answer ?? "");
-  const [distractors, setDistractors] = useState<string[]>(
-    initial?.distractors ?? ["", "", ""]
-  );
-  const [answers, setAnswers] = useState<string[]>(
-    initial?.answers && initial.answers.length > 0 ? initial.answers : ["", ""]
-  );
-  const [multiDistractors, setMultiDistractors] = useState<string[]>(
-    initial?.kind === "multi" ? (initial.distractors ?? []) : [""]
-  );
+  
+  const [options, setOptions] = useState<Array<{ text: string; isCorrect: boolean }>>(() => {
+    const initialOptions: Array<{ text: string; isCorrect: boolean }> = [];
+    if (initial?.kind === "mcq") {
+      initialOptions.push({ text: initial.answer ?? "", isCorrect: true });
+      for (const d of initial.distractors ?? []) {
+        initialOptions.push({ text: d, isCorrect: false });
+      }
+    } else if (initial?.kind === "multi") {
+      const correctSet = new Set(initial.answers ?? []);
+      if (initial.answer && correctSet.size === 0) {
+        correctSet.add(initial.answer);
+      }
+      for (const c of correctSet) {
+        initialOptions.push({ text: c, isCorrect: true });
+      }
+      for (const d of initial.distractors ?? []) {
+        if (!correctSet.has(d)) {
+          initialOptions.push({ text: d, isCorrect: false });
+        }
+      }
+    }
+    while (initialOptions.length < 2) {
+      initialOptions.push({ text: "", isCorrect: false });
+    }
+    // For a brand new MCQ, make the first option correct by default if none is
+    if (initialOptions.length > 0 && !initialOptions.some(o => o.isCorrect)) {
+      initialOptions[0].isCorrect = true;
+    }
+    return initialOptions;
+  });
+
   const [statements, setStatements] = useState<TfStatement[]>(
     initial?.statements && initial.statements.length > 0
       ? initial.statements
@@ -78,11 +149,8 @@ export function CardForm({ initial, tags }: Props) {
   // Refs for Enter-to-advance navigation.
   const qRef = useRef<HTMLTextAreaElement>(null);
   const clozeRef = useRef<HTMLTextAreaElement>(null);
-  const aRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
-  const d0Ref = useRef<HTMLInputElement>(null);
-  const d1Ref = useRef<HTMLInputElement>(null);
-  const d2Ref = useRef<HTMLInputElement>(null);
-  const hRef = useRef<HTMLInputElement>(null);
+  const aRef = useRef<HTMLTextAreaElement>(null);
+  const hRef = useRef<HTMLTextAreaElement>(null);
   const eRef = useRef<HTMLTextAreaElement>(null);
   const tagSelRef = useRef<TagSelectorHandle>(null);
 
@@ -93,21 +161,86 @@ export function CardForm({ initial, tags }: Props) {
 
   // eslint-disable-next-line react-hooks/refs -- refs are only read inside the returned onKeyDown handlers, never during render
   const advance = makeAdvanceOnEnter([
-    qRef, clozeRef, aRef, d0Ref, d1Ref, d2Ref, hRef, eRef, tagFocusProxy,
+    qRef, clozeRef, aRef, hRef, eRef, tagFocusProxy,
   ]);
+
+  const handleKindChange = (newKind: CardKind) => {
+    setKind(newKind);
+    if (newKind === "mcq") {
+      setOptions(prev => {
+        let foundCorrect = false;
+        const nextOpts = prev.map(opt => {
+          if (opt.isCorrect) {
+            if (!foundCorrect) {
+              foundCorrect = true;
+              return opt;
+            }
+            return { ...opt, isCorrect: false };
+          }
+          return opt;
+        });
+        if (!foundCorrect && nextOpts.length > 0) {
+          nextOpts[0].isCorrect = true;
+        }
+        return nextOpts;
+      });
+    } else if (newKind === "multi") {
+      setOptions(prev => {
+        const hasCorrect = prev.some(o => o.isCorrect);
+        if (!hasCorrect && prev.length > 0) {
+          return prev.map((opt, i) => i === 0 ? { ...opt, isCorrect: true } : opt);
+        }
+        return prev;
+      });
+    }
+  };
+
+  const handleToggleOption = (idx: number) => {
+    setOptions(prev =>
+      prev.map((opt, i) => {
+        if (kind === "mcq") {
+          return { ...opt, isCorrect: i === idx };
+        } else {
+          return i === idx ? { ...opt, isCorrect: !opt.isCorrect } : opt;
+        }
+      })
+    );
+  };
+
+  const handleAddOption = () => {
+    setOptions(prev => [...prev, { text: "", isCorrect: false }]);
+  };
+
+  const handleRemoveOption = (idx: number) => {
+    setOptions(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleOptionTextChange = (idx: number, text: string) => {
+    setOptions(prev =>
+      prev.map((opt, i) => (i === idx ? { ...opt, text } : opt))
+    );
+  };
 
   function validate() {
     const e: Record<string, string> = {};
     if (kind !== "cloze" && !question.trim()) e.question = "Question is required";
+    
     if (kind === "mcq") {
-      if (!answer.trim()) e.answer = "Answer is required";
-      if (distractors.filter((d) => d.trim()).length !== 3)
-        e.distractors = "Exactly 3 distractors required";
+      const correctCount = options.filter((o) => o.isCorrect && o.text.trim()).length;
+      const filledCount = options.filter((o) => o.text.trim()).length;
+      if (correctCount !== 1) {
+        e.options = "Please select exactly one correct answer (with text)";
+      } else if (filledCount < 2) {
+        e.options = "At least 2 options are required";
+      }
     } else if (kind === "multi") {
-      const filledAnswers = answers.filter((a) => a.trim());
-      const filledDistractors = multiDistractors.filter((d) => d.trim());
-      if (filledAnswers.length < 1) e.answers = "At least 1 correct answer required";
-      else if (filledAnswers.length + filledDistractors.length < 2) e.answers = "At least 2 options total required";
+      const correctCount = options.filter((o) => o.isCorrect && o.text.trim()).length;
+      const filledCount = options.filter((o) => o.text.trim()).length;
+      if (correctCount < 1) {
+        e.options = "At least 1 correct answer is required";
+      } else if (filledCount < 2) {
+        e.options = "At least 2 options total are required";
+      }
     } else if (kind === "tf-sort") {
       const filled = statements.filter((s) => s.text.trim());
       if (filled.length < 2) e.statements = "At least 2 statements required";
@@ -157,15 +290,26 @@ export function CardForm({ initial, tags }: Props) {
       const payload = {
         kind,
         question: kind === "cloze" ? (question.trim() || clozeText.trim()) : question.trim(),
-        answer: (kind === "mcq" || kind === "flash") ? answer.trim() : "",
-        distractors:
+        answer:
           kind === "mcq"
-            ? distractors.map((d) => d.trim())
-            : kind === "multi"
-            ? multiDistractors.map((d) => d.trim()).filter(Boolean)
+            ? (options.find((o) => o.isCorrect)?.text ?? "").trim()
+            : kind === "flash"
+            ? answer.trim()
+            : "",
+        distractors:
+          kind === "mcq" || kind === "multi"
+            ? options
+                .filter((o) => !o.isCorrect)
+                .map((o) => o.text.trim())
+                .filter(Boolean)
             : [],
         answers:
-          kind === "multi" ? answers.map((a) => a.trim()).filter(Boolean) : undefined,
+          kind === "multi"
+            ? options
+                .filter((o) => o.isCorrect)
+                .map((o) => o.text.trim())
+                .filter(Boolean)
+            : undefined,
         statements:
           kind === "tf-sort"
             ? statements
@@ -207,7 +351,7 @@ export function CardForm({ initial, tags }: Props) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-5 max-w-2xl">
+    <form onSubmit={submit} className="space-y-5 max-w-4xl w-full">
       <Field label="Card type">
         <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-300 dark:border-zinc-700 p-0.5 bg-zinc-50 dark:bg-zinc-900 w-fit">
           {([
@@ -221,7 +365,7 @@ export function CardForm({ initial, tags }: Props) {
             <button
               key={k}
               type="button"
-              onClick={() => setKind(k)}
+              onClick={() => handleKindChange(k)}
               className={[
                 "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
                 kind === k
@@ -245,12 +389,11 @@ export function CardForm({ initial, tags }: Props) {
 
       {kind !== "cloze" && (
         <Field label="Question" error={errors.question}>
-          <textarea
+          <AutoResizeTextarea
             ref={qRef}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={advance(0)}
-            rows={2}
             autoFocus
             className={inputCls}
             placeholder={
@@ -262,135 +405,61 @@ export function CardForm({ initial, tags }: Props) {
         </Field>
       )}
 
-      {kind === "mcq" && (
-        <>
-          <Field label="Correct answer" error={errors.answer}>
-            <input
-              ref={aRef as any}
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              onKeyDown={advance(2)}
-              className={inputCls}
-            />
-          </Field>
- 
-          <Field label="Distractors (3 wrong answers)" error={errors.distractors}>
-            <div className="space-y-2">
-              <input
-                ref={d0Ref}
-                value={distractors[0]}
-                placeholder="Distractor 1"
-                onChange={(e) => {
-                  const n = [...distractors];
-                  n[0] = e.target.value;
-                  setDistractors(n);
-                }}
-                onKeyDown={advance(3)}
-                className={inputCls}
-              />
-              <input
-                ref={d1Ref}
-                value={distractors[1]}
-                placeholder="Distractor 2"
-                onChange={(e) => {
-                  const n = [...distractors];
-                  n[1] = e.target.value;
-                  setDistractors(n);
-                }}
-                onKeyDown={advance(4)}
-                className={inputCls}
-              />
-              <input
-                ref={d2Ref}
-                value={distractors[2]}
-                placeholder="Distractor 3"
-                onChange={(e) => {
-                  const n = [...distractors];
-                  n[2] = e.target.value;
-                  setDistractors(n);
-                }}
-                onKeyDown={advance(5)}
-                className={inputCls}
-              />
-            </div>
-          </Field>
-        </>
-      )}
-
-      {kind === "multi" && (
-        <>
-          <Field label="Correct answers (tap + adds more)" error={errors.answers}>
-            <div className="space-y-2">
-              {answers.map((a, i) => (
-                <div key={i} className="flex items-stretch gap-2">
-                  <span className="flex items-center px-2 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-semibold shrink-0">
-                    ✓
-                  </span>
-                  <input
-                    value={a}
-                    onChange={(e) => {
-                      const n = [...answers];
-                      n[i] = e.target.value;
-                      setAnswers(n);
-                    }}
-                    placeholder={`Correct answer ${i + 1}`}
-                    className={inputCls + " flex-1"}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => { if (answers.length > 1) setAnswers(answers.filter((_, j) => j !== i)); }}
-                    disabled={answers.length <= 1}
-                    className="shrink-0 px-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:text-rose-600 hover:border-rose-300 disabled:opacity-40"
-                    aria-label={`Remove correct answer ${i + 1}`}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => setAnswers([...answers, ""])}
-                className="text-xs px-2.5 py-1.5 rounded-md border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-emerald-400 hover:text-emerald-600"
-              >
-                + Add correct answer
-              </button>
-            </div>
-          </Field>
- 
-          <Field label="Distractors (wrong options)">
-            <div className="space-y-2">
-              {multiDistractors.map((d, i) => (
-                <div key={i} className="flex items-stretch gap-2">
-                  <input
-                    value={d}
-                    onChange={(e) => {
-                      const n = [...multiDistractors];
-                      n[i] = e.target.value;
-                      setMultiDistractors(n);
-                    }}
-                    placeholder={`Distractor ${i + 1}`}
-                    className={inputCls + " flex-1"}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setMultiDistractors(multiDistractors.filter((_, j) => j !== i))}
-                    className="shrink-0 px-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:text-rose-600 hover:border-rose-300"
-                    aria-label={`Remove distractor ${i + 1}`}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => setMultiDistractors([...multiDistractors, ""])}
-                className="text-xs px-2.5 py-1.5 rounded-md border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-indigo-400 hover:text-indigo-600"
-              >
-                + Add distractor
-              </button>
-            </div>
-          </Field>
-        </>
+      {(kind === "mcq" || kind === "multi") && (
+        <Field
+          label={
+            kind === "mcq"
+              ? "Options (toggle checkmark to select correct)"
+              : "Options (multiple correct allowed)"
+          }
+          error={errors.options}
+        >
+          <div className="space-y-3">
+            {options.map((opt, idx) => (
+              <div key={idx} className="flex items-stretch gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleToggleOption(idx)}
+                  className={[
+                    "flex items-center justify-center w-9 h-9 rounded-lg border text-sm font-semibold transition-colors shrink-0",
+                    opt.isCorrect
+                      ? "bg-emerald-600 border-emerald-600 text-white dark:bg-emerald-700 dark:border-emerald-700"
+                      : "border-zinc-300 dark:border-zinc-700 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:border-zinc-400 dark:hover:border-zinc-600",
+                  ].join(" ")}
+                  title={
+                    kind === "mcq"
+                      ? "Mark this option as correct"
+                      : "Toggle correct status"
+                  }
+                >
+                  {opt.isCorrect ? "✓" : "○"}
+                </button>
+                <AutoResizeTextarea
+                  value={opt.text}
+                  onChange={(e) => handleOptionTextChange(idx, e.target.value)}
+                  placeholder={`Option ${idx + 1}`}
+                  className={[inputCls, "flex-1 min-h-[38px]"].join(" ")}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveOption(idx)}
+                  disabled={options.length <= 2}
+                  className="shrink-0 px-3 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:text-rose-600 hover:border-rose-300 disabled:opacity-40 disabled:hover:text-zinc-500 disabled:hover:border-zinc-300"
+                  aria-label={`Remove option ${idx + 1}`}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={handleAddOption}
+              className="text-xs px-2.5 py-1.5 rounded-md border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-indigo-400 hover:text-indigo-600"
+            >
+              + Add option
+            </button>
+          </div>
+        </Field>
       )}
 
       {kind === "tf-sort" && (
@@ -472,12 +541,11 @@ export function CardForm({ initial, tags }: Props) {
 
       {kind === "flash" && (
         <Field label="Back (answer)" error={errors.answer}>
-          <textarea
-            ref={aRef as any}
+          <AutoResizeTextarea
+            ref={aRef}
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             onKeyDown={advance(2)}
-            rows={2}
             className={inputCls}
             placeholder="Answer shown on back of card"
           />
@@ -488,11 +556,10 @@ export function CardForm({ initial, tags }: Props) {
         <>
           <Field label="Cloze Text" error={errors.clozeText}>
             <div className="space-y-2">
-              <textarea
+              <AutoResizeTextarea
                 ref={clozeRef}
                 value={clozeText}
                 onChange={(e) => setClozeText(e.target.value)}
-                rows={4}
                 className={inputCls}
                 placeholder="Type your text here. Highlight a word and click 'Cloze it' to create a blank."
               />
@@ -599,22 +666,21 @@ export function CardForm({ initial, tags }: Props) {
       )}
 
       <Field label="Hint">
-        <input
+        <AutoResizeTextarea
           ref={hRef}
           value={hint}
           onChange={(e) => setHint(e.target.value)}
-          onKeyDown={advance(5)}
+          onKeyDown={advance(3)}
           className={inputCls}
         />
       </Field>
 
       <Field label="Explanation">
-        <textarea
+        <AutoResizeTextarea
           ref={eRef}
           value={explanation}
           onChange={(e) => setExplanation(e.target.value)}
-          onKeyDown={advance(6)}
-          rows={3}
+          onKeyDown={advance(4)}
           className={inputCls}
         />
       </Field>
@@ -639,7 +705,7 @@ export function CardForm({ initial, tags }: Props) {
         />
       </Field>
 
-      <div className="flex gap-3 pt-2">
+      <div className="flex gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
         <button
           type="submit"
           disabled={saving}
@@ -679,3 +745,4 @@ function Field({
     </label>
   );
 }
+

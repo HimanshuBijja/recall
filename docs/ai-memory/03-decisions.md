@@ -2,6 +2,12 @@
 
 Significant architectural/technical decisions. Newest first.
 
+## 2026-08-22 — Unified card edit layout & auto-resizing textareas
+- **Decision 1 — Unified MCQ/Multi option editor:** Aligned the web app's `CardForm` layout for MCQ and Multi card types with the browser extension UI. The form now renders a single list of options with toggleable checkmarks instead of separate input lists for correct answers and distractors. This unifies option rendering and enables flexible numbers of distractors.
+- **Decision 2 — Custom `AutoResizeTextarea` component:** Introduced a custom React forward-ref component that adjusts its `style.height` dynamically to its `scrollHeight + 4px` on input, value changes, and window resizing. This was applied to `question`, `clozeText`, `answer` (flashcard back), `hint`, `explanation`, and all MCQ/Multi options, resolving the issue where long text inside these fields was hidden behind scrollbars.
+- **Decision 3 — Exclude option textareas from Enter-to-advance navigation:** While main textareas like question, hint, and explanation support pressing Enter to jump to the next field, options textareas are excluded to allow learners to input multi-line option text with simple Enter keys.
+- **Decision 4 — Wide single-column layout:** Positioned all fields in a single, sequential column matching Anki/Recall's edit flow, but widened the layout to `max-w-4xl w-full` to utilize desktop screen width more effectively. This ensures fields span across the container without internal scrollbars (via the `AutoResizeTextarea` component) and provides a clean, unified view on all screen sizes.
+
 ## 2026-07-25 — Web text capture (any site)
 - **`CardSource` is a discriminated union, and the web arm declares the video-only properties as `?: undefined`.** Eight call sites read `card.source?.videoId` directly; declaring `videoId?: undefined` on `WebSource` keeps all of them type-checking, so the union landed without touching analytics, groups, subjects, or exemptions. Use the `isVideoSource` / `isWebSource` guards from `lib/source.ts` anywhere you need to read `timestamp` or `screenshotUrl`.
 - **The MCQ/multi "table" in the batch overlay is a CSS grid, not a `<table>`.** `ai.ts` inserts its diff block as a sibling of the field it replaces; inside a real `<tbody>` that would be a stray `<div>` between `<tr>`s. A grid row gives the same visual structure and leaves the existing pill insertion logic intact.

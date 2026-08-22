@@ -1,5 +1,12 @@
 # 02 — Features Log
 
+## 2026-08-22 — Unified Wide Card Edit Layout & Auto-Resizing Textareas
+- **Unified Card Edit Options Layout:** Realigned the web application's `CardForm` layout for MCQ and Multi card types with the browser extension UI. The form now uses a single, consolidated list of options with toggleable checkmarks instead of separate inputs for correct answers and distractors.
+- **Auto-Resizing Textareas:** Implemented a custom `AutoResizeTextarea` component that dynamically adjusts its height based on the text contents (`scrollHeight + 4px`) on input, value changes, and window resizing. This was integrated across all text fields (Question, ClozeText, Answer/Back, Hint, Explanation, and MCQ/Multi Options), resolving the issue where long text was hidden behind scrollbars.
+- **Improved Field Navigation:** Retained Enter-to-advance keyboard navigation for main textareas (Question, Hint, Explanation, and ClozeText) while excluding option textareas to allow learners to type multi-line options using the Enter key.
+- **Wide Single-Column Layout:** Reorganized the form layout into a single, wide column (`max-w-4xl`) on all screen sizes, ensuring inputs utilize the full horizontal space cleanly.
+- **Files modified:** [CardForm.tsx](file:///d:/code/personal_projects/recall/components/CardForm.tsx).
+
 ## 2026-08-13 — Video Frame Capture Compression
 - **Video Frame Capture Compression**: Changed the video frame capture output inside the Chrome extension from a lossless PNG format to a compressed JPEG format (70% quality).
 - **Network and Storage Savings**: Reduces capture frame payload sizes by 80% to 90% (e.g. from ~3MB to ~250KB per frame), saving network upload bandwidth and Cloudflare R2 storage usage.
