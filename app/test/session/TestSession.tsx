@@ -600,6 +600,20 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
             )}
           </div>
           <div className="flex items-center gap-2 sm:gap-3 font-mono text-zinc-500">
+            {results.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm(`Submit early? You've answered ${results.length} of ${total} cards.`)) {
+                    finish(results);
+                  }
+                }}
+                disabled={submitting}
+                className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition-colors disabled:opacity-40"
+              >
+                {submitting ? "Submitting…" : "Submit Early"}
+              </button>
+            )}
             <span className="text-emerald-600 dark:text-emerald-400">✓ {correctCount}</span>
             <span className="text-rose-600 dark:text-rose-400">✗ {results.length - correctCount}</span>
             {!picked && <span className="tabular-nums">⏱ {fmtMs(elapsed)}</span>}

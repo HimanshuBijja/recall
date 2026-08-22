@@ -1,5 +1,9 @@
 # 02 — Features Log
 
+## 2026-08-22 — Submit Test Session Early
+- **Submit Test Session Early:** Added a "Submit Early" button at the top right of the test session status bar. It becomes active as soon as at least one card is answered. Clicking it submits only the answered questions to the database and takes the user to the results dashboard.
+- **Files modified:** [TestSession.tsx](file:///d:/code/personal_projects/recall/app/test/session/TestSession.tsx).
+
 ## 2026-08-22 — Unified Wide Card Edit Layout & Auto-Resizing Textareas
 - **Unified Card Edit Options Layout:** Realigned the web application's `CardForm` layout for MCQ and Multi card types with the browser extension UI. The form now uses a single, consolidated list of options with toggleable checkmarks instead of separate inputs for correct answers and distractors.
 - **Auto-Resizing Textareas:** Implemented a custom `AutoResizeTextarea` component that dynamically adjusts its height based on the text contents (`scrollHeight + 4px`) on input, value changes, and window resizing. This was integrated across all text fields (Question, ClozeText, Answer/Back, Hint, Explanation, and MCQ/Multi Options), resolving the issue where long text was hidden behind scrollbars.
