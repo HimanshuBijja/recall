@@ -3,200 +3,202 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Card, Group, Subject, Tag } from "@/types";
-import { resolveGroupCards, resolveSubjectCards } from "@/lib/due";
+import type { Card, Group, Tag } from "@/types";
+import type { NoteBook } from "@/types/notes";
+import { resolveGroupCards } from "@/lib/due";
+import { api } from "@/lib/api";
+import { useToast } from "@/components/Toast";
 
-interface NotebookItem {
-  id: string;
-  name: string;
-  kind: "subject" | "video" | "web" | "group";
-  subLabel: string;
-  matchingCards: Card[];
-  imageCount: number;
-  coverImage?: string;
-  videoUrl?: string;
-  webUrl?: string;
-  tagIds: string[];
+interface Props {
+  initialNotebooks: NoteBook[];
+  groups: Group[];
+  cards: Card[];
+  tags: Tag[];
 }
 
 export function NotesHubClient({
-  subjects,
+  initialNotebooks,
   groups,
-  tags,
   cards,
-}: {
-  subjects: Subject[];
-  groups: Group[];
-  tags: Tag[];
-  cards: Card[];
-}) {
+  tags,
+}: Props) {
   const router = useRouter();
+  const toast = useToast();
+  const [notebooks, setNotebooks] = useState<NoteBook[]>(initialNotebooks);
   const [query, setQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"all" | "subjects" | "video" | "web" | "group">("all");
+  const [showModal, setShowModal] = useState(false);
 
-  const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
+  // Form state for new notebook
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
 
-  // Build notebook list from subjects and groups
-  const notebooks = useMemo(() => {
-    const list: NotebookItem[] = [];
+  const groupMap = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
 
-    // 1. Add Subjects
-    for (const sub of subjects) {
-      const subCards = resolveSubjectCards(sub, groups, cards, tags);
-      let imgCount = 0;
-      let cover: string | undefined;
+  // Compute stats per notebook
+  const notebookData = useMemo(() => {
+    return notebooks.map((n) => {
+      let totalCards = 0;
+      let totalImages = 0;
+      let coverImage: string | undefined;
 
-      for (const c of subCards) {
-        const screenshot = c.source?.screenshotUrl;
-        const refs = c.referenceImages ?? [];
-        if (screenshot || refs.length > 0) {
-          imgCount += (screenshot ? 1 : 0) + refs.length;
-          if (!cover) cover = screenshot ?? refs[0];
+      for (const gid of n.groupIds) {
+        const g = groupMap.get(gid);
+        if (!g) continue;
+        const gCards = resolveGroupCards(g, cards, tags);
+        totalCards += gCards.length;
+
+        for (const c of gCards) {
+          const screenshot = c.source?.screenshotUrl;
+          const refs = c.referenceImages ?? [];
+          if (screenshot || refs.length > 0) {
+            totalImages += (screenshot ? 1 : 0) + refs.length;
+            if (!coverImage) coverImage = screenshot ?? refs[0];
+          }
         }
       }
 
-      list.push({
-        id: sub.id,
-        name: sub.name,
-        kind: "subject",
-        subLabel: `${sub.groupIds.length} groups inside`,
-        matchingCards: subCards,
-        imageCount: imgCount,
-        coverImage: cover,
-        tagIds: [],
-      });
-    }
-
-    // 2. Add Groups
-    for (const g of groups) {
-      const gCards = resolveGroupCards(g, cards, tags);
-      let imgCount = 0;
-      let cover: string | undefined;
-
-      for (const c of gCards) {
-        const screenshot = c.source?.screenshotUrl;
-        const refs = c.referenceImages ?? [];
-        if (screenshot || refs.length > 0) {
-          imgCount += (screenshot ? 1 : 0) + refs.length;
-          if (!cover) cover = screenshot ?? refs[0];
-        }
-      }
-
-      const kind = g.videoId ? "video" : g.webUrl ? "web" : "group";
-      const subLabel = g.videoId
-        ? "YouTube Video Notebook"
-        : g.webUrl
-        ? "Web Article Notebook"
-        : `${g.tagIds.length} tag${g.tagIds.length === 1 ? "" : "s"}`;
-
-      list.push({
-        id: g.id,
-        name: g.name,
-        kind,
-        subLabel,
-        matchingCards: gCards,
-        imageCount: imgCount,
-        coverImage: cover,
-        videoUrl: g.videoUrl,
-        webUrl: g.webUrl,
-        tagIds: g.tagIds,
-      });
-    }
-
-    return list;
-  }, [subjects, groups, tags, cards]);
-
-  const visibleNotebooks = useMemo(() => {
-    return notebooks.filter((n) => {
-      if (activeTab === "subjects" && n.kind !== "subject") return false;
-      if (activeTab === "video" && n.kind !== "video") return false;
-      if (activeTab === "web" && n.kind !== "web") return false;
-      if (activeTab === "group" && n.kind !== "group") return false;
-
-      if (query.trim()) {
-        const q = query.toLowerCase();
-        const matchesName = n.name.toLowerCase().includes(q);
-        const matchesTags = n.tagIds.some((tid) => tagById.get(tid)?.name.toLowerCase().includes(q));
-        if (!matchesName && !matchesTags) return false;
-      }
-      return true;
+      return {
+        ...n,
+        totalCards,
+        totalImages,
+        coverImage,
+      };
     });
-  }, [notebooks, activeTab, query, tagById]);
+  }, [notebooks, groupMap, cards, tags]);
 
-  function launchTest(n: NotebookItem) {
-    const cardIds = n.matchingCards.map((c) => c.id);
-    if (cardIds.length === 0) return;
-    router.push(`/test/session?ids=${cardIds.join(",")}&shuffle=true`);
+  const filteredNotebooks = useMemo(() => {
+    if (!query.trim()) return notebookData;
+    const q = query.toLowerCase();
+    return notebookData.filter(
+      (n) => n.name.toLowerCase().includes(q) || n.description?.toLowerCase().includes(q)
+    );
+  }, [notebookData, query]);
+
+  function toggleGroupSelection(gid: string) {
+    setSelectedGroupIds((prev) =>
+      prev.includes(gid) ? prev.filter((id) => id !== gid) : [...prev, gid]
+    );
+  }
+
+  function moveGroupInModal(idx: number, dir: -1 | 1) {
+    const next = [...selectedGroupIds];
+    const targetIdx = idx + dir;
+    if (targetIdx < 0 || targetIdx >= next.length) return;
+    [next[idx], next[targetIdx]] = [next[targetIdx], next[idx]];
+    setSelectedGroupIds(next);
+  }
+
+  async function handleCreateNotebook() {
+    if (!name.trim()) {
+      toast("error", "Notebook name is required");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await api.post<NoteBook>("/notes", {
+        name: name.trim(),
+        description: description.trim(),
+        groupIds: selectedGroupIds,
+      });
+      setNotebooks((prev) => [...prev, res.data]);
+      toast("success", "Notebook created successfully");
+      setShowModal(false);
+      setName("");
+      setDescription("");
+      setSelectedGroupIds([]);
+    } catch {
+      toast("error", "Failed to create notebook");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteNotebook(id: string, notebookName: string) {
+    if (!confirm(`Delete notebook "${notebookName}"?`)) return;
+    try {
+      await api.delete(`/notes/${id}`);
+      setNotebooks((prev) => prev.filter((n) => n.id !== id));
+      toast("success", "Notebook deleted");
+    } catch {
+      toast("error", "Failed to delete notebook");
+    }
+  }
+
+  function launchTest(groupIds: string[]) {
+    const allCardIds: string[] = [];
+    for (const gid of groupIds) {
+      const g = groupMap.get(gid);
+      if (!g) continue;
+      const gCards = resolveGroupCards(g, cards, tags);
+      for (const c of gCards) allCardIds.push(c.id);
+    }
+    if (allCardIds.length === 0) {
+      toast("error", "No cards available in this notebook");
+      return;
+    }
+    router.push(`/test/session?ids=${allCardIds.join(",")}&shuffle=true`);
   }
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      {/* Top Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <div className="flex items-center gap-3 text-xs tracking-widest text-muted uppercase font-semibold mb-2">
             <span className="w-6 h-[2px] bg-accent" />
-            Visual Lecture Library
+            Standalone Note Volumes
           </div>
-          <h1 className="cinematic-headline text-[10vw] sm:text-[8vw] md:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text="NOTES">
-            NOTES
+          <h1 className="cinematic-headline text-[10vw] sm:text-[8vw] md:text-[5vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text="NOTEBOOKS">
+            NOTEBOOKS
           </h1>
           <p className="text-sm text-muted mt-2 uppercase tracking-wider">
-            Read through captured lecture screenshots and chapter notes sequentially.
+            Custom study volumes built from your captured lecture groups.
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowModal(true)}
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] cursor-pointer"
+        >
+          + Create Notebook
+        </button>
       </div>
 
       <hr className="border-t border-divider my-6" />
 
-      {/* Category Tabs & Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {[
-            { id: "all", label: "All Notebooks" },
-            { id: "subjects", label: "Subjects" },
-            { id: "video", label: "YouTube Videos" },
-            { id: "web", label: "Web Articles" },
-            { id: "group", label: "Tag Bundles" },
-          ].map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={[
-                  "px-3 py-1.5 rounded-[4px] border text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap cursor-pointer",
-                  isActive
-                    ? "bg-accent border-accent text-background font-bold"
-                    : "border-border bg-black/25 text-muted hover:border-zinc-500 hover:text-foreground",
-                ].join(" ")}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
+      {/* Search Input */}
+      {notebooks.length > 0 && (
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search notebooks or tags…"
-          className="px-3.5 py-2 rounded-[4px] border border-border/60 bg-black/40 text-foreground placeholder-zinc-500 text-sm focus:outline-none focus:border-accent"
+          placeholder="Search notebooks…"
+          className="w-full px-3.5 py-2.5 rounded-[4px] border border-border/60 bg-black/40 text-foreground placeholder-zinc-500 text-sm focus:outline-none focus:border-accent"
         />
-      </div>
+      )}
 
       {/* Notebook Cards Grid */}
-      {visibleNotebooks.length === 0 ? (
-        <div className="border border-dashed border-border p-12 text-center text-sm text-muted rounded-[4px] bg-zinc-950/10">
-          No notebooks match your filter.
+      {notebooks.length === 0 ? (
+        <div className="border border-dashed border-border p-12 text-center text-sm text-muted rounded-[4px] bg-zinc-950/10 space-y-4">
+          <p>No notebooks created yet. Create one to organize existing groups into study volumes.</p>
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] cursor-pointer"
+          >
+            + Create Notebook
+          </button>
         </div>
+      ) : filteredNotebooks.length === 0 ? (
+        <p className="text-sm text-muted">No notebooks match your search query.</p>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {visibleNotebooks.map((n) => (
+          {filteredNotebooks.map((n) => (
             <li
-              key={n.kind + ":" + n.id}
+              key={n.id}
               className="rounded-xl border border-border bg-zinc-950/30 hover:border-zinc-700 transition-colors p-4 flex flex-col justify-between gap-4 group"
             >
               {/* Cover Image Preview */}
@@ -209,47 +211,65 @@ export function NotesHubClient({
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute bottom-2 right-2 bg-black/80 text-accent text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-accent/30">
-                    🖼 {n.imageCount} slide{n.imageCount === 1 ? "" : "s"}
+                    🖼 {n.totalImages} slide{n.totalImages === 1 ? "" : "s"}
                   </div>
                 </div>
               ) : (
                 <div className="rounded-lg border border-border/50 bg-black/30 aspect-video flex flex-col items-center justify-center text-zinc-600 space-y-1">
                   <span className="text-2xl">📖</span>
-                  <span className="text-[10px] font-mono">{n.matchingCards.length} notes</span>
+                  <span className="text-[10px] font-mono">{n.totalCards} cards</span>
                 </div>
               )}
 
               {/* Title & Info */}
               <div className="space-y-1.5 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
-                    {n.kind}
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-muted uppercase font-bold">
+                    {n.groupIds.length} Chapter{n.groupIds.length === 1 ? "" : "s"}
                   </span>
-                  <span className="text-xs text-muted font-mono truncate">{n.subLabel}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteNotebook(n.id, n.name)}
+                    className="text-xs text-rose-500 hover:text-rose-400 font-bold uppercase"
+                    title="Delete notebook"
+                  >
+                    ✕
+                  </button>
                 </div>
 
                 <h3 className="font-bold text-base text-foreground group-hover:text-accent transition-colors truncate">
                   {n.name}
                 </h3>
 
-                <p className="text-xs text-muted font-mono">
-                  {n.matchingCards.length} note{n.matchingCards.length === 1 ? "" : "s"} total
+                {n.description && (
+                  <p className="text-xs text-muted line-clamp-2">{n.description}</p>
+                )}
+
+                <p className="text-xs text-muted font-mono pt-1">
+                  {n.totalCards} total note{n.totalCards === 1 ? "" : "s"} inside
                 </p>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+              <div className="flex items-center gap-2 pt-2 border-t border-border/30 flex-wrap">
                 <Link
-                  href={`/notes/${n.id}?type=${n.kind}`}
+                  href={`/notes/${n.id}`}
                   className="flex-1 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest text-center transition-colors rounded-[4px] no-underline"
                 >
                   📖 Read Notes
                 </Link>
+                <Link
+                  href={`/notes/${n.id}/index`}
+                  className="px-3 py-2 border border-border hover:border-accent text-foreground font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] no-underline"
+                  title="View and re-arrange chapters"
+                >
+                  📑 Index
+                </Link>
                 <button
                   type="button"
-                  onClick={() => launchTest(n)}
-                  disabled={n.matchingCards.length === 0}
-                  className="px-3 py-2 border border-border hover:border-accent text-foreground font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={() => launchTest(n.groupIds)}
+                  disabled={n.totalCards === 0}
+                  className="px-3 py-2 border border-border hover:border-accent text-foreground font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   title="Practice quiz"
                 >
                   ▶ Quiz
@@ -258,6 +278,131 @@ export function NotesHubClient({
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Create Notebook Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+          <div className="cinematic-editor-panel max-w-xl w-full max-h-[90vh] overflow-y-auto space-y-5 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <h3 className="font-bold text-sm uppercase tracking-wider text-foreground">
+                Create New Notebook
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="text-xs text-muted hover:text-foreground uppercase font-bold"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase font-bold tracking-wider text-muted">Notebook Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder='e.g. "GATE Computer Networks Complete Course"'
+                autoFocus
+                className="w-full px-3.5 py-2.5 rounded-[4px] border border-border/60 bg-black/40 text-foreground placeholder-zinc-600 text-sm focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase font-bold tracking-wider text-muted">Description (Optional)</label>
+              <input
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder='e.g. "Lecture notes and slide review for IP Addressing & Subnetting"'
+                className="w-full px-3.5 py-2.5 rounded-[4px] border border-border/60 bg-black/40 text-foreground placeholder-zinc-600 text-sm focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            {/* Select Existing Groups */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] uppercase font-bold tracking-wider text-muted">Select & Order Groups (Chapters)</label>
+                <span className="text-xs text-accent font-mono">{selectedGroupIds.length} selected</span>
+              </div>
+
+              <div className="border border-border bg-black/30 rounded-[4px] p-3 max-h-60 overflow-y-auto space-y-2">
+                {groups.length === 0 ? (
+                  <p className="text-xs text-muted italic">No groups exist in database.</p>
+                ) : (
+                  groups.map((g) => {
+                    const isSelected = selectedGroupIds.includes(g.id);
+                    const selectedIdx = selectedGroupIds.indexOf(g.id);
+                    return (
+                      <div
+                        key={g.id}
+                        onClick={() => toggleGroupSelection(g.id)}
+                        className={[
+                          "p-2.5 rounded border flex items-center justify-between gap-3 text-xs cursor-pointer transition-colors select-none",
+                          isSelected ? "border-accent bg-zinc-900" : "border-border/50 hover:bg-zinc-900/40",
+                        ].join(" ")}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span
+                            className={[
+                              "w-4 h-4 rounded border flex items-center justify-center text-[10px] shrink-0 font-bold",
+                              isSelected ? "bg-accent border-accent text-background" : "border-zinc-700 text-transparent",
+                            ].join(" ")}
+                          >
+                            ✓
+                          </span>
+                          <span className="font-semibold truncate">{g.name}</span>
+                        </div>
+
+                        {isSelected && (
+                          <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <span className="text-[10px] font-mono text-muted mr-1">Ch {selectedIdx + 1}</span>
+                            <button
+                              type="button"
+                              disabled={selectedIdx === 0}
+                              onClick={() => moveGroupInModal(selectedIdx, -1)}
+                              className="px-1.5 py-0.5 rounded border border-border hover:bg-zinc-800 disabled:opacity-30 text-[10px] font-bold"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              type="button"
+                              disabled={selectedIdx === selectedGroupIds.length - 1}
+                              onClick={() => moveGroupInModal(selectedIdx, 1)}
+                              className="px-1.5 py-0.5 rounded border border-border hover:bg-zinc-800 disabled:opacity-30 text-[10px] font-bold"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex gap-3 pt-3 border-t border-border">
+              <button
+                type="button"
+                onClick={handleCreateNotebook}
+                disabled={saving}
+                className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] disabled:opacity-40"
+              >
+                {saving ? "Saving…" : "Create Notebook"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2.5 border border-border hover:bg-zinc-900 text-foreground font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px]"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

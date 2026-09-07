@@ -309,6 +309,39 @@ mirror verified (insert/update/delete on Atlas reach local in ~2s).
 - Mirror is one-way; offline writes to local are not synced up.
 - `data/*.json` kept as a backup snapshot (not removed).
 
+## Standalone Notes Revision Engine & Notebook Organizer (2026-09-07)
+
+**Goal**
+Provide a dedicated revision environment (`/notes`) for studying lecture screenshots, structured textbook notes, and video slides without flashcard flip mechanics or subject dependencies.
+
+**Key Features Implemented**
+1. **Standalone Notebook Hub (`/notes`)**:
+   - Create custom notebooks selecting specific video groups/chapters.
+   - Notebook metadata (`id`, `name`, `description`, `groupIds`, `createdAt`) stored in `notes.json`.
+2. **Notebook Index Chapter Re-ordering (`/notes/[id]/index`)**:
+   - Index / Table of Contents view listing all groups in the notebook.
+   - **`▲ Move Up`** and **`▼ Move Down`** chapter re-ordering buttons to customize sequence.
+   - **Feature E: Markdown & HTML Export**: Download complete notebook slides, timestamps, and notes as `.md` or `.html` files.
+3. **Visual Slide Deck Reader (`/notes/[id]`)**:
+   - Render YouTube screenshots directly at full width.
+   - Dual view modes: Slide Deck (horizontal slider) and Continuous Feed (vertical stream).
+   - Timestamp ascending sorting for reading chapter cards chronologically.
+   - **Feature A: Quick Index Drawer**: Slide-out drawer displaying chapters and cards for 1-click jump to any card.
+   - Persistent filter bar saved in `localStorage` (`recall_notes_kind_filters`, `recall_notes_view_mode`).
+   - Deep-link timestamp button (`▶ YouTube mm:ss`) opening original YouTube videos at exact capture timestamps.
+
+**Modified / Added Files**
+- `types/notes.ts` — `NoteBook` interface.
+- `app/api/notes/route.ts` & `app/api/notes/[id]/route.ts` — API endpoints for notebook CRUD operations.
+- `app/notes/page.tsx` & `NotesHubClient.tsx` — Main Notes library & creation modal.
+- `app/notes/[id]/index/page.tsx` & `NotebookIndexClient.tsx` — Index table of contents & export tools.
+- `app/notes/[id]/page.tsx` & `NotesReaderClient.tsx` — Visual slide deck reader & quick index drawer.
+- `components/NotesSlideCard.tsx` — Direct full-width screenshot card display component.
+- `components/Nav.tsx` — Added **Notes Reader** link to primary navigation.
+
+---
+
 ## Earlier (pre-migration, from git history)
 Card CRUD, tag DAG manager, groups, unified bin, test flow (MCQ + tf-sort),
 analytics, JSON import/export, filters, quick-launch groups.
+

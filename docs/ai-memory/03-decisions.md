@@ -122,3 +122,9 @@ linter carries regression risk with no functional benefit. The rules stay
 active as errors for new code.
 **Trade-off:** If those patterns are ever genuinely reworked, drop the disables.
 
+## 2026-09-07 — Standalone Notes Revision Engine & Chapter Index
+**Decision:** Keep `/notes` completely independent from the `subjects` collection, using custom user-curated `NoteBook` entities referencing existing video `groupIds`. Render screenshots directly in full-width slide cards without question/answer flip mechanics.
+**Why:** Flashcard SRS drills (flip cards, rating again/hard/good) serve memorization testing, while chapter notes revision requires linear visual reading of lecture slides in continuous/slide deck mode sorted by video timestamp. Decoupling from subjects allows custom note compilation across arbitrary groups.
+
+
+

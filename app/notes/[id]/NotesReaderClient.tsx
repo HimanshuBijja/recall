@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import type { Card, Tag } from "@/types";
+import type { NoteBook } from "@/types/notes";
+import type { ChapterCardItem } from "./page";
 import { NotesSlideCard } from "@/components/NotesSlideCard";
 import { KIND_CONFIG } from "@/app/groups/[id]/GroupDetailClient";
 import { api } from "@/lib/api";
@@ -24,20 +27,24 @@ function formatTimestamp(seconds: number): string {
 }
 
 export function NotesReaderClient({
-  title,
-  subTitle,
-  initialCards,
+  notebook,
+  chapterCards: initialChapterCards,
+  chaptersSummary,
   tags,
 }: {
-  title: string;
-  subTitle: string;
-  initialCards: Card[];
+  notebook: NoteBook;
+  chapterCards: ChapterCardItem[];
+  chaptersSummary: { chapterNum: number; groupId: string; groupName: string; startIndex: number }[];
   tags: Tag[];
 }) {
-  const [cards, setCards] = useState<Card[]>(initialCards);
+  const searchParams = useSearchParams();
+  const startChapterParam = searchParams.get("startChapter");
+
+  const [chapterCards, setChapterCards] = useState<ChapterCardItem[]>(initialChapterCards);
   const [viewMode, setViewMode] = useState<"slide" | "scroll">("slide");
   const [selectedKinds, setSelectedKinds] = useState<string[]>(ALL_KINDS);
   const [slideIdx, setSlideIdx] = useState(0);
+  const [showDrawer, setShowDrawer] = useState(false);
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
@@ -60,7 +67,16 @@ export function NotesReaderClient({
     }
   }, []);
 
-  // Update LocalStorage on filter/mode changes
+  // Handle startChapter URL param jump
+  useEffect(() => {
+    if (startChapterParam) {
+      const chIdx = Number(startChapterParam);
+      if (!isNaN(chIdx) && chIdx >= 0 && chIdx < chaptersSummary.length) {
+        setSlideIdx(chaptersSummary[chIdx].startIndex);
+      }
+    }
+  }, [startChapterParam, chaptersSummary]);
+
   function toggleKind(kind: string) {
     setSelectedKinds((prev) => {
       const next = prev.includes(kind) ? prev.filter((k) => k !== kind) : [...prev, kind];
@@ -78,22 +94,19 @@ export function NotesReaderClient({
     } catch { /* ignore */ }
   }
 
-  const filteredCards = useMemo(() => {
-    return cards.filter((c) => selectedKinds.includes(c.kind || "mcq"));
-  }, [cards, selectedKinds]);
+  const filteredItems = useMemo(() => {
+    return chapterCards.filter((item) => selectedKinds.includes(item.card.kind || "mcq"));
+  }, [chapterCards, selectedKinds]);
 
-  const currentCard = filteredCards[slideIdx] ?? filteredCards[0];
+  const currentItem = filteredItems[slideIdx] ?? filteredItems[0];
 
-  // Reset slide index if bounds exceeded
-  useEffect(() => {
-    if (slideIdx >= filteredCards.length && filteredCards.length > 0) {
-      setSlideIdx(0);
-    }
-  }, [filteredCards.length, slideIdx]);
+  // Active Group Name computation
+  const activeGroupName = currentItem ? currentItem.groupName : "No Active Group";
+  const activeChapterNum = currentItem ? currentItem.chapterNum : 1;
 
   // Keyboard navigation for Slide Deck mode
   useEffect(() => {
-    if (viewMode !== "slide" || filteredCards.length === 0) return;
+    if (viewMode !== "slide" || filteredItems.length === 0) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.target && (e.target as HTMLElement).tagName === "INPUT") return;
       if (e.key === "ArrowLeft" || (e.shiftKey && e.key === " ")) {
@@ -101,60 +114,80 @@ export function NotesReaderClient({
         setSlideIdx((i) => Math.max(0, i - 1));
       } else if (e.key === "ArrowRight" || e.key === " ") {
         e.preventDefault();
-        setSlideIdx((i) => Math.min(filteredCards.length - 1, i + 1));
+        setSlideIdx((i) => Math.min(filteredItems.length - 1, i + 1));
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [viewMode, filteredCards.length]);
+  }, [viewMode, filteredItems.length]);
 
   async function handleToggleBookmark(cardId: string, currentVal: boolean) {
     const nextVal = !currentVal;
-    setCards((prev) =>
-      prev.map((c) => (c.id === cardId ? { ...c, bookmarked: nextVal } : c))
+    setChapterCards((prev) =>
+      prev.map((item) =>
+        item.card.id === cardId ? { ...item, card: { ...item.card, bookmarked: nextVal } } : item
+      )
     );
     try {
       await api.patch(`/cards/${cardId}`, { bookmarked: nextVal });
     } catch {
-      setCards((prev) =>
-        prev.map((c) => (c.id === cardId ? { ...c, bookmarked: currentVal } : c))
+      setChapterCards((prev) =>
+        prev.map((item) =>
+          item.card.id === cardId ? { ...item, card: { ...item.card, bookmarked: currentVal } } : item
+        )
       );
     }
   }
 
+  function jumpToChapter(startIndex: number) {
+    // Find closest filtered index
+    const targetCard = chapterCards[startIndex];
+    if (!targetCard) return;
+    const foundIdx = filteredItems.findIndex((item) => item.card.id === targetCard.card.id);
+    if (foundIdx !== -1) {
+      setSlideIdx(foundIdx);
+    }
+    setShowDrawer(false);
+  }
+
   return (
     <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <div className="flex items-center gap-3 text-xs tracking-widest text-muted uppercase font-semibold mb-2">
-            <span className="w-6 h-[2px] bg-accent" />
-            Notebook Reader
+      {/* Sticky Active Group Top Status Bar */}
+      <div className="sticky top-14 z-30 bg-zinc-950/95 border-b border-border/80 backdrop-blur py-2.5 px-4 -mx-4 sm:-mx-6 flex items-center justify-between gap-3 flex-wrap shadow-md">
+        <div className="flex items-center gap-2 min-w-0">
+          <Link
+            href={`/notes/${notebook.id}/index`}
+            className="px-2.5 py-1 rounded border border-border/80 hover:bg-zinc-800 text-xs font-bold text-foreground no-underline shrink-0"
+          >
+            ← Index
+          </Link>
+          <div className="flex items-center gap-2 truncate">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-accent/20 text-accent border border-accent/30 shrink-0">
+              Ch {activeChapterNum} of {chaptersSummary.length}
+            </span>
+            <span className="text-xs font-bold text-foreground truncate">
+              {activeGroupName}
+            </span>
           </div>
-          <h1 className="cinematic-headline text-[8vw] sm:text-[6vw] md:text-[4vw] leading-[0.85] font-display font-bold tracking-tight mb-1" data-text={title}>
-            {title}
-          </h1>
-          <p className="text-xs text-muted font-mono mt-1">{subTitle}</p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <Link
-            href="/notes"
-            className="px-4 py-2 border border-border hover:bg-zinc-900 text-foreground font-bold text-xs uppercase tracking-widest transition-colors duration-150 rounded-[4px] no-underline"
+        {/* Feature A: Quick Index Drawer Trigger & View Mode Switcher */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowDrawer((s) => !s)}
+            className="px-2.5 py-1 rounded border border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-wider cursor-pointer"
           >
-            ← Notes Library
-          </Link>
+            ≡ Quick Index
+          </button>
 
-          {/* View Mode Toggle */}
-          <div className="flex items-center rounded-[4px] border border-border bg-black/40 p-0.5">
+          <div className="flex items-center rounded border border-border bg-black/40 p-0.5">
             <button
               type="button"
               onClick={() => changeViewMode("slide")}
               className={[
-                "px-3 py-1.5 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer",
-                viewMode === "slide"
-                  ? "bg-accent text-background"
-                  : "text-muted hover:text-foreground",
+                "px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer",
+                viewMode === "slide" ? "bg-accent text-background" : "text-muted hover:text-foreground",
               ].join(" ")}
             >
               🖼 Slide Deck
@@ -163,21 +196,17 @@ export function NotesReaderClient({
               type="button"
               onClick={() => changeViewMode("scroll")}
               className={[
-                "px-3 py-1.5 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer",
-                viewMode === "scroll"
-                  ? "bg-accent text-background"
-                  : "text-muted hover:text-foreground",
+                "px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer",
+                viewMode === "scroll" ? "bg-accent text-background" : "text-muted hover:text-foreground",
               ].join(" ")}
             >
-              📜 Continuous Feed
+              📜 Continuous
             </button>
           </div>
         </div>
       </div>
 
-      <hr className="border-t border-divider my-6" />
-
-      {/* Card Kind Filter Bar (Persisted in LocalStorage) */}
+      {/* Card Kind Filter Bar */}
       <div className="flex items-center gap-3 bg-zinc-950/20 border border-border p-3 rounded-[4px] flex-wrap">
         <span className="text-xs uppercase font-bold tracking-wider text-muted">Card Type Filter:</span>
         <div className="flex items-center gap-2 flex-wrap">
@@ -203,63 +232,63 @@ export function NotesReaderClient({
           })}
         </div>
         <span className="text-xs font-mono text-muted ml-auto">
-          {filteredCards.length} of {cards.length} notes active
+          {filteredItems.length} of {chapterCards.length} notes active
         </span>
       </div>
 
-      {/* Reader Views */}
-      {filteredCards.length === 0 ? (
+      {/* Main Content Area */}
+      {filteredItems.length === 0 ? (
         <div className="border border-dashed border-border p-12 text-center text-sm text-muted rounded-[4px] bg-zinc-950/10">
           No notes match the selected card type filters.
         </div>
       ) : viewMode === "slide" ? (
         /* SLIDE DECK MODE (HORIZONTAL) */
         <div className="space-y-4 max-w-4xl mx-auto">
-          {/* Top Slide Control Bar */}
+          {/* Controls Bar */}
           <div className="flex items-center justify-between text-xs font-mono text-muted bg-zinc-950/40 border border-border p-2.5 rounded-[4px]">
             <button
               type="button"
               disabled={slideIdx === 0}
               onClick={() => setSlideIdx((i) => Math.max(0, i - 1))}
-              className="px-3 py-1.5 rounded border border-border hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed font-bold uppercase tracking-wider"
+              className="px-3 py-1.5 rounded border border-border hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed font-bold uppercase tracking-wider cursor-pointer"
             >
               ← Previous
             </button>
             <span className="font-bold text-accent">
-              Slide {slideIdx + 1} of {filteredCards.length}
+              Slide {slideIdx + 1} of {filteredItems.length}
             </span>
             <button
               type="button"
-              disabled={slideIdx === filteredCards.length - 1}
-              onClick={() => setSlideIdx((i) => Math.min(filteredCards.length - 1, i + 1))}
-              className="px-3 py-1.5 rounded border border-border hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed font-bold uppercase tracking-wider"
+              disabled={slideIdx === filteredItems.length - 1}
+              onClick={() => setSlideIdx((i) => Math.min(filteredItems.length - 1, i + 1))}
+              className="px-3 py-1.5 rounded border border-border hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed font-bold uppercase tracking-wider cursor-pointer"
             >
               Next →
             </button>
           </div>
 
-          {/* Slide Deck Card */}
-          {currentCard && (
+          {/* Current Slide Card */}
+          {currentItem && (
             <NotesSlideCard
-              key={currentCard.id}
-              card={currentCard}
+              key={currentItem.card.id}
+              card={currentItem.card}
               tagById={tagById}
               onToggleBookmark={handleToggleBookmark}
             />
           )}
 
           {/* Bottom Thumbnail Strip Navigator */}
-          {filteredCards.length > 1 && (
+          {filteredItems.length > 1 && (
             <div className="space-y-2 pt-2">
               <div className="text-[10px] uppercase font-bold tracking-wider text-muted">Jump to slide:</div>
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
-                {filteredCards.map((c, i) => {
+                {filteredItems.map((item, i) => {
                   const isSelected = i === slideIdx;
-                  const thumb = c.source?.screenshotUrl ?? c.referenceImages?.[0];
-                  const ts = c.source?.timestamp;
+                  const thumb = item.card.source?.screenshotUrl ?? item.card.referenceImages?.[0];
+                  const ts = item.card.source?.timestamp;
                   return (
                     <button
-                      key={c.id}
+                      key={item.card.id}
                       type="button"
                       onClick={() => setSlideIdx(i)}
                       className={[
@@ -290,14 +319,60 @@ export function NotesReaderClient({
       ) : (
         /* CONTINUOUS FEED MODE (VERTICAL) */
         <div className="space-y-6 max-w-4xl mx-auto">
-          {filteredCards.map((c) => (
+          {filteredItems.map((item) => (
             <NotesSlideCard
-              key={c.id}
-              card={c}
+              key={item.card.id}
+              card={item.card}
               tagById={tagById}
               onToggleBookmark={handleToggleBookmark}
             />
           ))}
+        </div>
+      )}
+
+      {/* Feature A: Quick Index Drawer (Slide-Over) */}
+      {showDrawer && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex justify-end">
+          <div className="w-full max-w-sm bg-zinc-900 border-l border-border h-full p-5 space-y-5 overflow-y-auto animate-in slide-in-from-right duration-200 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div>
+                <h3 className="font-bold text-sm uppercase tracking-wider text-foreground">
+                  Quick Index
+                </h3>
+                <p className="text-[10px] text-muted font-mono">{notebook.name}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDrawer(false)}
+                className="text-xs text-muted hover:text-foreground font-bold"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-[10px] uppercase font-bold tracking-wider text-muted mb-2">Chapters List:</div>
+              {chaptersSummary.map((ch) => (
+                <button
+                  key={ch.groupId}
+                  type="button"
+                  onClick={() => jumpToChapter(ch.startIndex)}
+                  className={[
+                    "w-full text-left p-3 rounded border text-xs transition-colors flex items-center justify-between cursor-pointer",
+                    activeChapterNum === ch.chapterNum
+                      ? "border-accent bg-zinc-800 text-accent font-bold"
+                      : "border-border/60 bg-black/40 hover:bg-zinc-800/50 text-foreground",
+                  ].join(" ")}
+                >
+                  <div className="space-y-0.5 truncate">
+                    <div className="font-bold">Chapter {ch.chapterNum}</div>
+                    <div className="text-muted text-[11px] truncate">{ch.groupName}</div>
+                  </div>
+                  <span className="text-[10px] font-mono text-accent">Jump →</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>
