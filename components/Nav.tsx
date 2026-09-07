@@ -33,6 +33,7 @@ interface NavItem {
 }
 
 const studyItems: NavItem[] = [
+  { href: "/notes", label: "Notes Reader", icon: <BookOpen size={16} /> },
   { href: "/test/setup", label: "Start a Test", icon: <GraduationCap size={16} /> },
   { href: "/subjects", label: "Subjects", icon: <BookOpen size={16} /> },
   { href: "/groups", label: "Groups", icon: <FolderOpen size={16} /> },

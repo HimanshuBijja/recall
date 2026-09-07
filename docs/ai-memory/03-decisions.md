@@ -2,6 +2,13 @@
 
 Significant architectural/technical decisions. Newest first.
 
+## 2026-09-07 — Notes Revision Feature (`/notes`)
+- **Decision 1 — Direct Full-Width Image Presentation:** Unlike quiz/test views where screenshots are hidden behind a toggle, Notes Reader renders YouTube frames directly at full width without hidden frame toggles or card flipping mechanics.
+- **Decision 2 — Chronological Timestamp Sorting:** Cards inside a Notebook are sorted by `source.timestamp` ascending so lecture slides reconstruct the video's chronological flow.
+- **Decision 3 — LocalStorage Filter Persistence:** Card kind filters and view mode (`slide` vs `scroll`) are saved to `localStorage` under `recall_notes_kind_filters` and `recall_notes_view_mode`, automatically restoring user reading preferences across sessions.
+
+Significant architectural/technical decisions. Newest first.
+
 ## 2026-09-07 — YouTube Deep-Link Timestamp Button (`▶ YouTube mm:ss`)
 - **Decision:** Embed deep-linking YouTube timestamp buttons directly inside the `<CardFrame />` component, formatted as `▶ YouTube (mm:ss)`.
 - **Why:** Allows learners to instantly jump to the exact video explanation/timestamp (`&t=Xs`) in a new browser tab without cluttering card layouts or requiring complex video iframe embeds inside test session views.

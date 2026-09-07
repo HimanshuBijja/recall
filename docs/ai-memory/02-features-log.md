@@ -1,5 +1,13 @@
 # 02 — Features Log
 
+## 2026-09-07 — Notes Revision Feature (`/notes`)
+- **Visual Lecture Notebooks Hub (`/notes`):** Displays all MongoDB Subjects and Groups automatically as Study Notebooks with cover thumbnails, slide counts, card counts, category filters, and search.
+- **Sequential Visual Reader (`/notes/[id]`):** Displays lecture screenshots directly at full width without hidden frame toggles, sorted chronologically by video timestamp (`source.timestamp` ascending).
+- **Dual Reading Modes:** Slide Deck Mode (Horizontal with `←` / `→` arrow keys + bottom thumbnail carousel) and Continuous Feed Mode (Vertical stacked scroll).
+- **LocalStorage Filter Persistence:** Interactive Card Kind filter bar (`MCQ`, `Flashcard`, `Cloze`, `T/F`, `Match`, `Multi`) auto-saves and restores filters and view mode in browser `localStorage`.
+- **Files added:** `components/NotesSlideCard.tsx`, `app/notes/page.tsx`, `app/notes/NotesHubClient.tsx`, `app/notes/[id]/page.tsx`, `app/notes/[id]/NotesReaderClient.tsx`.
+- **Files modified:** `components/Nav.tsx`.
+
 ## 2026-09-07 — YouTube Deep-Link Timestamp Button
 - **YouTube Deep-Link Timestamp Button:** Added a `▶ YouTube (mm:ss)` timestamp button to `<CardFrame />` for video-captured flashcards.
 - **Direct Jump to Video Timestamp:** Clicking the button opens YouTube in a new tab directly at the exact timestamp (`&t=Xs`) parsed from `card.source.timestamp`.
