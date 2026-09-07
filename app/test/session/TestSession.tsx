@@ -638,7 +638,11 @@ export function TestSession({ cards, tags }: { cards: Card[]; tags: Tag[] }) {
           </div>
         )}
 
-        <CardFrame url={current.card.source?.screenshotUrl} urls={current.card.referenceImages} />
+        <CardFrame
+          url={current.card.source?.screenshotUrl}
+          urls={current.card.referenceImages}
+          source={current.card.source}
+        />
 
         {isFlash ? (
           <div

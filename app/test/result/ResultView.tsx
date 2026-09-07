@@ -229,7 +229,11 @@ export function ResultView() {
                       <Markdown text={card.explanation} />
                     </div>
                   )}
-                  <CardFrame url={card.source?.screenshotUrl} urls={card.referenceImages} />
+                  <CardFrame
+                    url={card.source?.screenshotUrl}
+                    urls={card.referenceImages}
+                    source={card.source}
+                  />
                   <div className="flex flex-wrap gap-1 pt-1">
                     {card.tags.slice(0, 4).map((tid) => (
                       <span

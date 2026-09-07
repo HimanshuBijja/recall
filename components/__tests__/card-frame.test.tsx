@@ -16,3 +16,21 @@ test("image is absent until the button is pressed", () => {
   fireEvent.click(screen.getByRole("button", { name: /hide frame/i }));
   expect(screen.queryByRole("img")).toBeNull();
 });
+
+test("renders YouTube deep-link button with formatted timestamp when video source is provided", () => {
+  render(
+    <CardFrame
+      source={{
+        type: "video",
+        videoId: "8dUh3oOhtqs",
+        url: "https://www.youtube.com/watch?v=8dUh3oOhtqs",
+        timestamp: 145,
+      }}
+    />
+  );
+  const link = screen.getByRole("link", { name: /youtube \(2:25\)/i }) as HTMLAnchorElement;
+  expect(link).not.toBeNull();
+  expect(link.getAttribute("href")).toBe("https://www.youtube.com/watch?v=8dUh3oOhtqs&t=145s");
+  expect(link.getAttribute("target")).toBe("_blank");
+});
+
