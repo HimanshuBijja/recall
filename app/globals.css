@@ -105,7 +105,7 @@ body {
 }
 
 input, textarea, select {
-  background-color: transparent !important;
+  background-color: #121111 !important;
   border: 1px solid #4A4441 !important;
   color: #EBDCC4 !important;
   border-radius: 4px !important;
@@ -119,11 +119,9 @@ li:hover, tr:hover, .hover\:bg-zinc-100:hover, .dark\:hover\:bg-zinc-800:hover {
 }
 
 .cinematic-editor-panel {
-  background-color: rgba(24, 24, 24, 0.3) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(74, 68, 65, 0.4) !important;
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6) !important;
+  background-color: #181818 !important;
+  border: 1px solid #4A4441 !important;
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.8) !important;
   border-radius: 4px !important;
   padding: 24px !important;
 }
