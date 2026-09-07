@@ -1,5 +1,12 @@
 # 02 — Features Log
 
+## 2026-09-07 — YouTube Deep-Link Timestamp Button
+- **YouTube Deep-Link Timestamp Button:** Added a `▶ YouTube (mm:ss)` timestamp button to `<CardFrame />` for video-captured flashcards.
+- **Direct Jump to Video Timestamp:** Clicking the button opens YouTube in a new tab directly at the exact timestamp (`&t=Xs`) parsed from `card.source.timestamp`.
+- **Integrated Across Views:** Supported in Test Sessions (`TestSession.tsx`), Result Views (`ResultView.tsx`), and Cards Archive Browser (`CardsBrowser.tsx`). Uses `e.stopPropagation()` to avoid unwanted card flipping or option selections.
+- **Timestamp Formatting:** Includes utility converting raw seconds into formatted `mm:ss` or `h:mm:ss` timestamps inside the button label.
+- **Files modified:** [CardFrame.tsx](file:///d:/code/personal_projects/recall/components/CardFrame.tsx), [TestSession.tsx](file:///d:/code/personal_projects/recall/app/test/session/TestSession.tsx), [ResultView.tsx](file:///d:/code/personal_projects/recall/app/test/result/ResultView.tsx), [CardsBrowser.tsx](file:///d:/code/personal_projects/recall/app/cards/CardsBrowser.tsx), [card-frame.test.tsx](file:///d:/code/personal_projects/recall/components/__tests__/card-frame.test.tsx).
+
 ## 2026-08-22 — Submit Test Session Early
 - **Submit Test Session Early:** Added a "Submit Early" button at the top right of the test session status bar. It becomes active as soon as at least one card is answered. Clicking it submits only the answered questions to the database and takes the user to the results dashboard.
 - **Files modified:** [TestSession.tsx](file:///d:/code/personal_projects/recall/app/test/session/TestSession.tsx).

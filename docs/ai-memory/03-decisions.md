@@ -2,6 +2,11 @@
 
 Significant architectural/technical decisions. Newest first.
 
+## 2026-09-07 — YouTube Deep-Link Timestamp Button (`▶ YouTube mm:ss`)
+- **Decision:** Embed deep-linking YouTube timestamp buttons directly inside the `<CardFrame />` component, formatted as `▶ YouTube (mm:ss)`.
+- **Why:** Allows learners to instantly jump to the exact video explanation/timestamp (`&t=Xs`) in a new browser tab without cluttering card layouts or requiring complex video iframe embeds inside test session views.
+- **How:** Extended `<CardFrame />` props to accept `source?: CardSource`. When `isVideoSource(source)` is true, builds `https://www.youtube.com/watch?v={videoId}&t={Math.floor(timestamp)}s` with formatted timestamp text (`formatTimestamp`). Uses `e.stopPropagation()` so clicking the button doesn't trigger card flips or option selections.
+
 ## 2026-08-22 — Unified card edit layout & auto-resizing textareas
 - **Decision 1 — Unified MCQ/Multi option editor:** Aligned the web app's `CardForm` layout for MCQ and Multi card types with the browser extension UI. The form now renders a single list of options with toggleable checkmarks instead of separate input lists for correct answers and distractors. This unifies option rendering and enables flexible numbers of distractors.
 - **Decision 2 — Custom `AutoResizeTextarea` component:** Introduced a custom React forward-ref component that adjusts its `style.height` dynamically to its `scrollHeight + 4px` on input, value changes, and window resizing. This was applied to `question`, `clozeText`, `answer` (flashcard back), `hint`, `explanation`, and all MCQ/Multi options, resolving the issue where long text inside these fields was hidden behind scrollbars.
