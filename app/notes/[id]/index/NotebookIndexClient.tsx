@@ -284,14 +284,6 @@ export function NotebookIndexClient({
           >
             + Add Chapter Group
           </button>
-          <button
-            type="button"
-            onClick={launchTest}
-            disabled={totalNotebookCards === 0}
-            className="px-3 py-1.5 border border-border hover:border-accent text-foreground text-xs font-bold uppercase tracking-wider rounded disabled:opacity-40"
-          >
-            ▶ Quiz Notebook
-          </button>
         </div>
       </div>
 

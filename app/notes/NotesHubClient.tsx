@@ -206,50 +206,30 @@ export function NotesHubClient({
           {filteredNotebooks.map((n) => (
             <li
               key={n.id}
-              className="rounded-xl border border-border bg-zinc-950/30 hover:border-zinc-700 transition-colors p-4 flex flex-col justify-between gap-4 group"
+              className="rounded-xl border border-border bg-zinc-950/30 hover:border-zinc-700 transition-colors p-5 flex flex-col justify-between gap-4 group"
             >
-              {/* Cover Image Preview */}
-              {n.coverImage ? (
-                <div className="rounded-lg border border-border overflow-hidden bg-black/50 aspect-video relative">
-                  <img
-                    src={n.coverImage}
-                    loading="lazy"
-                    alt={n.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute bottom-2 right-2 bg-black/80 text-accent text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-accent/30">
-                    🖼 {n.totalImages} slide{n.totalImages === 1 ? "" : "s"}
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-lg border border-border/50 bg-black/30 aspect-video flex flex-col items-center justify-center text-zinc-600 space-y-1">
-                  <span className="text-2xl">📖</span>
-                  <span className="text-[10px] font-mono">{n.totalCards} cards</span>
-                </div>
-              )}
-
               {/* Title & Info */}
-              <div className="space-y-1.5 min-w-0">
+              <div className="space-y-2 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-muted uppercase font-bold">
-                    {n.groupIds.length} Chapter{n.groupIds.length === 1 ? "" : "s"}
+                  <span className="text-[10px] font-mono text-accent uppercase font-bold tracking-wider">
+                    {n.groupIds.length} Chapter{n.groupIds.length === 1 ? "" : "s"} · {n.totalImages} Slide{n.totalImages === 1 ? "" : "s"}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleDeleteNotebook(n.id, n.name)}
-                    className="text-xs text-rose-500 hover:text-rose-400 font-bold uppercase"
+                    className="text-xs text-rose-500 hover:text-rose-400 font-bold uppercase p-1"
                     title="Delete notebook"
                   >
                     ✕
                   </button>
                 </div>
 
-                <h3 className="font-bold text-base text-foreground group-hover:text-accent transition-colors truncate">
+                <h3 className="font-bold text-lg text-foreground group-hover:text-accent transition-colors truncate">
                   {n.name}
                 </h3>
 
                 {n.description && (
-                  <p className="text-xs text-muted line-clamp-2">{n.description}</p>
+                  <p className="text-xs text-muted line-clamp-2 font-mono">{n.description}</p>
                 )}
 
                 <p className="text-xs text-muted font-mono pt-1">
@@ -258,29 +238,20 @@ export function NotesHubClient({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 pt-2 border-t border-border/30 flex-wrap">
+              <div className="flex items-center gap-2 pt-3 border-t border-border/30">
                 <Link
                   href={`/notes/${n.id}`}
-                  className="flex-1 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest text-center transition-colors rounded-[4px] no-underline"
+                  className="flex-1 px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest text-center transition-colors rounded-[4px] no-underline"
                 >
                   📖 Read Notes
                 </Link>
                 <Link
                   href={`/notes/${n.id}/index`}
-                  className="px-3 py-2 border border-border hover:border-accent text-foreground font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] no-underline"
+                  className="px-3.5 py-2.5 border border-border hover:border-accent text-foreground font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] no-underline"
                   title="View and re-arrange chapters"
                 >
                   📑 Index
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => launchTest(n.groupIds)}
-                  disabled={n.totalCards === 0}
-                  className="px-3 py-2 border border-border hover:border-accent text-foreground font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  title="Practice quiz"
-                >
-                  ▶ Quiz
-                </button>
               </div>
             </li>
           ))}
