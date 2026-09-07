@@ -223,7 +223,8 @@ export function NotebookIndexClient({
   }, [unassignedGroups, chapterSearch]);
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <>
+      <div className="index-ui print:hidden space-y-6 max-w-4xl mx-auto">
       {/* Top Bar Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
@@ -435,6 +436,7 @@ export function NotebookIndexClient({
         availableKinds={availableKinds}
         matchingCount={totalMatchingScreenshots}
       />
+      </div>
 
       {/* Off-screen Printable Document Container (Only visible during window.print()) */}
       <div id="pdf-print-container" className="hidden print:block text-black bg-white p-8">
@@ -471,14 +473,14 @@ export function NotebookIndexClient({
         <div className="space-y-12">
           {printableChapters.map((ch) => (
             <section key={ch.group.id} className="pdf-chapter-section space-y-6 pdf-page-break">
-              {/* Semantic H2 for Chrome & Edge PDF Sidebar Outline Bookmarks */}
+              {/* Semantic H1/H2 Heading for Chrome & Edge PDF Sidebar Outline Bookmarks */}
               <div className="border-b-2 border-black pb-2 pt-4">
-                <h2
+                <h1
                   id={`pdf-ch-${ch.chapterNum}`}
                   className="pdf-chapter-header text-xl font-bold uppercase tracking-wide text-black"
                 >
                   Chapter {ch.chapterNum}: {ch.group.name}
-                </h2>
+                </h1>
                 {ch.group.videoUrl && (
                   <p className="text-xs text-gray-500 font-mono mt-0.5">Video: {ch.group.videoUrl}</p>
                 )}
@@ -506,32 +508,37 @@ export function NotebookIndexClient({
                   return (
                     <div
                       key={c.id}
-                      className="pdf-slide-card border border-gray-200 rounded-lg p-2 bg-white pdf-no-split flex flex-col items-center justify-center relative overflow-hidden"
+                      className="pdf-slide-card bg-white pdf-no-split flex flex-col items-center justify-center relative overflow-hidden w-full"
                     >
-                      {/* High-res Screenshot Image */}
+                      {/* Searchable Text Layer Positioned DIRECTLY BEHIND Image for Ctrl+F Search */}
+                      <div
+                        className="pdf-searchable-text"
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          zIndex: 1,
+                          color: "#ffffff",
+                          backgroundColor: "#ffffff",
+                          fontSize: "12px",
+                          lineHeight: "1.4",
+                          overflow: "hidden",
+                          wordBreak: "break-word",
+                          userSelect: "text",
+                        }}
+                      >
+                        Chapter {ch.chapterNum}: {ch.group.name}. Slide {cIdx + 1}. {c.question} {c.answer} {c.explanation} {c.tags?.join(" ")} {c.kind} {timeLabel ? `Timestamp ${timeLabel}` : ""}
+                      </div>
+
+                      {/* High-res Screenshot Image layered cleanly ON TOP (z-index: 10, borderless) */}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={imgUrl}
                         alt={c.question || `Slide ${ch.chapterNum}.${cIdx + 1}`}
-                        className="w-full h-auto max-h-[750px] object-contain rounded"
+                        className="relative z-10 w-full h-auto max-h-[850px] object-contain"
                       />
-
-                      {/* Invisible Searchable Layer for Ctrl+F Search in Chrome/Edge */}
-                      <div
-                        className="pdf-invisible-text"
-                        style={{
-                          position: "absolute",
-                          width: "1px",
-                          height: "1px",
-                          opacity: 0.001,
-                          color: "transparent",
-                          overflow: "hidden",
-                          clip: "rect(0,0,0,0)",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        Chapter {ch.chapterNum} {ch.group.name} Slide {cIdx + 1} {c.question} {c.answer} {c.explanation} {c.tags?.join(" ")} {c.kind} {timeLabel ? `Timestamp ${timeLabel}` : ""}
-                      </div>
                     </div>
                   );
                 })}
@@ -543,20 +550,16 @@ export function NotebookIndexClient({
         {/* Global CSS for Browser Print Engine */}
         <style jsx global>{`
           @media print {
-            body * {
-              visibility: hidden;
-            }
-            #pdf-print-container,
-            #pdf-print-container * {
-              visibility: visible;
-            }
-            #pdf-print-container {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
+            body {
               background: white !important;
               color: black !important;
+            }
+            .index-ui {
+              display: none !important;
+            }
+            #pdf-print-container {
+              display: block !important;
+              width: 100% !important;
             }
             .pdf-page-break {
               page-break-before: always;
@@ -569,6 +572,6 @@ export function NotebookIndexClient({
           }
         `}</style>
       </div>
-    </div>
+    </>
   );
 }
