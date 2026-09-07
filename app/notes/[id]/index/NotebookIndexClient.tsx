@@ -158,6 +158,311 @@ export function NotebookIndexClient({
     setShowAddGroupModal(false);
   }
 
+  // Export Notebook to Standalone Interactive HTML File
+  function handleExportHtml() {
+    const exportedDateStr = new Date().toLocaleDateString();
+
+    const chaptersHtml = chapters.map((ch) => {
+      const gCards = resolveGroupCards(ch.group, cards, tags).sort((a, b) => {
+        const timeA = a.source?.timestamp ?? Number.MAX_SAFE_INTEGER;
+        const timeB = b.source?.timestamp ?? Number.MAX_SAFE_INTEGER;
+        return timeA - timeB;
+      });
+
+      const cardsHtml = gCards.map((c, cIdx) => {
+        const cardImages: string[] = [];
+        if (c.source?.screenshotUrl) cardImages.push(c.source.screenshotUrl);
+        if (c.referenceImages) {
+          c.referenceImages.forEach((refUrl) => {
+            if (refUrl && !cardImages.includes(refUrl)) cardImages.push(refUrl);
+          });
+        }
+
+        const sec = typeof c.source?.timestamp === "number" ? Math.floor(c.source.timestamp) : null;
+        const mm = sec !== null ? Math.floor(sec / 60) : null;
+        const ss = sec !== null ? String(sec % 60).padStart(2, "0") : null;
+        const timeStr = mm !== null && ss !== null ? `${mm}:${ss}` : "";
+
+        const searchableText = [
+          ch.group.name,
+          c.question,
+          c.answer,
+          c.explanation,
+          c.tags?.join(" "),
+          c.kind,
+          timeStr,
+        ].filter(Boolean).join(" ").toLowerCase();
+
+        return cardImages.map((imgUrl, imgIdx) => `
+          <div className="slide-card card-item" data-text="${searchableText.replace(/"/g, '&quot;')}">
+            <div className="card-meta">
+              <span className="badge">${(c.kind || "flash").toUpperCase()}</span>
+              <span>Chapter ${ch.chapterNum} · Slide ${cIdx + 1}${imgIdx > 0 ? ` (Extra ${imgIdx})` : ""}</span>
+            </div>
+            <img src="${imgUrl}" className="slide-img" alt="Slide ${ch.chapterNum}.${cIdx + 1}" loading="lazy" />
+            ${c.question ? `<h3 className="question">${c.question}</h3>` : ""}
+            ${c.answer ? `<div className="notes-box"><strong>Notes:</strong> ${c.answer}</div>` : ""}
+            ${c.explanation ? `<div className="notes-box"><strong>Explanation:</strong> ${c.explanation}</div>` : ""}
+            ${c.source?.videoId && sec !== null ? `
+              <div>
+                <a href="https://www.youtube.com/watch?v=${c.source.videoId}&t=${sec}s" target="_blank" className="yt-btn">▶ Watch on YouTube (${timeStr})</a>
+              </div>
+            ` : ""}
+          </div>
+        `).join("");
+      }).join("");
+
+      return `
+        <section className="chapter-sec" id="ch-${ch.chapterNum}">
+          <h2 className="chapter-head">Chapter ${ch.chapterNum}: ${ch.group.name}</h2>
+          <div className="cards-grid">
+            ${cardsHtml}
+          </div>
+        </section>
+      `;
+    }).join("");
+
+    const tocHtml = chapters.map((ch) => `
+      <li className="toc-item">
+        <a href="#ch-${ch.chapterNum}">Chapter ${ch.chapterNum}: ${ch.group.name}</a>
+        <span style="font-family: monospace; font-size: 0.8rem; color: #B6A596;">${ch.cardsCount} notes</span>
+      </li>
+    `).join("");
+
+    const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${notebook.name} — Interactive Notebook</title>
+  <style>
+    :root {
+      --bg: #181818;
+      --fg: #EBDCC4;
+      --accent: #DC9F85;
+      --muted: #B6A596;
+      --border: #4A4441;
+      --card-bg: #1C1513;
+    }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 24px;
+    }
+    .header {
+      max-width: 900px;
+      margin: 0 auto 24px;
+    }
+    .title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--fg);
+      margin: 0 0 6px;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+    }
+    .desc {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin: 0 0 12px;
+    }
+    .stats {
+      font-size: 0.8rem;
+      color: var(--accent);
+      font-family: monospace;
+      margin-bottom: 20px;
+    }
+    .search-box {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #121111;
+      color: var(--fg);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      outline: none;
+    }
+    .search-box:focus {
+      border-color: var(--accent);
+    }
+    .toc-box {
+      background: #121111;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 36px;
+    }
+    .toc-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .toc-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .toc-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dotted var(--border);
+    }
+    .toc-item a {
+      color: var(--fg);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .toc-item a:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+    .chapter-sec {
+      margin-bottom: 48px;
+    }
+    .chapter-head {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--fg);
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 8px;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    .slide-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .slide-img {
+      width: 100%;
+      height: auto;
+      max-height: 800px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: #000;
+    }
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      font-family: monospace;
+      color: var(--muted);
+    }
+    .badge {
+      background: rgba(220, 159, 133, 0.15);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(220, 159, 133, 0.3);
+      font-weight: 700;
+    }
+    .question {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--fg);
+      margin: 4px 0 0;
+    }
+    .notes-box {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .yt-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #3f0f0f;
+      color: #ff8080;
+      border: 1px solid #7f1d1d;
+      padding: 6px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: 4px;
+      transition: background 0.2s;
+    }
+    .yt-btn:hover {
+      background: #5f1515;
+    }
+    @media print {
+      body { background: white !important; color: black !important; padding: 0; }
+      .search-box, .yt-btn { display: none !important; }
+      .slide-card { border: none !important; background: white !important; page-break-inside: avoid; }
+      .chapter-sec { page-break-before: always; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 class="title">${notebook.name}</h1>
+    ${notebook.description ? `<p class="desc">${notebook.description}</p>` : ""}
+    <div class="stats">Notebook Study Deck · ${chapters.length} Chapters · Exported on ${exportedDateStr}</div>
+    
+    <input type="text" id="search-input" class="search-box" placeholder="🔍 Search notes, timestamps, tags, concepts..." oninput="filterSlides()">
+
+    <div class="toc-box">
+      <div class="toc-title">Table of Contents</div>
+      <ul class="toc-list">
+        ${tocHtml}
+      </ul>
+    </div>
+
+    ${chaptersHtml}
+  </div>
+
+  <script>
+    function filterSlides() {
+      const q = document.getElementById('search-input').value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.card-item');
+      cards.forEach(card => {
+        const text = card.getAttribute('data-text') || '';
+        if (!q || text.includes(q)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>`;
+
+    const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${notebook.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_notes.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast("success", "Exported notebook as Standalone HTML file");
+  }
+
   // Feature E: Export Notebook to Markdown File
   function handleExportNotebook() {
     let md = `# Notebook: ${notebook.name}\n\n`;
@@ -276,6 +581,14 @@ export function NotebookIndexClient({
             title="Export full notebook to Markdown summary"
           >
             📥 Export (.MD)
+          </button>
+          <button
+            type="button"
+            onClick={handleExportHtml}
+            className="px-3.5 py-2 border border-sky-500/40 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] cursor-pointer flex items-center gap-1.5"
+            title="Export standalone interactive HTML slide deck with live search"
+          >
+            <span>🌐</span> Export (.HTML)
           </button>
         </div>
       </div>
