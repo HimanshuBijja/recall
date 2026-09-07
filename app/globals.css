@@ -126,6 +126,29 @@ li:hover, tr:hover, .hover\:bg-zinc-100:hover, .dark\:hover\:bg-zinc-800:hover {
   padding: 24px !important;
 }
 
+/* --- Print Engine Rules --- */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .index-ui, header, nav, button {
+    display: none !important;
+  }
+  #pdf-print-container {
+    display: block !important;
+    width: 100% !important;
+  }
+  .pdf-page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+  .pdf-no-split {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+
 /* --- Markdown Rendering Styles --- */
 .prose-markdown p {
   margin-bottom: 0.75rem;

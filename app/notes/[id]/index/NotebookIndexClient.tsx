@@ -546,31 +546,6 @@ export function NotebookIndexClient({
             </section>
           ))}
         </div>
-
-        {/* Global CSS for Browser Print Engine */}
-        <style jsx global>{`
-          @media print {
-            body {
-              background: white !important;
-              color: black !important;
-            }
-            .index-ui {
-              display: none !important;
-            }
-            #pdf-print-container {
-              display: block !important;
-              width: 100% !important;
-            }
-            .pdf-page-break {
-              page-break-before: always;
-              break-before: page;
-            }
-            .pdf-no-split {
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-          }
-        `}</style>
       </div>
     </>
   );

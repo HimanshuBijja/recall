@@ -53,8 +53,8 @@ export default function NotesPdfPrintModal({
     setSelectedKinds(ALL_KINDS);
   };
 
-  const handleSelectFlashAndCloze = () => {
-    setSelectedKinds(["flash", "cloze"]);
+  const handleSelectFlash = () => {
+    setSelectedKinds(["flash"]);
   };
 
   const handleClearAll = () => {
@@ -106,10 +106,10 @@ export default function NotesPdfPrintModal({
               <span className="text-[#3D3735]">|</span>
               <button
                 type="button"
-                onClick={handleSelectFlashAndCloze}
+                onClick={handleSelectFlash}
                 className="text-[#DC9F85] hover:underline"
               >
-                Flash & Cloze
+                Flashcards Only
               </button>
               <span className="text-[#3D3735]">|</span>
               <button
