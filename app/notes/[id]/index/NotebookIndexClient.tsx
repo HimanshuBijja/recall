@@ -3,11 +3,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Card, Group, Tag } from "@/types";
+import type { Card, CardKind, Group, Tag } from "@/types";
 import type { NoteBook } from "@/types/notes";
 import { resolveGroupCards } from "@/lib/due";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
+import NotesPdfPrintModal, { PdfPrintOptions } from "@/components/NotesPdfPrintModal";
 
 interface Props {
   initialNotebook: NoteBook;
@@ -27,6 +28,11 @@ export function NotebookIndexClient({
   const [notebook, setNotebook] = useState<NoteBook>(initialNotebook);
   const [saving, setSaving] = useState(false);
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [pdfOptions, setPdfOptions] = useState<PdfPrintOptions>({
+    selectedKinds: ["mcq", "multi", "tf-sort", "flash", "cloze", "match"],
+    slidesPerPage: 1,
+  });
 
   const groupMap = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
 
@@ -46,9 +52,61 @@ export function NotebookIndexClient({
         group: g,
         cardsCount: gCards.length,
         imgCount,
+        cards: gCards,
       };
-    }).filter(Boolean) as { chapterNum: number; group: Group; cardsCount: number; imgCount: number }[];
+    }).filter(Boolean) as { chapterNum: number; group: Group; cardsCount: number; imgCount: number; cards: Card[] }[];
   }, [notebook.groupIds, groupMap, cards, tags]);
+
+  // Available card kinds among notebook cards with screenshots
+  const availableKinds = useMemo(() => {
+    const kinds = new Set<CardKind>();
+    for (const ch of chapters) {
+      for (const c of ch.cards) {
+        if (c.source?.screenshotUrl || (c.referenceImages && c.referenceImages.length > 0)) {
+          kinds.add(c.kind || "mcq");
+        }
+      }
+    }
+    return Array.from(kinds);
+  }, [chapters]);
+
+  // Filtered chapters & cards for PDF print output
+  const printableChapters = useMemo(() => {
+    return chapters.map((ch) => {
+      const matchingCards = ch.cards
+        .filter((c) => pdfOptions.selectedKinds.includes(c.kind || "mcq"))
+        .filter((c) => Boolean(c.source?.screenshotUrl || (c.referenceImages && c.referenceImages.length > 0)))
+        .sort((a, b) => {
+          const timeA = a.source?.timestamp ?? Number.MAX_SAFE_INTEGER;
+          const timeB = b.source?.timestamp ?? Number.MAX_SAFE_INTEGER;
+          return timeA - timeB;
+        });
+
+      return {
+        ...ch,
+        cards: matchingCards,
+      };
+    }).filter((ch) => ch.cards.length > 0);
+  }, [chapters, pdfOptions.selectedKinds]);
+
+  const totalMatchingScreenshots = useMemo(() => {
+    return printableChapters.reduce((sum, ch) => {
+      let cnt = 0;
+      for (const c of ch.cards) {
+        if (c.source?.screenshotUrl) cnt++;
+        if (c.referenceImages) cnt += c.referenceImages.length;
+      }
+      return sum + cnt;
+    }, 0);
+  }, [printableChapters]);
+
+  const handleExecutePrint = (options: PdfPrintOptions) => {
+    setPdfOptions(options);
+    setShowPdfModal(false);
+    setTimeout(() => {
+      window.print();
+    }, 250);
+  };
 
   // Total cards in notebook
   const totalNotebookCards = useMemo(() => {
@@ -184,6 +242,14 @@ export function NotebookIndexClient({
           >
             📖 Read Notes →
           </Link>
+          <button
+            type="button"
+            onClick={() => setShowPdfModal(true)}
+            className="px-3.5 py-2 border border-red-500/40 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] cursor-pointer flex items-center gap-1.5"
+            title="Print high-res PDF with screenshots only, Chrome/Edge outlines, and invisible Ctrl+F search"
+          >
+            <span>🖨️</span> Print PDF
+          </button>
           <button
             type="button"
             onClick={handleExportNotebook}
@@ -343,6 +409,149 @@ export function NotebookIndexClient({
           </div>
         </div>
       )}
+
+      {/* PDF Export Options Modal */}
+      <NotesPdfPrintModal
+        isOpen={showPdfModal}
+        onClose={() => setShowPdfModal(false)}
+        onPrint={handleExecutePrint}
+        availableKinds={availableKinds}
+        matchingCount={totalMatchingScreenshots}
+      />
+
+      {/* Off-screen Printable Document Container (Only visible during window.print()) */}
+      <div id="pdf-print-container" className="hidden print:block text-black bg-white p-8">
+        {/* Page 1: Table of Contents & Notebook Summary */}
+        <div className="pdf-page-toc space-y-6 pb-8 border-b-2 border-black mb-8">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-extrabold tracking-tight text-black">{notebook.name}</h1>
+            {notebook.description && <p className="text-sm text-gray-700 font-serif italic">{notebook.description}</p>}
+            <p className="text-xs text-gray-500 font-mono pt-1">
+              Notebook Study Deck · {printableChapters.length} Chapters · {totalMatchingScreenshots} Slides · Exported on {new Date().toLocaleDateString()}
+            </p>
+          </div>
+
+          <div className="bg-gray-50 border border-gray-300 rounded-lg p-6 space-y-4">
+            <h2 className="text-lg font-bold uppercase tracking-wider text-black border-b border-gray-300 pb-2">
+              Table of Contents
+            </h2>
+            <ol className="space-y-2 font-serif text-sm">
+              {printableChapters.map((ch) => (
+                <li key={ch.group.id} className="flex items-baseline justify-between border-b border-dotted border-gray-300 pb-1">
+                  <a href={`#pdf-ch-${ch.chapterNum}`} className="font-bold text-black no-underline hover:underline">
+                    Chapter {ch.chapterNum}: {ch.group.name}
+                  </a>
+                  <span className="text-xs font-mono text-gray-600">
+                    {ch.cards.length} slide{ch.cards.length === 1 ? "" : "s"}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+
+        {/* Chapter Slides */}
+        <div className="space-y-12">
+          {printableChapters.map((ch) => (
+            <section key={ch.group.id} className="pdf-chapter-section space-y-6 pdf-page-break">
+              {/* Semantic H2 for Chrome & Edge PDF Sidebar Outline Bookmarks */}
+              <div className="border-b-2 border-black pb-2 pt-4">
+                <h2
+                  id={`pdf-ch-${ch.chapterNum}`}
+                  className="pdf-chapter-header text-xl font-bold uppercase tracking-wide text-black"
+                >
+                  Chapter {ch.chapterNum}: {ch.group.name}
+                </h2>
+                {ch.group.videoUrl && (
+                  <p className="text-xs text-gray-500 font-mono mt-0.5">Video: {ch.group.videoUrl}</p>
+                )}
+              </div>
+
+              {/* Grid of Screenshots based on slidesPerPage */}
+              <div
+                className={`grid gap-6 ${
+                  pdfOptions.slidesPerPage === 1
+                    ? "grid-cols-1"
+                    : pdfOptions.slidesPerPage === 2
+                    ? "grid-cols-1 gap-8"
+                    : "grid-cols-2 gap-6"
+                }`}
+              >
+                {ch.cards.map((c, cIdx) => {
+                  const imgUrl = c.source?.screenshotUrl ?? (c.referenceImages && c.referenceImages[0]);
+                  if (!imgUrl) return null;
+
+                  const sec = typeof c.source?.timestamp === "number" ? Math.floor(c.source.timestamp) : null;
+                  const mm = sec !== null ? Math.floor(sec / 60) : null;
+                  const ss = sec !== null ? String(sec % 60).padStart(2, "0") : null;
+                  const timeLabel = mm !== null && ss !== null ? `${mm}:${ss}` : null;
+
+                  return (
+                    <div
+                      key={c.id}
+                      className="pdf-slide-card border border-gray-200 rounded-lg p-2 bg-white pdf-no-split flex flex-col items-center justify-center relative overflow-hidden"
+                    >
+                      {/* High-res Screenshot Image */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imgUrl}
+                        alt={c.question || `Slide ${ch.chapterNum}.${cIdx + 1}`}
+                        className="w-full h-auto max-h-[750px] object-contain rounded"
+                      />
+
+                      {/* Invisible Searchable Layer for Ctrl+F Search in Chrome/Edge */}
+                      <div
+                        className="pdf-invisible-text"
+                        style={{
+                          position: "absolute",
+                          width: "1px",
+                          height: "1px",
+                          opacity: 0.001,
+                          color: "transparent",
+                          overflow: "hidden",
+                          clip: "rect(0,0,0,0)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Chapter {ch.chapterNum} {ch.group.name} Slide {cIdx + 1} {c.question} {c.answer} {c.explanation} {c.tags?.join(" ")} {c.kind} {timeLabel ? `Timestamp ${timeLabel}` : ""}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+
+        {/* Global CSS for Browser Print Engine */}
+        <style jsx global>{`
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            #pdf-print-container,
+            #pdf-print-container * {
+              visibility: visible;
+            }
+            #pdf-print-container {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+              background: white !important;
+              color: black !important;
+            }
+            .pdf-page-break {
+              page-break-before: always;
+              break-before: page;
+            }
+            .pdf-no-split {
+              page-break-inside: avoid;
+              break-inside: avoid;
+            }
+          }
+        `}</style>
+      </div>
     </div>
   );
 }

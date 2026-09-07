@@ -173,6 +173,14 @@ export function NotesReaderClient({
 
         {/* Feature A: Quick Index Drawer Trigger & View Mode Switcher */}
         <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href={`/notes/${notebook.id}/index`}
+            className="px-2.5 py-1 rounded border border-red-500/40 bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs font-bold uppercase tracking-wider no-underline flex items-center gap-1"
+            title="Configure Print PDF options and chapter order on Index page"
+          >
+            <span>🖨️</span> Print PDF
+          </Link>
+
           <button
             type="button"
             onClick={() => setShowDrawer((s) => !s)}

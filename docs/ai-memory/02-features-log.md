@@ -330,12 +330,20 @@ Provide a dedicated revision environment (`/notes`) for studying lecture screens
    - Persistent filter bar saved in `localStorage` (`recall_notes_kind_filters`, `recall_notes_view_mode`).
    - Deep-link timestamp button (`▶ YouTube mm:ss`) opening original YouTube videos at exact capture timestamps.
 
+4. **Pure Screenshot PDF Export Engine (`/notes/[id]/index` & `/notes/[id]`)**:
+   - `🖨️ Print PDF` options modal with card kind checkboxes, quick preset shortcuts (`Select All`, `Flashcards & Cloze Only`), and slides-per-page options (1, 2, 4 per page).
+   - High-resolution `window.print()` engine printing pure slide images with zero text clutter.
+   - **Page 1 Table of Contents** with hyperlinked chapter jump links.
+   - **Semantic `<h2>` Chapter Headers** for native Chrome & Edge left sidebar outline bookmarks.
+   - **Invisible Search Text Layer** (`opacity: 0.001`, `color: transparent`) rendering card questions, notes, timestamps (`04:15`), and tags so `Ctrl + F` keyword searching in Chrome/Edge highlights and jumps to target slides.
+
 **Modified / Added Files**
+- `components/NotesPdfPrintModal.tsx` — PDF Export modal component with filter presets & layout options.
 - `types/notes.ts` — `NoteBook` interface.
 - `app/api/notes/route.ts` & `app/api/notes/[id]/route.ts` — API endpoints for notebook CRUD operations.
 - `app/notes/page.tsx` & `NotesHubClient.tsx` — Main Notes library & creation modal.
-- `app/notes/[id]/index/page.tsx` & `NotebookIndexClient.tsx` — Index table of contents & export tools.
-- `app/notes/[id]/page.tsx` & `NotesReaderClient.tsx` — Visual slide deck reader & quick index drawer.
+- `app/notes/[id]/index/page.tsx` & `NotebookIndexClient.tsx` — Index table of contents, chapter re-ordering, MD export, & PDF print engine.
+- `app/notes/[id]/page.tsx` & `NotesReaderClient.tsx` — Visual slide deck reader, quick index drawer, & PDF print action shortcut.
 - `components/NotesSlideCard.tsx` — Direct full-width screenshot card display component.
 - `components/Nav.tsx` — Added **Notes Reader** link to primary navigation.
 
