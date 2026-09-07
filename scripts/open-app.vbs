@@ -9,9 +9,19 @@ Set WshShell = CreateObject("WScript.Shell")
 If Err.Number <> 0 Then
     ' Next.js server is not running, start it silently
     WshShell.Run "cmd.exe /c ""d: && cd d:\code\personal_projects\recall && npm run app:start""", 0, False
-    ' Wait 4 seconds for Next.js to start up and bind to port 3101
-    WScript.Sleep 4000
+    ' Poll server for up to 10 seconds until listening
+    Dim i
+    For i = 1 To 20
+        WScript.Sleep 500
+        Err.Clear
+        Set xmlHttp = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+        xmlHttp.open "GET", "http://localhost:3101/api/settings", False
+        xmlHttp.setTimeouts 500, 500, 500, 500
+        xmlHttp.send
+        If Err.Number = 0 Then Exit For
+    Next
 End If
+
 
 ' Launch Chrome in App Mode (borderless, separate taskbar icon)
 Err.Clear

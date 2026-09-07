@@ -27,22 +27,27 @@ if (!shouldSync) {
   process.exit(0);
 }
 
-const { source, target, dbName } = requireEnv();
-
-const src = await connect(source);
-const dst = await connect(target);
 try {
-  const srcDb = src.db(dbName);
-  const dstDb = dst.db(dbName);
-  for (const name of COLLECTIONS) {
-    const n = await mirrorCollection(srcDb, dstDb, name);
-    console.log(`mirrored ${name}: ${n} docs`);
+  const { source, target, dbName } = requireEnv();
+  const src = await connect(source);
+  const dst = await connect(target);
+  try {
+    const srcDb = src.db(dbName);
+    const dstDb = dst.db(dbName);
+    for (const name of COLLECTIONS) {
+      const n = await mirrorCollection(srcDb, dstDb, name);
+      console.log(`mirrored ${name}: ${n} docs`);
+    }
+    console.log("pull complete (Atlas -> local)");
+    
+    // Save current timestamp upon successful sync
+    fs.writeFileSync(TIMESTAMP_FILE, String(Date.now()), "utf8");
+  } finally {
+    await src.close().catch(() => {});
+    await dst.close().catch(() => {});
   }
-  console.log("pull complete (Atlas -> local)");
-  
-  // Save current timestamp upon successful sync
-  fs.writeFileSync(TIMESTAMP_FILE, String(Date.now()), "utf8");
-} finally {
-  await src.close();
-  await dst.close();
+} catch (err) {
+  console.warn(`[sync] Network or DB unavailable (${err.message}). Skipping sync, proceeding to start app.`);
+  process.exit(0);
 }
+

@@ -1,11 +1,5 @@
-# Self-elevation check
-if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Host "Re-running script with Administrator permissions to write Start Menu shortcuts..." -ForegroundColor Yellow
-    Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
-    exit
-}
-
 $WshShell = New-Object -ComObject WScript.Shell
+
 $WorkspacePath = "d:\code\personal_projects\recall"
 $IcoPath = "$WorkspacePath\public\recall.ico"
 $SrcJpg = "$WorkspacePath\public\recall-logo.jpg"
@@ -48,4 +42,4 @@ $StartupShortcut.Save()
 Write-Host "Background Startup Daemon configured successfully!" -ForegroundColor Green
 
 Write-Host "Setup Completed! You can now find 'Recall' in your Start Menu and it will run silently at login." -ForegroundColor Green
-Read-Host "Press Enter to exit"
+
