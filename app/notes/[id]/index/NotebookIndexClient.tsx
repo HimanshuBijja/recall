@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Card, CardKind, Group, Tag } from "@/types";
@@ -27,12 +27,17 @@ export function NotebookIndexClient({
   const toast = useToast();
   const [notebook, setNotebook] = useState<NoteBook>(initialNotebook);
   const [saving, setSaving] = useState(false);
+  const [exportDate, setExportDate] = useState("");
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [pdfOptions, setPdfOptions] = useState<PdfPrintOptions>({
     selectedKinds: ["mcq", "multi", "tf-sort", "flash", "cloze", "match"],
     slidesPerPage: 1,
   });
+
+  useEffect(() => {
+    setExportDate(new Date().toLocaleDateString());
+  }, []);
 
   const groupMap = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
 
@@ -439,7 +444,7 @@ export function NotebookIndexClient({
             <h1 className="text-3xl font-extrabold tracking-tight text-black">{notebook.name}</h1>
             {notebook.description && <p className="text-sm text-gray-700 font-serif italic">{notebook.description}</p>}
             <p className="text-xs text-gray-500 font-mono pt-1">
-              Notebook Study Deck · {printableChapters.length} Chapters · {totalMatchingScreenshots} Slides · Exported on {new Date().toLocaleDateString()}
+              Notebook Study Deck · {printableChapters.length} Chapters · {totalMatchingScreenshots} Slides{exportDate ? ` · Exported on ${exportDate}` : ""}
             </p>
           </div>
 
