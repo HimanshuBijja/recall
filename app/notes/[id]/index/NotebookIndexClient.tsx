@@ -98,8 +98,13 @@ export function NotebookIndexClient({
     return printableChapters.reduce((sum, ch) => {
       let cnt = 0;
       for (const c of ch.cards) {
-        if (c.source?.screenshotUrl) cnt++;
-        if (c.referenceImages) cnt += c.referenceImages.length;
+        const primary = c.source?.screenshotUrl;
+        if (primary) cnt++;
+        if (c.referenceImages && c.referenceImages.length > 0) {
+          for (const refUrl of c.referenceImages) {
+            if (refUrl && refUrl !== primary) cnt++;
+          }
+        }
       }
       return sum + cnt;
     }, 0);
@@ -496,18 +501,28 @@ export function NotebookIndexClient({
                     : "grid-cols-2 gap-6"
                 }`}
               >
-                {ch.cards.map((c, cIdx) => {
-                  const imgUrl = c.source?.screenshotUrl ?? (c.referenceImages && c.referenceImages[0]);
-                  if (!imgUrl) return null;
+                {ch.cards.flatMap((c, cIdx) => {
+                  const cardImages: { url: string; subLabel: string }[] = [];
+                  if (c.source?.screenshotUrl) {
+                    cardImages.push({ url: c.source.screenshotUrl, subLabel: "" });
+                  }
+                  if (c.referenceImages && c.referenceImages.length > 0) {
+                    c.referenceImages.forEach((refUrl, rIdx) => {
+                      if (refUrl && refUrl !== c.source?.screenshotUrl) {
+                        cardImages.push({ url: refUrl, subLabel: ` (Extra ${rIdx + 1})` });
+                      }
+                    });
+                  }
+                  if (cardImages.length === 0) return [];
 
                   const sec = typeof c.source?.timestamp === "number" ? Math.floor(c.source.timestamp) : null;
                   const mm = sec !== null ? Math.floor(sec / 60) : null;
                   const ss = sec !== null ? String(sec % 60).padStart(2, "0") : null;
                   const timeLabel = mm !== null && ss !== null ? `${mm}:${ss}` : null;
 
-                  return (
+                  return cardImages.map((img, imgIdx) => (
                     <div
-                      key={c.id}
+                      key={`${c.id}-${imgIdx}`}
                       className="pdf-slide-card bg-white pdf-no-split flex flex-col items-center justify-center relative overflow-hidden w-full"
                     >
                       {/* Searchable Text Layer Positioned DIRECTLY BEHIND Image for Ctrl+F Search */}
@@ -529,18 +544,18 @@ export function NotebookIndexClient({
                           userSelect: "text",
                         }}
                       >
-                        Chapter {ch.chapterNum}: {ch.group.name}. Slide {cIdx + 1}. {c.question} {c.answer} {c.explanation} {c.tags?.join(" ")} {c.kind} {timeLabel ? `Timestamp ${timeLabel}` : ""}
+                        Chapter {ch.chapterNum}: {ch.group.name}. Slide {cIdx + 1}{img.subLabel}. {c.question} {c.answer} {c.explanation} {c.tags?.join(" ")} {c.kind} {timeLabel ? `Timestamp ${timeLabel}` : ""}
                       </div>
 
                       {/* High-res Screenshot Image layered cleanly ON TOP (z-index: 10, borderless) */}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={imgUrl}
+                        src={img.url}
                         alt={c.question || `Slide ${ch.chapterNum}.${cIdx + 1}`}
                         className="relative z-10 w-full h-auto max-h-[850px] object-contain"
                       />
                     </div>
-                  );
+                  ));
                 })}
               </div>
             </section>
