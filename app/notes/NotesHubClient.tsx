@@ -32,9 +32,16 @@ export function NotesHubClient({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
+  const [groupSearch, setGroupSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
   const groupMap = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
+
+  const filteredModalGroups = useMemo(() => {
+    if (!groupSearch.trim()) return groups;
+    const q = groupSearch.toLowerCase();
+    return groups.filter((g) => g.name.toLowerCase().includes(q));
+  }, [groups, groupSearch]);
 
   // Compute stats per notebook
   const notebookData = useMemo(() => {
@@ -327,11 +334,21 @@ export function NotesHubClient({
                 <span className="text-xs text-accent font-mono">{selectedGroupIds.length} selected</span>
               </div>
 
+              <input
+                type="text"
+                value={groupSearch}
+                onChange={(e) => setGroupSearch(e.target.value)}
+                placeholder="🔍 Search chapters / groups by title..."
+                className="w-full px-3 py-2 rounded border border-border/60 bg-[#121111] text-foreground placeholder-zinc-500 text-xs focus:outline-none focus:border-accent"
+              />
+
               <div className="border border-border bg-black/30 rounded-[4px] p-3 max-h-60 overflow-y-auto space-y-2">
-                {groups.length === 0 ? (
-                  <p className="text-xs text-muted italic">No groups exist in database.</p>
+                {filteredModalGroups.length === 0 ? (
+                  <p className="text-xs text-muted italic">
+                    {groups.length === 0 ? "No groups exist in database." : "No groups match your search query."}
+                  </p>
                 ) : (
-                  groups.map((g) => {
+                  filteredModalGroups.map((g) => {
                     const isSelected = selectedGroupIds.includes(g.id);
                     const selectedIdx = selectedGroupIds.indexOf(g.id);
                     return (

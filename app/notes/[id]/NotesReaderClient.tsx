@@ -45,8 +45,17 @@ export function NotesReaderClient({
   const [selectedKinds, setSelectedKinds] = useState<string[]>(ALL_KINDS);
   const [slideIdx, setSlideIdx] = useState(0);
   const [showDrawer, setShowDrawer] = useState(false);
+  const [drawerSearch, setDrawerSearch] = useState("");
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
+
+  const filteredChaptersSummary = useMemo(() => {
+    if (!drawerSearch.trim()) return chaptersSummary;
+    const q = drawerSearch.toLowerCase();
+    return chaptersSummary.filter(
+      (ch) => ch.groupName.toLowerCase().includes(q) || String(ch.chapterNum).includes(q)
+    );
+  }, [chaptersSummary, drawerSearch]);
 
   // Restore LocalStorage filters on mount
   useEffect(() => {
@@ -359,8 +368,23 @@ export function NotesReaderClient({
             </div>
 
             <div className="space-y-2">
-              <div className="text-[10px] uppercase font-bold tracking-wider text-muted mb-2">Chapters List:</div>
-              {chaptersSummary.map((ch) => (
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-muted">Chapters List:</span>
+                <span className="text-[10px] font-mono text-accent">{filteredChaptersSummary.length} chapters</span>
+              </div>
+
+              <input
+                type="text"
+                value={drawerSearch}
+                onChange={(e) => setDrawerSearch(e.target.value)}
+                placeholder="🔍 Search chapters..."
+                className="w-full px-3 py-2 rounded border border-border/60 bg-[#121111] text-foreground placeholder-zinc-500 text-xs focus:outline-none focus:border-accent"
+              />
+
+              {filteredChaptersSummary.length === 0 ? (
+                <p className="text-xs text-muted italic pt-2">No matching chapters found.</p>
+              ) : (
+                filteredChaptersSummary.map((ch) => (
                 <button
                   key={ch.groupId}
                   type="button"
@@ -378,7 +402,8 @@ export function NotesReaderClient({
                   </div>
                   <span className="text-[10px] font-mono text-accent">Jump →</span>
                 </button>
-              ))}
+              ))
+            )}
             </div>
           </div>
         </div>

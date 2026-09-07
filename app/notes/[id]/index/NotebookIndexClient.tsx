@@ -205,9 +205,17 @@ export function NotebookIndexClient({
     router.push(`/test/session?ids=${allCardIds.join(",")}&shuffle=true`);
   }
 
+  const [chapterSearch, setChapterSearch] = useState("");
+
   const unassignedGroups = useMemo(() => {
     return groups.filter((g) => !notebook.groupIds.includes(g.id));
   }, [groups, notebook.groupIds]);
+
+  const filteredUnassignedGroups = useMemo(() => {
+    if (!chapterSearch.trim()) return unassignedGroups;
+    const q = chapterSearch.toLowerCase();
+    return unassignedGroups.filter((g) => g.name.toLowerCase().includes(q));
+  }, [unassignedGroups, chapterSearch]);
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -389,11 +397,23 @@ export function NotebookIndexClient({
               </button>
             </div>
 
+            <input
+              type="text"
+              value={chapterSearch}
+              onChange={(e) => setChapterSearch(e.target.value)}
+              placeholder="🔍 Search available chapters by title..."
+              className="w-full px-3 py-2 rounded border border-border/60 bg-[#121111] text-foreground placeholder-zinc-500 text-xs focus:outline-none focus:border-accent"
+            />
+
             <div className="space-y-2 max-h-72 overflow-y-auto">
-              {unassignedGroups.length === 0 ? (
-                <p className="text-xs text-muted italic">All available groups are already assigned to this notebook.</p>
+              {filteredUnassignedGroups.length === 0 ? (
+                <p className="text-xs text-muted italic">
+                  {unassignedGroups.length === 0
+                    ? "All available groups are already assigned to this notebook."
+                    : "No matching groups found."}
+                </p>
               ) : (
-                unassignedGroups.map((g) => (
+                filteredUnassignedGroups.map((g) => (
                   <button
                     key={g.id}
                     type="button"
