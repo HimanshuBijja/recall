@@ -2,6 +2,11 @@
 
 Significant architectural/technical decisions. Newest first.
 
+## 2026-09-07 — Master Search Command Palette (`Ctrl+K`) for Notes
+- **Decision 1 — Command Palette UI (`Ctrl+K`):** Adopted a floating cinematic modal command palette activated via `Ctrl+K` / `Cmd+K` or header button `🔍 Search Notes`. Offers spacious layout for slide thumbnails, chapter titles, card kind badges, timestamps, and matching snippets without cluttering the reading view.
+- **Decision 2 — Topic Study Mode (Behavior B):** Searching filters the active slide deck to show only matching slides (e.g. `4 of 88 notes active for "Cardinality"`), enabling sequential `←`/`→` stepping through matching concept slides. A prominent `✕ Clear Search` chip restores full deck context.
+- **Decision 3 — Regex-Based Non-HTML Markdown Keyword Highlighting:** Added `highlightQuery` prop to `<Markdown>` component that uses regex negative lookahead `(?![^<]*>)` to safely wrap matched search terms inside `<mark>` tags without breaking GFM markdown structure or HTML elements.
+
 ## 2026-09-07 — Notes Revision Feature (`/notes`)
 - **Decision 1 — Direct Full-Width Image Presentation:** Unlike quiz/test views where screenshots are hidden behind a toggle, Notes Reader renders YouTube frames directly at full width without hidden frame toggles or card flipping mechanics.
 - **Decision 2 — Chronological Timestamp Sorting:** Cards inside a Notebook are sorted by `source.timestamp` ascending so lecture slides reconstruct the video's chronological flow.

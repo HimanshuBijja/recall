@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Card, Group, Tag } from "@/types";
@@ -8,6 +8,7 @@ import type { NoteBook } from "@/types/notes";
 import { resolveGroupCards } from "@/lib/due";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/Toast";
+import { NotesSearchModal } from "@/components/NotesSearchModal";
 
 interface Props {
   initialNotebooks: NoteBook[];
@@ -27,6 +28,7 @@ export function NotesHubClient({
   const [notebooks, setNotebooks] = useState<NoteBook[]>(initialNotebooks);
   const [query, setQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
 
   // Form state for new notebook
   const [name, setName] = useState("");
@@ -34,6 +36,18 @@ export function NotesHubClient({
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
   const [groupSearch, setGroupSearch] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Ctrl+K key binding to toggle search modal
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowSearchModal((s) => !s);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const groupMap = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
 
@@ -165,13 +179,23 @@ export function NotesHubClient({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowModal(true)}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] cursor-pointer"
-        >
-          + Create Notebook
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowSearchModal(true)}
+            className="px-4 py-2 border border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] cursor-pointer flex items-center gap-2"
+          >
+            <span>🔍</span> Master Search <kbd className="hidden sm:inline text-[9px] px-1 py-0.2 rounded bg-black/40 border border-amber-500/40 text-amber-200">Ctrl+K</kbd>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest transition-colors rounded-[4px] cursor-pointer"
+          >
+            + Create Notebook
+          </button>
+        </div>
       </div>
 
       <hr className="border-t border-divider my-6" />
@@ -392,6 +416,20 @@ export function NotesHubClient({
           </div>
         </div>
       )}
+
+      {/* Global Master Search Command Palette Modal */}
+      <NotesSearchModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        onApplySearchFilter={(searchQuery) => {
+          if (notebooks.length > 0) {
+            router.push(`/notes/${notebooks[0].id}?search=${encodeURIComponent(searchQuery)}`);
+          }
+        }}
+        allNotebooks={notebooks}
+        allCards={cards}
+        tags={tags}
+      />
     </div>
   );
 }

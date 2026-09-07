@@ -1,5 +1,13 @@
 # 02 — Features Log
 
+## 2026-09-07 — Master Search Command Palette (`Ctrl+K`) for Notes
+- **Command Palette Search Modal (`NotesSearchModal.tsx`)**: Global `Ctrl + K` (or `Cmd + K`) keyboard shortcut + header button `🔍 Search Notes` opens a floating search palette with keyboard navigation (`↑`/`↓`/`Enter`/`Esc`), live slide thumbnails, chapter titles, card kind badges, timestamps (`▶ YouTube mm:ss`), and highlighted text snippets.
+- **Deep Content Query Engine (`lib/search.ts`)**: Full-text searching across all card text fields (questions, answers, cloze text, statements, match pairs, explanations, tags, distractors, and video titles) with helper `getMatchedSnippet`.
+- **Filtered Deck Topic Study Mode (Behavior B)**: Pressing Enter or selecting a result filters the active slide deck to show matching slides only (e.g. `4 of 88 notes active for "Cardinality"`) with a prominent `✕ Clear Search` chip and `←`/`→` stepping through matched concepts.
+- **Keyword Text Highlighting**: Renders warm accent `<mark>` tags around matched search terms inside `<Markdown>` elements (`NotesSlideCard.tsx`).
+- **Files added**: `lib/search.ts`, `components/NotesSearchModal.tsx`.
+- **Files modified**: `components/Markdown.tsx`, `components/NotesSlideCard.tsx`, `app/notes/NotesHubClient.tsx`, `app/notes/[id]/NotesReaderClient.tsx`.
+
 ## 2026-09-07 — Notes Revision Feature (`/notes`)
 - **Visual Lecture Notebooks Hub (`/notes`):** Displays all MongoDB Subjects and Groups automatically as Study Notebooks with cover thumbnails, slide counts, card counts, category filters, and search.
 - **Sequential Visual Reader (`/notes/[id]`):** Displays lecture screenshots directly at full width without hidden frame toggles, sorted chronologically by video timestamp (`source.timestamp` ascending).

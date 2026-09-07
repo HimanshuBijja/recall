@@ -12,15 +12,19 @@ Single user (the owner). No auth. Used mainly on **mobile** (the deployed
 Vercel app) and also on a **laptop** (localhost).
 
 ## Card kinds
-- **MCQ** — one correct answer + 3 distractors.
-- **tf-sort** — sort a set of statements into True/False bins; scored
-  all-or-nothing.
-- Planned: cloze, match-the-following, flashcards (swipe). See
-  `docs/superpowers/plans/2026-07-23-recall-upgrades-roadmap.md`.
+- **MCQ** — single correct answer + distractors.
+- **Multi** — multiple correct answers + distractors.
+- **tf-sort** — sort a set of statements into True/False bins; scored all-or-nothing.
+- **Flash** — self-graded swipe/flip card (question/answer).
+- **Cloze** — fill in the blank (`==answer==`).
+- **Match** — match left and right concept pairs.
+
+## Revision Engines
+- **Spaced Repetition Drills**: Timed/shuffled test sessions backed by FSRS scheduling (`ts-fsrs`).
+- **Notes Revision Engine (`/notes`)**: Linear visual reading of lecture screenshots & notes sorted chronologically by timestamp, with Slide Deck & Continuous modes, Quick Index, PDF print engine, and Master Search Command Palette (`Ctrl+K`).
 
 ## Core objects
-Cards, Tags (a DAG with multiple parents), Groups (saved tag bundles),
-Sessions (test results), Bin (soft-deleted items, 30-day auto-purge).
+Cards, Tags (a DAG with multiple parents), Groups (saved tag bundles), Subjects, Sessions, Bin (soft-deleted items), NoteBook (curated study volumes).
 
 ## Storage model (current)
 - **MongoDB Atlas** is the source of truth; the app connects to `MONGODB_URI`

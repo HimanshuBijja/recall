@@ -24,11 +24,13 @@ export function NotesSlideCard({
   tagById,
   onToggleBookmark,
   compact = false,
+  searchQuery = "",
 }: {
   card: Card;
   tagById: Map<string, Tag>;
   onToggleBookmark?: (cardId: string, current: boolean) => void;
   compact?: boolean;
+  searchQuery?: string;
 }) {
   const videoSource = isVideoSource(card.source) ? card.source : null;
   const screenshotUrl = card.source?.screenshotUrl;
@@ -62,7 +64,7 @@ export function NotesSlideCard({
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="text-base sm:text-xl font-bold leading-relaxed text-foreground">
-            <Markdown text={card.question} />
+            <Markdown text={card.question} highlightQuery={searchQuery} />
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">
@@ -102,7 +104,7 @@ export function NotesSlideCard({
                     {s.isTrue ? "True" : "False"}
                   </span>
                   <div className="flex-1">
-                    <Markdown text={s.text} inline />
+                    <Markdown text={s.text} inline highlightQuery={searchQuery} />
                   </div>
                 </li>
               ))}
@@ -113,10 +115,10 @@ export function NotesSlideCard({
                 const { segments, answers } = parseCloze(card.clozeText!);
                 return segments.map((seg, j) => (
                   <span key={j}>
-                    <Markdown text={seg} inline />
+                    <Markdown text={seg} inline highlightQuery={searchQuery} />
                     {j < answers.length && (
                       <span className="inline-block px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-300 font-semibold mx-1 border border-emerald-800 text-xs">
-                        <Markdown text={answers[j]} inline />
+                        <Markdown text={answers[j]} inline highlightQuery={searchQuery} />
                       </span>
                     )}
                   </span>
@@ -127,9 +129,9 @@ export function NotesSlideCard({
             <ul className="space-y-1.5 p-3 rounded bg-black/40 border border-border/50">
               {card.pairs.map((p, idx) => (
                 <li key={idx} className="flex gap-2 items-center text-xs">
-                  <Markdown text={p.left} className="font-semibold text-zinc-200 inline-block" />
+                  <Markdown text={p.left} className="font-semibold text-zinc-200 inline-block" highlightQuery={searchQuery} />
                   <span className="text-muted">➔</span>
-                  <Markdown text={p.right} className="text-emerald-400 font-medium inline-block" />
+                  <Markdown text={p.right} className="text-emerald-400 font-medium inline-block" highlightQuery={searchQuery} />
                 </li>
               ))}
             </ul>
@@ -142,7 +144,7 @@ export function NotesSlideCard({
                     key={idx}
                     className="px-2 py-1 rounded bg-emerald-950/60 text-emerald-300 text-xs font-medium border border-emerald-800"
                   >
-                    <Markdown text={ans} inline />
+                    <Markdown text={ans} inline highlightQuery={searchQuery} />
                   </span>
                 ))}
               </div>
@@ -154,7 +156,7 @@ export function NotesSlideCard({
                   {card.kind === "flash" ? "Answer / Notes" : "Correct Answer"}
                 </div>
                 <div className="text-sm leading-relaxed text-indigo-300 font-medium">
-                  <Markdown text={card.answer} />
+                  <Markdown text={card.answer} highlightQuery={searchQuery} />
                 </div>
               </div>
             )
@@ -164,7 +166,7 @@ export function NotesSlideCard({
             <div className="p-3 rounded bg-zinc-900/50 border border-border/40 space-y-1">
               <div className="text-[10px] uppercase font-bold tracking-wider text-muted">Explanation</div>
               <div className="text-xs leading-relaxed text-zinc-300">
-                <Markdown text={card.explanation} />
+                <Markdown text={card.explanation} highlightQuery={searchQuery} />
               </div>
             </div>
           )}

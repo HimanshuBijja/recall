@@ -9,6 +9,8 @@ import type { ChapterCardItem } from "./page";
 import { NotesSlideCard } from "@/components/NotesSlideCard";
 import { KIND_CONFIG } from "@/app/groups/[id]/GroupDetailClient";
 import { api } from "@/lib/api";
+import { NotesSearchModal } from "@/components/NotesSearchModal";
+import { matchesCardQuery } from "@/lib/search";
 
 const ALL_KINDS = ["mcq", "multi", "flash", "cloze", "tf-sort", "match"];
 const STORAGE_KINDS_KEY = "recall_notes_kind_filters";
@@ -39,6 +41,7 @@ export function NotesReaderClient({
 }) {
   const searchParams = useSearchParams();
   const startChapterParam = searchParams.get("startChapter");
+  const initialSearchParam = searchParams.get("search") || "";
 
   const [chapterCards, setChapterCards] = useState<ChapterCardItem[]>(initialChapterCards);
   const [viewMode, setViewMode] = useState<"slide" | "scroll">("slide");
@@ -46,8 +49,22 @@ export function NotesReaderClient({
   const [slideIdx, setSlideIdx] = useState(0);
   const [showDrawer, setShowDrawer] = useState(false);
   const [drawerSearch, setDrawerSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearchParam);
+  const [showSearchModal, setShowSearchModal] = useState(false);
 
   const tagById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
+
+  // Ctrl+K key binding to toggle search modal
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowSearchModal((s) => !s);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const filteredChaptersSummary = useMemo(() => {
     if (!drawerSearch.trim()) return chaptersSummary;
@@ -104,8 +121,19 @@ export function NotesReaderClient({
   }
 
   const filteredItems = useMemo(() => {
-    return chapterCards.filter((item) => selectedKinds.includes(item.card.kind || "mcq"));
-  }, [chapterCards, selectedKinds]);
+    return chapterCards.filter((item) => {
+      const matchesKind = selectedKinds.includes(item.card.kind || "mcq");
+      if (!matchesKind) return false;
+      if (!searchQuery.trim()) return true;
+      return matchesCardQuery(item.card, searchQuery, tagById);
+    });
+  }, [chapterCards, selectedKinds, searchQuery, tagById]);
+
+  // Reset slide index to 0 when search query changes
+  function applySearchQuery(query: string) {
+    setSearchQuery(query);
+    setSlideIdx(0);
+  }
 
   const currentItem = filteredItems[slideIdx] ?? filteredItems[0];
 
@@ -182,6 +210,15 @@ export function NotesReaderClient({
 
         {/* Feature A: Quick Index Drawer Trigger & View Mode Switcher */}
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowSearchModal(true)}
+            className="px-2.5 py-1 rounded border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold uppercase tracking-wider cursor-pointer flex items-center gap-1.5"
+            title="Search notes content (Ctrl+K)"
+          >
+            <span>🔍</span> Search <kbd className="hidden sm:inline text-[9px] px-1 py-0.2 rounded bg-black/40 border border-amber-500/40 text-amber-200">Ctrl+K</kbd>
+          </button>
+
           <Link
             href={`/notes/${notebook.id}/index`}
             className="px-2.5 py-1 rounded border border-red-500/40 bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs font-bold uppercase tracking-wider no-underline flex items-center gap-1"
@@ -223,7 +260,7 @@ export function NotesReaderClient({
         </div>
       </div>
 
-      {/* Card Kind Filter Bar */}
+      {/* Card Kind & Search Filter Bar */}
       <div className="flex items-center gap-3 bg-zinc-950/20 border border-border p-3 rounded-[4px] flex-wrap">
         <span className="text-xs uppercase font-bold tracking-wider text-muted">Card Type Filter:</span>
         <div className="flex items-center gap-2 flex-wrap">
@@ -248,6 +285,19 @@ export function NotesReaderClient({
             );
           })}
         </div>
+
+        {/* Active Search Query Clear Chip */}
+        {searchQuery.trim() && (
+          <button
+            type="button"
+            onClick={() => applySearchQuery("")}
+            className="px-2.5 py-1 rounded-[4px] border border-amber-500/60 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-sm animate-in fade-in duration-100"
+            title="Clear search query filter"
+          >
+            <span>✕ Search: "{searchQuery}"</span>
+          </button>
+        )}
+
         <span className="text-xs font-mono text-muted ml-auto">
           {filteredItems.length} of {chapterCards.length} notes active
         </span>
@@ -291,6 +341,7 @@ export function NotesReaderClient({
               card={currentItem.card}
               tagById={tagById}
               onToggleBookmark={handleToggleBookmark}
+              searchQuery={searchQuery}
             />
           )}
 
@@ -342,6 +393,7 @@ export function NotesReaderClient({
               card={item.card}
               tagById={tagById}
               onToggleBookmark={handleToggleBookmark}
+              searchQuery={searchQuery}
             />
           ))}
         </div>
@@ -408,6 +460,17 @@ export function NotesReaderClient({
           </div>
         </div>
       )}
+
+      {/* Master Search Command Palette Modal */}
+      <NotesSearchModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        onApplySearchFilter={applySearchQuery}
+        currentNotebook={notebook}
+        chapterCards={chapterCards}
+        tags={tags}
+        initialQuery={searchQuery}
+      />
     </div>
   );
 }
